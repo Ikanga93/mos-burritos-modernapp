@@ -1,0 +1,96 @@
+.marketing-bar {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+  padding: 16px 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.marketing-bar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 16px;
+}
+
+.marketing-bar-icon {
+  display: flex;
+  align-items: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.marketing-bar-text {
+  flex: 1;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.marketing-bar-text span {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.marketing-bar-button {
+  background: white;
+  color: #6366f1;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.marketing-bar-button:hover {
+  background: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.marketing-bar-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .marketing-bar {
+    padding: 12px 16px;
+  }
+  
+  .marketing-bar-content {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .marketing-bar-text {
+    font-size: 14px;
+  }
+  
+  .marketing-bar-button {
+    width: 100%;
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .marketing-bar-content {
+    gap: 8px;
+  }
+  
+  .marketing-bar-text {
+    font-size: 13px;
+  }
+  
+  .marketing-bar-button {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+} 
