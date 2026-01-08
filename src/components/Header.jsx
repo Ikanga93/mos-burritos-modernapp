@@ -8,6 +8,7 @@ import './Header.css'
 const Header = ({ onCartOpen }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const { cartItems } = useCart()
   const { user, logout } = useCustomerAuth()
   const location = useLocation()
@@ -15,6 +16,20 @@ const Header = ({ onCartOpen }) => {
   const totalItems = Array.isArray(cartItems)
     ? cartItems.reduce((sum, item) => sum + item.quantity, 0)
     : 0
+
+  // Detect scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setIsScrolled(true)
+      } else {
+        setIsScrolled(false)
+      }
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -42,7 +57,7 @@ const Header = ({ onCartOpen }) => {
   }, [])
 
   return (
-    <header className="header">
+    <header className={`header ${isScrolled ? 'header-scrolled' : ''}`}>
       <div className="container">
         <div className="header-content">
           <Link to="/" className="logo">

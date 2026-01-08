@@ -1,7 +1,7 @@
 /* Professional Hero Section with Background Image */
 .hero {
   position: relative;
-  min-height: 90vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -51,7 +51,7 @@
   max-width: 900px;
   margin: 0 auto;
   text-align: center;
-  padding: 100px 20px;
+  padding: 140px 20px 100px 20px;
 }
 
 .hero-text {
@@ -131,7 +131,7 @@
   }
 
   .hero-content {
-    padding: 80px 20px;
+    padding: 120px 20px 80px 20px;
   }
 
   .hero-title {
@@ -163,7 +163,7 @@
   }
 
   .hero-content {
-    padding: 60px 15px;
+    padding: 100px 15px 60px 15px;
   }
 
   .hero-title {

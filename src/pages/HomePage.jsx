@@ -3,6 +3,7 @@ import { ChefHat, Leaf, Award, Heart, User } from 'lucide-react'
 import Hero from '../components/Hero'
 import Contact from '../components/Contact'
 import LocationMap from '../components/LocationMap'
+import Statistics from '../components/Statistics'
 import ApiService from '../services/ApiService'
 
 const HomePage = () => {
@@ -147,6 +148,9 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+
+      {/* Statistics Section */}
+      <Statistics />
 
       {/* Why Choose Mo's Burritos Section */}
       <section className="why-choose-us">

@@ -1,10 +1,19 @@
 /* Mobile-First Header Styles */
 .header {
+  background: transparent;
+  box-shadow: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  border-bottom: none;
+  transition: all 0.3s ease;
+}
+
+.header-scrolled {
   background: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 100;
   border-bottom: 2px solid var(--cream);
 }
 
@@ -43,6 +52,7 @@
   height: 60px;
   width: auto;
   object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
 }
 
 .logo-tagline {
@@ -58,22 +68,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: none;
-  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   cursor: pointer;
   padding: 8px;
   border-radius: 8px;
   transition: all 0.3s ease;
-  color: var(--dark-brown);
+  color: white;
   min-width: 44px;
   min-height: 44px;
   z-index: 101;
   order: 3;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   /* Ensure it appears after cart button */
 }
 
 .menu-toggle:hover {
-  background: var(--cream);
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 /* Mobile Navigation */
@@ -234,20 +247,22 @@
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background: none;
-  border: 1px solid #e0e0e0;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 25px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-family: 'Fredoka', sans-serif;
   font-size: 0.9rem;
-  color: var(--dark-brown);
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   min-height: 44px;
 }
 
 .user-menu-trigger:hover {
-  border-color: #1B5E20;
-  background: #fafafa;
+  border-color: rgba(255, 215, 0, 0.6);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .user-name {
@@ -314,19 +329,24 @@
   align-items: center;
   gap: 8px;
   padding: 8px 20px;
-  background: #1B5E20;
+  background: rgba(255, 215, 0, 0.25);
+  backdrop-filter: blur(10px);
   color: white;
   text-decoration: none;
   border-radius: 25px;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.9rem;
   transition: all 0.3s ease;
   min-height: 44px;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .login-btn:hover {
-  background: #4CAF50;
+  background: rgba(255, 215, 0, 0.4);
+  border-color: rgba(255, 215, 0, 0.7);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
 }
 
 .login-text {
@@ -339,23 +359,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--dark-brown);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
   color: white;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   width: 48px;
   height: 48px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(46, 74, 46, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   order: 2;
   /* Ensure it appears before hamburger menu */
 }
 
 .cart-btn:hover {
-  background: #1E3A1E;
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 215, 0, 0.6);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(46, 74, 46, 0.4);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
 .cart-count {
@@ -374,6 +396,36 @@
   align-items: center;
   justify-content: center;
   border: 2px solid white;
+}
+
+/* Scrolled State - Normal Background Colors */
+.header-scrolled .menu-toggle {
+  background: none;
+  border: none;
+  color: var(--dark-brown);
+  text-shadow: none;
+}
+
+.header-scrolled .menu-toggle:hover {
+  background: var(--cream);
+  border: none;
+}
+
+.header-scrolled .cart-btn {
+  background: var(--dark-brown);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 8px rgba(46, 74, 46, 0.3);
+}
+
+.header-scrolled .cart-btn:hover {
+  background: #1E3A1E;
+  border: none;
+  box-shadow: 0 4px 12px rgba(46, 74, 46, 0.4);
+}
+
+.header-scrolled .logo-image {
+  filter: none;
 }
 
 /* Tablet Styles (768px and up) */
@@ -417,14 +469,78 @@
     border-radius: 25px;
     display: flex;
     align-items: center;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
   }
 
   .nav-link:hover {
     transform: none;
+    background: rgba(255, 255, 255, 0.15);
+    color: #FFD700;
+    backdrop-filter: blur(10px);
+  }
+
+  .nav-link.active {
+    background: rgba(255, 215, 0, 0.2);
+    color: #FFD700;
+    border: 1px solid rgba(255, 215, 0, 0.4);
   }
 
   .nav-link.active:hover {
     transform: none;
+    background: rgba(255, 215, 0, 0.3);
+    border-color: rgba(255, 215, 0, 0.6);
+  }
+
+  /* Scrolled state - normal nav colors */
+  .header-scrolled .nav-link {
+    color: var(--dark-brown);
+    text-shadow: none;
+  }
+
+  .header-scrolled .nav-link:hover {
+    background: var(--cream);
+    color: var(--primary-red);
+    backdrop-filter: none;
+  }
+
+  .header-scrolled .nav-link.active {
+    background: linear-gradient(135deg, #1B5E20, #2E7D32);
+    color: white;
+    border: none;
+  }
+
+  .header-scrolled .nav-link.active:hover {
+    background: linear-gradient(135deg, #4CAF50, #66BB6A);
+    border: none;
+  }
+
+  .header-scrolled .user-menu-trigger {
+    background: none;
+    backdrop-filter: none;
+    border: 1px solid #e0e0e0;
+    color: var(--dark-brown);
+    text-shadow: none;
+  }
+
+  .header-scrolled .user-menu-trigger:hover {
+    border-color: #1B5E20;
+    background: #fafafa;
+  }
+
+  .header-scrolled .login-btn {
+    background: #1B5E20;
+    backdrop-filter: none;
+    color: white;
+    border: none;
+    text-shadow: none;
+  }
+
+  .header-scrolled .login-btn:hover {
+    background: #4CAF50;
+    border: none;
+    box-shadow: none;
   }
 
   .mobile-auth {
