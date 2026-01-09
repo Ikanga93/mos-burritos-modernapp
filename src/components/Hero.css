@@ -109,19 +109,26 @@
 
 .cta-button {
   display: inline-block !important;
-  padding: 12px 32px !important;
-  font-size: 1rem !important;
-  font-weight: 600 !important;
+  padding: 16px 48px !important;
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
   text-transform: uppercase !important;
   letter-spacing: 1px !important;
   color: #FFFFFF !important;
-  background: #000000 !important;
+  background: var(--primary-red) !important;
+  /* Branding Red */
   background-image: none !important;
   border: none !important;
-  border-radius: 6px !important;
+  border-radius: 8px !important;
   text-decoration: none !important;
-  box-shadow: none !important;
-  transition: none !important;
+  box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.cta-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(211, 47, 47, 0.6) !important;
+  background: var(--primary-red-dark) !important;
 }
 
 /* Mobile Responsiveness */

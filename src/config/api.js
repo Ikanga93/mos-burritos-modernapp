@@ -1,7 +1,7 @@
 // API Configuration for Railway
-const API_BASE_URL = import.meta.env.PROD 
-  ? window.location.origin  // Use same domain in production
-  : 'http://localhost:3002'  // Server runs on 3002
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD
+  ? window.location.origin  // Use same domain in production (if monolithic)
+  : 'http://localhost:3002')  // Server runs on 3002
 
 export const API_ENDPOINTS = {
   orders: `${API_BASE_URL}/api/orders`,
