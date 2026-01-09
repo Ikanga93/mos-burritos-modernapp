@@ -85,9 +85,11 @@
 
 /* Map Popup Styles */
 .map-popup {
-    min-width: 250px;
-    max-width: 320px;
-    padding: 8px 0;
+    min-width: 220px;
+    max-width: 280px;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
 }
 
 .live-badge-popup {
@@ -100,7 +102,7 @@
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 700;
-    margin-bottom: 8px;
+    margin: 8px 12px 4px 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -133,48 +135,82 @@
     border-radius: 20px;
     font-size: 0.7rem;
     font-weight: 700;
-    margin-bottom: 8px;
+    margin: 8px 12px 4px 12px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .popup-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
     color: #2E7D32;
-    margin: 8px 0;
-    line-height: 1.3;
+    margin: 8px 12px;
+    line-height: 1.2;
 }
 
 .popup-image-container {
     width: 100%;
-    margin: 12px 0;
-    border-radius: 8px;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
     overflow: hidden;
+    position: relative;
+    display: block;
 }
 
 .popup-image {
     width: 100%;
-    height: 150px;
+    height: 120px;
     object-fit: cover;
     display: block;
+    margin: 0;
+    padding: 0;
+}
+
+.popup-close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 50%;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    padding: 0;
+    z-index: 10;
+}
+
+.popup-close-btn:hover {
+    background: rgba(0, 0, 0, 0.8);
+    transform: scale(1.1);
 }
 
 .popup-details {
-    margin: 12px 0;
+    margin: 0;
+    padding: 0 12px 8px 12px;
+    display: flex;
+    flex-direction: column;
 }
 
 .popup-address,
 .popup-hours,
 .popup-phone,
 .popup-description {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: #333;
-    margin: 6px 0;
-    line-height: 1.5;
+    margin: 4px 0;
+    line-height: 1.3;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
 .popup-icon {
@@ -200,20 +236,21 @@
 
 .popup-actions {
     display: flex;
-    gap: 10px;
-    margin-top: 12px;
+    gap: 6px;
+    margin: 8px 12px 8px 12px;
+    padding: 0;
 }
 
 .popup-order-btn {
     flex: 1;
     display: inline-block;
-    padding: 10px 16px;
+    padding: 8px 14px;
     background: #000000;
     color: white !important;
     text-decoration: none;
-    border-radius: 8px;
+    border-radius: 6px;
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     text-align: center;
     transition: all 0.3s ease;
     border: 2px solid #000000;
@@ -227,25 +264,24 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.popup-directions-btn {
-    flex: 1;
-    display: inline-block;
-    padding: 10px 16px;
-    background: white;
+.popup-icon-btn {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: transparent;
+    border: none;
     color: #000000;
-    text-decoration: none;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-align: center;
+    border-radius: 6px;
     transition: all 0.3s ease;
-    border: 2px solid #000000;
 }
 
-.popup-directions-btn:hover {
+.popup-icon-btn:hover {
     background: #f5f5f5;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Mobile Responsive */
@@ -261,37 +297,52 @@
 
     .map-popup {
         min-width: 200px;
-        max-width: 280px;
+        max-width: 240px;
     }
 
     .popup-title {
-        font-size: 1rem;
+        font-size: 0.9rem;
+        margin: 6px 10px;
     }
 
     .popup-image {
-        height: 120px;
+        height: 80px;
+    }
+
+    .popup-details {
+        padding: 0 10px 6px 10px;
     }
 
     .popup-address,
     .popup-hours,
     .popup-phone {
-        font-size: 0.85rem;
+        font-size: 0.75rem;
+        margin: 3px 0;
     }
 
     .popup-description {
-        font-size: 0.8rem;
+        font-size: 0.7rem;
     }
 
     .popup-actions {
-        flex-direction: column;
-        gap: 8px;
+        margin: 6px 10px 6px 10px;
+        gap: 4px;
     }
 
     .popup-order-btn,
     .popup-directions-btn {
-        width: 100%;
-        padding: 12px 16px;
-        font-size: 0.95rem;
+        padding: 5px 8px;
+        font-size: 0.7rem;
+    }
+
+    .popup-icon-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .popup-icon-btn svg {
+        width: 16px;
+        height: 16px;
     }
 
     .live-badge-popup {
@@ -366,25 +417,43 @@
 
 .leaflet-popup-content-wrapper {
     border-radius: 12px;
-    padding: 4px;
+    padding: 0 !important;
     max-width: 320px;
+    overflow: hidden;
 }
 
 .leaflet-popup-content {
-    margin: 12px 16px;
+    margin: 0 !important;
+    padding: 0 !important;
     width: auto !important;
     max-width: 290px;
+}
+
+/* Hide Leaflet's default close button */
+.leaflet-popup-close-button {
+    display: none !important;
+}
+
+/* Ensure top corners match for image */
+.map-popup {
+    border-radius: 12px 12px 0 0;
+}
+
+.popup-image-container {
+    border-radius: 12px 12px 0 0;
 }
 
 /* Mobile-specific Leaflet overrides */
 @media (max-width: 768px) {
     .leaflet-popup-content-wrapper {
         max-width: 280px !important;
+        padding: 0 !important;
     }
 
     .leaflet-popup-content {
         max-width: 250px !important;
-        margin: 10px 12px !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 }
 

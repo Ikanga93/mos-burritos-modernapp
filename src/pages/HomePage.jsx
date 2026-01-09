@@ -1,53 +1,135 @@
-import React, { useState, useEffect } from 'react'
-import { ChefHat, Leaf, Award, Heart, User } from 'lucide-react'
+import React from 'react'
+import { ChefHat, Leaf, Award, Heart, User, MapPin, Utensils, ShoppingBag, Truck, ArrowRight, X, Navigation, Phone } from 'lucide-react'
 import Hero from '../components/Hero'
 import Contact from '../components/Contact'
-import LocationMap from '../components/LocationMap'
 import Statistics from '../components/Statistics'
-import ApiService from '../services/ApiService'
+import { businessConfig } from '../config/businessConfig'
+import './HomePage.css'
+
+const DiningLocationsModal = ({ onClose }) => {
+  // Show only the two main physical restaurant locations (ID 1 and 7) as requested
+  // ID 1: 705 N Neil St
+  // ID 7: 723 S Neil St
+  const restaurants = businessConfig.locations.filter(
+    loc => (loc.id === 1 || loc.id === 7) && loc.status === 'active'
+  );
+
+  return (
+    <div className="dining-modal-overlay" onClick={onClose}>
+      <div className="dining-modal-content" onClick={e => e.stopPropagation()}>
+        <button className="modal-close-button" onClick={onClose}>
+          <X size={24} />
+        </button>
+        <h3>Dine With Us</h3>
+        <p className="modal-subtitle">Visit one of our restaurant locations</p>
+        <div className="modal-location-list">
+          {restaurants.map(loc => (
+            <div key={loc.id} className="modal-location-item">
+              <div className="modal-location-info">
+                <h4>{loc.name}</h4>
+                <p>{loc.address}</p>
+                <div className="modal-location-hours">
+                  <span className="hours-label">Open:</span> {loc.hours}
+                </div>
+              </div>
+              <div className="modal-actions-group">
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${loc.coordinates.lat},${loc.coordinates.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="modal-directions-btn"
+                >
+                  <Navigation size={16} />
+                  Directions
+                </a>
+                <a
+                  href={`tel:${loc.phone.replace(/\D/g, '')}`}
+                  className="modal-call-btn"
+                >
+                  <Phone size={16} />
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const HomePage = () => {
-  const [scheduledLocations, setScheduledLocations] = useState([])
-  const [liveLocations, setLiveLocations] = useState([])
-
-  useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        const scheduledData = await ApiService.getLocations()
-        setScheduledLocations(scheduledData.filter(location => location.status === 'active'))
-      } catch (error) {
-        console.warn('Scheduled locations not available:', error)
-      }
-    }
-
-    const fetchLiveLocations = async () => {
-      try {
-        const liveData = await ApiService.getLiveLocations()
-        setLiveLocations(liveData.filter(location => location.is_active))
-      } catch (error) {
-        console.warn('Live locations not available:', error)
-      }
-    }
-
-    fetchLocations()
-    fetchLiveLocations()
-  }, [])
+  const [showDiningModal, setShowDiningModal] = React.useState(false);
 
   return (
     <>
       <Hero />
 
-      {/* Locations - Map Section */}
-      <section className="map-section section">
+      {/* Ways to Order Section */}
+      <section className="ordering-section">
         <div className="container">
-          <h2 className="section-title">Locations</h2>
-          <p className="section-subtitle">
-            Visit our restaurant or catch our food trucks around town
+          <h2 className="section-title text-center">Ways to Order</h2>
+          <p className="section-subtitle text-center">
+            Choose the most convenient way to enjoy our authentic flavors
           </p>
-          <LocationMap
-            locations={scheduledLocations}
-            liveLocations={liveLocations}
-          />
+
+          <div className="ordering-grid">
+            {/* Pick Up */}
+            <div className="ordering-card card-pickup">
+              <div className="ordering-icon-wrapper">
+                <ShoppingBag size={36} strokeWidth={1.5} />
+              </div>
+              <h3>Pick Up</h3>
+              <p>Order ahead and skip the line. Your food will be hot and ready when you arrive at our restaurant or food trucks.</p>
+              <a href="/menu" className="ordering-link">
+                Order Now <ArrowRight size={16} />
+              </a>
+            </div>
+
+            <div className="ordering-card card-dining">
+              <div className="ordering-icon-wrapper">
+                <Utensils size={36} strokeWidth={1.5} />
+              </div>
+              <h3>Dining In</h3>
+              <p>Experience our warm atmosphere and fresh food served right to your table. Perfect for family dinners and gatherings.</p>
+              <button
+                className="ordering-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowDiningModal(true);
+                }}
+              >
+                Find Location <ArrowRight size={16} />
+              </button>
+            </div>
+
+            {/* Food Delivery */}
+            <div className="ordering-card card-delivery">
+              <div className="ordering-icon-wrapper">
+                <Truck size={36} strokeWidth={1.5} />
+              </div>
+              <h3>Food Delivery</h3>
+              <p>Craving Mo's Burritos but can't make it out? We'll bring the fiesta to your doorstep with our fast delivery partners.</p>
+              <a href="/menu" className="ordering-link">
+                Order Delivery <ArrowRight size={16} />
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Locations Section with Logo Background */}
+      <section className="locations-section">
+        <div className="container">
+          <h2 className="section-title">Our Locations</h2>
+          <p className="section-subtitle">
+            Mo's Burritos has two restaurants and three food trucks that serve the Champaign County area and surrounding places.
+          </p>
+          <div className="locations-button-container">
+            <a href="/locations" className="locations-cta-button">
+              <MapPin size={20} />
+              See Locations
+            </a>
+          </div>
         </div>
       </section>
 
@@ -189,6 +271,9 @@ const HomePage = () => {
       </section>
 
       <Contact />
+
+      {/* Dining Modal */}
+      {showDiningModal && <DiningLocationsModal onClose={() => setShowDiningModal(false)} />}
     </>
   )
 }

@@ -62,7 +62,7 @@ export const businessConfig = {
         lat: 40.1164,
         lng: -88.2434
       },
-      hours: "Mon-Thu: 11AM-9PM, Fri-Sat: 11AM-10PM, Sun: 12PM-8PM",
+      hours: "Daily: 8AM-9PM",
       features: ["Dine-in", "Takeout", "In-store pickup", "Catering"],
       description: "Our main restaurant location offering authentic Mexican and Salvadorian cuisine with dine-in, takeout, and catering services.",
       image: "/images/popus-image/resto-neil-01.webp",

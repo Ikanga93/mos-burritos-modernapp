@@ -137,6 +137,14 @@ const LocationMap = ({ locations = [], liveLocations = [] }) => {
                     >
                         <Popup>
                             <div className="map-popup">
+                                {marker.image && (
+                                    <div className="popup-image-container">
+                                        <img src={marker.image} alt={marker.name} className="popup-image" />
+                                        <button className="popup-close-btn" onClick={(e) => {
+                                            e.target.closest('.leaflet-popup').querySelector('.leaflet-popup-close-button').click();
+                                        }}>×</button>
+                                    </div>
+                                )}
                                 {marker.isLive && (
                                     <div className="live-badge-popup">
                                         <span className="live-indicator">●</span> LIVE NOW
@@ -148,11 +156,6 @@ const LocationMap = ({ locations = [], liveLocations = [] }) => {
                                     </div>
                                 )}
                                 <h3 className="popup-title">{marker.name}</h3>
-                                {marker.image && (
-                                    <div className="popup-image-container">
-                                        <img src={marker.image} alt={marker.name} className="popup-image" />
-                                    </div>
-                                )}
                                 <div className="popup-details">
                                     {marker.address && (
                                         <p className="popup-address">
@@ -187,9 +190,12 @@ const LocationMap = ({ locations = [], liveLocations = [] }) => {
                                         href={`https://www.google.com/maps/dir/?api=1&destination=${marker.position[0]},${marker.position[1]}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="popup-directions-btn"
+                                        className="popup-directions-btn popup-icon-btn"
+                                        title="Get Directions"
                                     >
-                                        Get Directions
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                                        </svg>
                                     </a>
                                 </div>
                             </div>
