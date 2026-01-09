@@ -7,6 +7,56 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
+/* Custom Map Pin Marker with Logo */
+.custom-div-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
+.map-pin-marker {
+    position: relative;
+    width: 40px;
+    height: 50px;
+}
+
+.pin-circle {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: 3px solid #1B5E20;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.pin-circle img {
+    width: 28px;
+    height: 28px;
+    transform: rotate(45deg);
+    object-fit: contain;
+    background: white;
+    border-radius: 50%;
+    padding: 2px;
+}
+
+.pin-point {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 10px solid #1B5E20;
+    position: absolute;
+    bottom: 0;
+    left: 14px;
+}
+
 /* Full-page map mode */
 .full-map-container .location-map-wrapper {
     position: absolute;
@@ -376,7 +426,8 @@
     background: white;
     border: none;
     border-radius: 12px;
-    display: flex;
+    display: none;
+    /* Hidden by default */
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -392,7 +443,10 @@
     box-shadow: 0 6px 16px rgba(46, 125, 50, 0.3);
 }
 
+/* Only show reset button in full-page map mode */
 .full-map-container .map-reset-button {
+    display: flex;
+    /* Show only in full-page mode */
     bottom: 30px;
     right: 20px;
 }

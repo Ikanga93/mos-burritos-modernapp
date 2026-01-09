@@ -84,7 +84,6 @@ const LocationPage = () => {
           <ArrowLeft size={24} />
           <span>Back</span>
         </button>
-        <h1 className="map-page-title">Locations</h1>
         <LocationMap
           locations={scheduledLocations}
           liveLocations={liveLocations}

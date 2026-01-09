@@ -102,7 +102,7 @@ const Header = ({ onCartOpen }) => {
               className={location.pathname === '/location' ? 'nav-link active' : 'nav-link'}
               onClick={() => setIsMenuOpen(false)}
             >
-              Find Us
+              Locations
             </Link>
 
             {/* Mobile Authentication */}

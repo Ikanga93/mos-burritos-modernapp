@@ -14,18 +14,20 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 })
 
-// Custom icon for all Mo's Burritos locations (unified green pin)
-const mosBurritosIcon = new L.Icon({
-    iconUrl: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
-      <path fill="#2E7D32" stroke="#1B5E20" stroke-width="2" d="M16,2 C9.4,2 4,7.4 4,14 C4,22 16,38 16,38 S28,22 28,14 C28,7.4 22.6,2 16,2 Z"/>
-      <circle cx="16" cy="14" r="5" fill="#FFFFFF"/>
-      <text x="16" y="17" text-anchor="middle" font-size="12" font-weight="bold" fill="#2E7D32">M</text>
-    </svg>
-  `),
-    iconSize: [32, 40],
-    iconAnchor: [16, 40],
-    popupAnchor: [0, -40]
+// Custom icon for all Mo's Burritos locations using HTML DivIcon with logo
+const mosBurritosIcon = new L.DivIcon({
+    className: 'custom-div-icon',
+    html: `
+        <div class="map-pin-marker">
+            <div class="pin-circle">
+                <img src="/images/logo/burritos-logo.png" alt="Mo's Burritos" />
+            </div>
+            <div class="pin-point"></div>
+        </div>
+    `,
+    iconSize: [50, 60],
+    iconAnchor: [25, 60],
+    popupAnchor: [0, -60]
 })
 
 // Reset View Button Component
