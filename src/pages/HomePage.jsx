@@ -27,6 +27,9 @@ const DiningLocationsModal = ({ onClose }) => {
         <div className="modal-location-list">
           {restaurants.map(loc => (
             <div key={loc.id} className="modal-location-item">
+              <div className="modal-location-logo">
+                <img src="/images/logo/burritos-logo.png" alt="Mo's Burritos" />
+              </div>
               <div className="modal-location-info">
                 <h4>
                   <MapPin size={16} />
@@ -81,6 +84,9 @@ const PickupLocationsModal = ({ onClose }) => {
         <div className="modal-location-list">
           {allLocations.map(loc => (
             <div key={loc.id} className="modal-location-item">
+              <div className="modal-location-logo">
+                <img src="/images/logo/burritos-logo.png" alt="Mo's Burritos" />
+              </div>
               <div className="modal-location-info">
                 <h4>
                   <MapPin size={16} />
@@ -127,9 +133,76 @@ const PickupLocationsModal = ({ onClose }) => {
   );
 };
 
+const DeliveryModal = ({ onClose }) => {
+  const deliveryPlatforms = [
+    {
+      name: 'DoorDash',
+      url: "https://www.doordash.com/store/mo's-burritos-bar-&-grill-champaign-30563328/40838749/?pickup=true",
+      logo: '/images/delivery-logos/doordash-logo.png',
+      backgroundColor: '#FFFFFF',
+      description: 'Fast delivery from DoorDash'
+    },
+    {
+      name: 'Grubhub',
+      url: 'https://www.grubhub.com/restaurant/mos-burritos-restaurant-705-n-neil-st-champaign/1465452',
+      logo: '/images/delivery-logos/grubhub-logo.png',
+      backgroundColor: '#FFFFFF',
+      description: 'Order on Grubhub'
+    },
+    {
+      name: 'Uber Eats',
+      url: 'https://www.ubereats.com/store/mos-burritos-restaurant/b4R-vj8SRZ-1KShbKuGvZg?srsltid=AfmBOorb3mDKCngT6x4CNix0cTn_9qzHZzDRzAbzil5EEfRxsq57MvHE',
+      logo: '/images/delivery-logos/ubereats-logo.png',
+      backgroundColor: '#FFFFFF',
+      description: 'Delivered by Uber Eats'
+    }
+  ];
+
+  return (
+    <div className="dining-modal-overlay" onClick={onClose}>
+      <div className="dining-modal-content delivery-modal" onClick={e => e.stopPropagation()}>
+        <button className="modal-close-button" onClick={onClose}>
+          <X size={24} />
+        </button>
+        <h3>Delivery Options</h3>
+        <p className="modal-subtitle">Choose your preferred delivery platform</p>
+        <div className="delivery-platform-list">
+          {deliveryPlatforms.map(platform => (
+            <a
+              key={platform.name}
+              href={platform.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="delivery-platform-item"
+            >
+              <div className="delivery-platform-icon" style={{ backgroundColor: platform.backgroundColor }}>
+                <img
+                  src={platform.logo}
+                  alt={`${platform.name} logo`}
+                  className="delivery-logo"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentElement.innerHTML = `<span style="font-weight: 700; font-size: 0.9rem; color: #333;">${platform.name}</span>`;
+                  }}
+                />
+              </div>
+              <div className="delivery-platform-info">
+                <h4>{platform.name}</h4>
+                <p>{platform.description}</p>
+              </div>
+              <ArrowRight size={20} className="delivery-arrow" />
+            </a>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const HomePage = () => {
   const [showDiningModal, setShowDiningModal] = React.useState(false);
   const [showPickupModal, setShowPickupModal] = React.useState(false);
+  const [showDeliveryModal, setShowDeliveryModal] = React.useState(false);
 
   return (
     <>
@@ -189,9 +262,15 @@ const HomePage = () => {
               </div>
               <h3>Food Delivery</h3>
               <p>Craving Mo's Burritos but can't make it out? We'll bring the fiesta to your doorstep with our fast delivery partners.</p>
-              <a href="/menu" className="ordering-link">
+              <button
+                className="ordering-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowDeliveryModal(true);
+                }}
+              >
                 Order Delivery <ArrowRight size={16} />
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -355,6 +434,7 @@ const HomePage = () => {
       {/* Modals */}
       {showDiningModal && <DiningLocationsModal onClose={() => setShowDiningModal(false)} />}
       {showPickupModal && <PickupLocationsModal onClose={() => setShowPickupModal(false)} />}
+      {showDeliveryModal && <DeliveryModal onClose={() => setShowDeliveryModal(false)} />}
     </>
   )
 }
