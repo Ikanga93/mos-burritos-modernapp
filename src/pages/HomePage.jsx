@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom'
 import { ChefHat, Leaf, Award, Heart, User, MapPin, Utensils, ShoppingBag, Truck, ArrowRight, X, Navigation, Phone, Clock } from 'lucide-react'
 import Hero from '../components/Hero'
 import Contact from '../components/Contact'
-import Statistics from '../components/Statistics'
 import MostOrdered from '../components/MostOrdered'
 import { businessConfig } from '../config/businessConfig'
 import './HomePage.css'
+import '../components/Testimonials.css'
 
 const DiningLocationsModal = ({ onClose }) => {
   // Show only the two main physical restaurant locations (ID 1 and 7) as requested
@@ -295,103 +295,155 @@ const HomePage = () => {
       {/* Customer Testimonials Section */}
       <section className="testimonials section">
         <div className="container">
-          <h2 className="section-title">What Our Customers Say</h2>
-          <p className="section-subtitle">
-            Don't just take our word for it - hear from our satisfied customers
-          </p>
+          <div className="testimonials-header">
+            <h2 className="section-title">What Our Customers Say</h2>
+            <p className="section-subtitle">
+              Over 500+ five-star reviews from happy customers
+            </p>
+            <div className="rating-summary">
+              <div className="stars">★★★★★</div>
+              <span className="rating-text">4.8 out of 5 stars</span>
+            </div>
+          </div>
 
           <div className="reviews-container">
             <div className="reviews-scroll">
-              <div className="review-card">
-                <div className="review-header">
-                  <div className="reviewer-avatar"><User size={32} /></div>
-                  <div className="reviewer-info">
-                    <strong>Cas Beadell</strong>
-                    <span>Local Guide · 20 reviews</span>
-                    <div className="review-time">a year ago</div>
+              <div className="review-card featured">
+                <div className="review-bg-image" style={{backgroundImage: 'url(/images/most-ordered-images/quesabirria.avif)'}}></div>
+                <div className="review-content">
+                  <div className="quote-mark">"</div>
+                  <div className="stars-rating">★★★★★</div>
+                  <p className="review-text">Always genuinely amazing food. Tortas are the best I've ever had. I think they pan fry the bread with cheese to get this really crispy, savory cheese layer on it. It's so good. Employees are always super nice and efficient too. Best prices in town as well.</p>
+                  <div className="review-footer">
+                    <div className="reviewer-avatar"><User size={20} /></div>
+                    <div className="reviewer-info">
+                      <strong>Cas Beadell</strong>
+                      <span>Local Guide</span>
+                    </div>
                   </div>
+                  <div className="featured-badge">Top Review</div>
                 </div>
-                <p>Always genuinely amazing food. Tortas are the best I've ever had. I think they pan fry the bread with cheese to get this really crispy, savory cheese layer on it. It's so good. Employees are always super nice and efficient too. Best prices in town as well. 11/10 I've brought every friend who's visited me to this truck.</p>
               </div>
 
               <div className="review-card">
-                <div className="review-header">
-                  <div className="reviewer-avatar"><User size={32} /></div>
-                  <div className="reviewer-info">
-                    <strong>Sarah Fogel</strong>
-                    <span>Local Guide · 39 reviews · 6 photos</span>
-                    <div className="review-time">2 years ago</div>
+                <div className="review-bg-image" style={{backgroundImage: 'url(/images/most-ordered-images/taco-dinner.avif)'}}></div>
+                <div className="review-content">
+                  <div className="quote-mark">"</div>
+                  <div className="stars-rating">★★★★★</div>
+                  <p className="review-text">Holy moly these are some good tacos. And so reasonably priced! The chorizo especially was unreal, but the pastor was bomb and the asada was solid too!</p>
+                  <div className="review-footer">
+                    <div className="reviewer-avatar"><User size={20} /></div>
+                    <div className="reviewer-info">
+                      <strong>Sarah Fogel</strong>
+                      <span>Local Guide</span>
+                    </div>
                   </div>
                 </div>
-                <p>Holy moly these are some good tacos. And so reasonably priced!!!! The chorizo especially was unreal, but the pastor was bomb and the asada was solid too! Will definitely come back if I'm in Champaign again.</p>
               </div>
 
               <div className="review-card">
-                <div className="review-header">
-                  <div className="reviewer-avatar"><User size={32} /></div>
-                  <div className="reviewer-info">
-                    <strong>No Fears Transport LLC</strong>
-                    <span>7 reviews</span>
-                    <div className="review-time">2 months ago</div>
+                <div className="review-bg-image" style={{backgroundImage: 'url(/images/most-ordered-images/burrito.avif)'}}></div>
+                <div className="review-content">
+                  <div className="quote-mark">"</div>
+                  <div className="stars-rating">★★★★★</div>
+                  <p className="review-text">These are the best tacos I've tried in the US. The al pastor tacos are my favorite! And the burritos are great too. I would highly recommend Mo's Burritos!</p>
+                  <div className="review-footer">
+                    <div className="reviewer-avatar"><User size={20} /></div>
+                    <div className="reviewer-info">
+                      <strong>Johanna</strong>
+                      <span>Verified Customer</span>
+                    </div>
                   </div>
                 </div>
-                <p>Great food and always prepared to order. I've been eating here for 10+ years!</p>
               </div>
 
               <div className="review-card">
-                <div className="review-header">
-                  <div className="reviewer-avatar"><User size={32} /></div>
-                  <div className="reviewer-info">
-                    <strong>Johanna</strong>
-                    <span>7 reviews · 1 photo</span>
-                    <div className="review-time">a year ago</div>
+                <div className="review-bg-image" style={{backgroundImage: 'url(/images/most-ordered-images/taco-dinner.avif)'}}></div>
+                <div className="review-content">
+                  <div className="quote-mark">"</div>
+                  <div className="stars-rating">★★★★★</div>
+                  <p className="review-text">As someone who grew up in Mexico, I have to say these are the best tacos in Champaign. They taste as good as any street taco you can get in Mexico. The staff always greets you with a smile!</p>
+                  <div className="review-footer">
+                    <div className="reviewer-avatar"><User size={20} /></div>
+                    <div className="reviewer-info">
+                      <strong>HyeonR</strong>
+                      <span>Verified Customer</span>
+                    </div>
                   </div>
                 </div>
-                <p>These are the best tacos I've tried in the US. The al pastor tacos are my favorite! And the burritos are great too. I would highly recommend Mo's Burritos!</p>
               </div>
 
               <div className="review-card">
-                <div className="review-header">
-                  <div className="reviewer-avatar"><User size={32} /></div>
-                  <div className="reviewer-info">
-                    <strong>Duke Yin</strong>
-                    <span>Local Guide · 33 reviews · 3 photos</span>
-                    <div className="review-time">a year ago</div>
+                <div className="review-bg-image" style={{backgroundImage: 'url(/images/most-ordered-images/nachos.avif)'}}></div>
+                <div className="review-content">
+                  <div className="quote-mark">"</div>
+                  <div className="stars-rating">★★★★★</div>
+                  <p className="review-text">One of the best quick Mexican food places in Urbana Champaign. The topping portion is amazing and their tacos are incredible. I recommend the avocado topping!</p>
+                  <div className="review-footer">
+                    <div className="reviewer-avatar"><User size={20} /></div>
+                    <div className="reviewer-info">
+                      <strong>Duke Yin</strong>
+                      <span>Local Guide</span>
+                    </div>
                   </div>
                 </div>
-                <p>One of the best quick Mexican food places in Urbana Champaign. I tried almost all Mexican restaurants in this area, and usually I have tons of nachos remaining when the topping is gone. But here, the topping portion is a lot so I finish topping and nachos at the same time! I recommend avocado topping addition if you like avocado. Their tacos are amazing too. It is worth it.</p>
               </div>
 
               <div className="review-card">
-                <div className="review-header">
-                  <div className="reviewer-avatar"><User size={32} /></div>
-                  <div className="reviewer-info">
-                    <strong>Cathy Smith</strong>
-                    <span>Local Guide · 140 reviews · 1,824 photos</span>
-                    <div className="review-time">4 months ago</div>
+                <div className="review-bg-image" style={{backgroundImage: 'url(/images/most-ordered-images/burrito-dinner.avif)'}}></div>
+                <div className="review-content">
+                  <div className="quote-mark">"</div>
+                  <div className="stars-rating">★★★★★</div>
+                  <p className="review-text">Great food and always prepared to order. I've been eating here for 10+ years! Consistent quality every single time.</p>
+                  <div className="review-footer">
+                    <div className="reviewer-avatar"><User size={20} /></div>
+                    <div className="reviewer-info">
+                      <strong>No Fears Transport</strong>
+                      <span>Loyal Customer</span>
+                    </div>
                   </div>
                 </div>
-                <p>Food always Good. Truck was at Circle K on Mattis and Sangamon Dr.</p>
-              </div>
-
-              <div className="review-card">
-                <div className="review-header">
-                  <div className="reviewer-avatar"><User size={32} /></div>
-                  <div className="reviewer-info">
-                    <strong>HyeonR</strong>
-                    <span>8 reviews · 4 photos</span>
-                    <div className="review-time">2 years ago</div>
-                  </div>
-                </div>
-                <p>As someone who grew up in Mexico, I have to say these are the best tacos in Champaign. They taste as good as any street taco you can get in Mexico. Also, the staff always greets you with a smile and makes you feel like a valued customer. Can't recommend this place enough.</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Statistics Section */}
-      <Statistics />
+      {/* Book Food Truck Section */}
+      <section className="book-truck-section">
+        <div className="container">
+          <div className="book-truck-content">
+            <div className="book-truck-image">
+              <img src="/images/party-truck.JPG" alt="Mo's Burritos Food Truck" />
+              <div className="truck-image-overlay"></div>
+            </div>
+            <div className="book-truck-info">
+              <h2 className="book-truck-title">Book Our Food Truck</h2>
+              <p className="book-truck-subtitle">Bring the Fiesta to Your Event!</p>
+              <p className="book-truck-description">
+                Make your next event unforgettable with Mo's Burritos food truck! Whether it's a corporate gathering, wedding, birthday party, or community event, we bring authentic Mexican and Salvadorian flavors right to your doorstep.
+              </p>
+              <div className="book-truck-features">
+                <div className="truck-feature">
+                  <div className="truck-feature-icon">🎉</div>
+                  <span>Perfect for Any Event</span>
+                </div>
+                <div className="truck-feature">
+                  <div className="truck-feature-icon">🌮</div>
+                  <span>Fresh Made-to-Order Food</span>
+                </div>
+                <div className="truck-feature">
+                  <div className="truck-feature-icon">👥</div>
+                  <span>Serves Groups of All Sizes</span>
+                </div>
+              </div>
+              <a href="/contact" className="book-truck-btn">
+                Book Now for Your Event
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Why Choose Mo's Burritos Section */}
       <section className="why-choose-us">
