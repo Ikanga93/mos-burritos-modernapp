@@ -7,10 +7,30 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
+/* Full-page map mode */
+.full-map-container .location-map-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    border-radius: 0;
+    height: 100%;
+    width: 100%;
+    box-shadow: none;
+    z-index: 0;
+}
+
 .location-map {
     width: 100%;
     height: 500px;
     z-index: 1;
+}
+
+.full-map-container .location-map {
+    height: 100%;
+    width: 100%;
 }
 
 /* Map Popup Styles */
@@ -233,6 +253,13 @@
         font-size: 0.65rem;
         padding: 3px 10px;
     }
+
+    .map-reset-button {
+        width: 44px;
+        height: 44px;
+        bottom: 20px;
+        right: 15px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -284,7 +311,7 @@
 
 /* Leaflet override for better mobile touch */
 .leaflet-container {
-    font-family: 'Fredoka', sans-serif;
+    font-family: 'Quicksand', sans-serif;
 }
 
 .leaflet-popup-content-wrapper {
@@ -328,6 +355,46 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
     border-radius: 12px !important;
     overflow: hidden;
+}
+
+/* Position zoom controls to top-right in full-page mode */
+.full-map-container .leaflet-control-zoom {
+    position: absolute !important;
+    top: 20px !important;
+    right: 20px !important;
+    left: auto !important;
+}
+
+/* Map Reset/Home Button */
+.map-reset-button {
+    position: absolute;
+    bottom: 30px;
+    right: 20px;
+    z-index: 1000;
+    width: 48px;
+    height: 48px;
+    background: white;
+    border: none;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    color: #2E7D32;
+}
+
+.map-reset-button:hover {
+    background: #2E7D32;
+    color: white;
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(46, 125, 50, 0.3);
+}
+
+.full-map-container .map-reset-button {
+    bottom: 30px;
+    right: 20px;
 }
 
 .leaflet-control-zoom a {

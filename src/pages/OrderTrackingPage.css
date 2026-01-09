@@ -2,7 +2,7 @@
   min-height: 100vh;
   background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
   padding: 100px 20px 40px 20px; /* Increased top padding to account for navbar */
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
 }
 
 .container {

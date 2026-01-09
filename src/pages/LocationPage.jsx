@@ -1,11 +1,13 @@
 import React from 'react'
 import { ArrowLeft, MapPin, Navigation, Clock, Phone, Calendar } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import ApiService from '../services/ApiService'
 import LocationMap from '../components/LocationMap'
 import './LocationPage.css'
 
 const LocationPage = () => {
+  const navigate = useNavigate()
+
   // State for locations from admin dashboard
   const [scheduledLocations, setScheduledLocations] = React.useState([])
   const [liveLocations, setLiveLocations] = React.useState([])
@@ -76,31 +78,17 @@ const LocationPage = () => {
 
   return (
     <div className="location-page">
-      <div className="location-hero">
-        <div className="container">
-          <Link to="/" className="back-link">
-            <ArrowLeft size={20} />
-            Back to Home
-          </Link>
-          <h1 className="location-page-title">Find Our Locations</h1>
-          <p className="location-subtitle">
-            Find us at our current locations and check our schedule for upcoming stops
-          </p>
-        </div>
-      </div>
-
-      {/* Interactive Map Section */}
-      <div className="map-section">
-        <div className="container">
-          <h2 className="map-title">📍 All Our Locations on the Map</h2>
-          <p className="map-subtitle">
-            Click on any marker to see details and get directions
-          </p>
-          <LocationMap
-            locations={scheduledLocations}
-            liveLocations={liveLocations}
-          />
-        </div>
+      {/* Full-page Map with Back Button */}
+      <div className="full-map-container">
+        <button onClick={() => navigate(-1)} className="map-back-button" aria-label="Go back">
+          <ArrowLeft size={24} />
+          <span>Back</span>
+        </button>
+        <h1 className="map-page-title">Locations</h1>
+        <LocationMap
+          locations={scheduledLocations}
+          liveLocations={liveLocations}
+        />
       </div>
 
       {/* Live Locations Section */}

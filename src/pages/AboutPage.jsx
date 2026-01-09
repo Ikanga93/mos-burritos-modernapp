@@ -1,12 +1,26 @@
 import React from 'react'
-import { Heart, Award, Users, Star, Clock, MapPin } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Heart, Award, Users, Star, Clock, MapPin, ArrowLeft } from 'lucide-react'
 import './AboutPage.css'
 
 const AboutPage = () => {
+  const navigate = useNavigate()
+
   return (
     <div className="about-page">
       <div className="about-hero">
-        <div className="container">
+        <button onClick={() => navigate(-1)} className="back-button" aria-label="Go back">
+          <ArrowLeft size={24} />
+          <span>Back</span>
+        </button>
+        <div className="hero-image-overlay">
+          <img
+            src="/images/mosburritosteam.webp"
+            alt="Mo's Burritos Team"
+            className="hero-image"
+          />
+        </div>
+        <div className="container hero-content">
           <h1 className="page-title">About Mo's Burritos</h1>
           <p className="page-subtitle">
             Bringing authentic Mexican & Salvadorian flavors to Champaign-Urbana since day one
@@ -20,23 +34,23 @@ const AboutPage = () => {
             <div className="story-text">
               <h2>Our Story</h2>
               <p className="story-paragraph">
-                Mo's Burritos Restaurant offers a variety of Mexican and Salvadorian food, 
-                bringing together the rich culinary traditions of both cultures in the heart 
-                of Champaign, Illinois. Our passion for authentic flavors and quality ingredients 
+                Mo's Burritos Restaurant offers a variety of Mexican and Salvadorian food,
+                bringing together the rich culinary traditions of both cultures in the heart
+                of Champaign, Illinois. Our passion for authentic flavors and quality ingredients
                 drives everything we do.
               </p>
               <p className="story-paragraph">
-                From our location at 705 N Neil St, we serve the Champaign-Urbana community 
-                with traditional recipes passed down through generations. Whether you're craving 
-                a hearty burrito, authentic tacos, or traditional Salvadorian specialties, 
+                From our location at 705 N Neil St, we serve the Champaign-Urbana community
+                with traditional recipes passed down through generations. Whether you're craving
+                a hearty burrito, authentic tacos, or traditional Salvadorian specialties,
                 we're here to satisfy your appetite for genuine Latin American cuisine.
               </p>
               <p className="story-paragraph">
-                We also offer catering for any type of events, bringing our delicious food 
+                We also offer catering for any type of events, bringing our delicious food
                 directly to your celebrations, corporate gatherings, and special occasions.
               </p>
             </div>
-            
+
             <div className="story-image">
               <div className="chef-illustration">👨‍🍳</div>
               <div className="quote">
@@ -61,7 +75,7 @@ const AboutPage = () => {
                 <p>Every dish prepared with passion and traditional family recipes passed down through generations</p>
               </div>
             </div>
-            
+
             <div className="feature-card">
               <div className="feature-icon">
                 <Award />
@@ -71,7 +85,7 @@ const AboutPage = () => {
                 <p>Best Food Truck 2023 - City Food Awards. Recognized for authentic flavors and quality</p>
               </div>
             </div>
-            
+
             <div className="feature-card">
               <div className="feature-icon">
                 <Users />
@@ -120,8 +134,8 @@ const AboutPage = () => {
           <div className="mission-content">
             <h2>Our Mission</h2>
             <p className="mission-text">
-              To share the rich culinary heritage of Mexico with our community, one taco at a time. 
-              We believe that food is more than sustenance – it's a way to connect cultures, 
+              To share the rich culinary heritage of Mexico with our community, one taco at a time.
+              We believe that food is more than sustenance – it's a way to connect cultures,
               create memories, and bring joy to everyday moments.
             </p>
             <div className="mission-values">

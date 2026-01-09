@@ -37,6 +37,8 @@ const AppContent = () => {
 
   // Check if current route is catering page (no header/footer)
   const isCateringPage = location.pathname === '/catering'
+  const isAboutPage = location.pathname === '/about'
+  const isLocationPage = location.pathname === '/location'
 
   // Check if we should open cart on menu page (when redirected from login)
   useEffect(() => {
@@ -59,8 +61,8 @@ const AppContent = () => {
 
   return (
     <div className="App">
-      {/* Only show customer header on customer pages (except catering) */}
-      {!isAdminPage && !isCateringPage && (
+      {/* Only show customer header on customer pages (except catering, about, and location) */}
+      {!isAdminPage && !isCateringPage && !isAboutPage && !isLocationPage && (
         <Header
           onCartOpen={handleCartOpen}
         />
@@ -149,8 +151,8 @@ const AppContent = () => {
         />
       </Routes>
 
-      {/* Only show customer footer on customer pages (except catering) */}
-      {!isAdminPage && !isCateringPage && <Footer />}
+      {/* Only show customer footer on customer pages (except catering, about, and location) */}
+      {!isAdminPage && !isCateringPage && !isAboutPage && !isLocationPage && <Footer />}
 
       {/* Only show cart on customer pages */}
       {!isAdminPage && (

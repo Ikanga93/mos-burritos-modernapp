@@ -1,6 +1,66 @@
 .location-page {
   min-height: 100vh;
   padding-top: 0;
+  position: relative;
+}
+
+/* Full-page Map Container */
+.full-map-container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: stretch;
+}
+
+/* Map Page Title */
+.map-page-title {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+  margin: 0;
+  padding: 0.75rem 2rem;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border-radius: 50px;
+}
+
+/* Map Back Button */
+.map-back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  color: #2E7D32;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.map-back-button:hover {
+  background: white;
+  transform: translateX(-5px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.map-back-button span {
+  font-size: 1rem;
 }
 
 .location-hero {
@@ -302,7 +362,7 @@
   color: white;
   border: none;
   border-radius: 15px;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -445,6 +505,23 @@
 
   .schedule-note {
     padding: 30px 20px;
+  }
+
+  .map-back-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    top: 15px;
+    left: 15px;
+  }
+
+  .map-back-button span {
+    display: none;
+  }
+
+  .map-page-title {
+    font-size: 1.8rem;
+    padding: 0.5rem 1rem;
+    top: 15px;
   }
 }
 

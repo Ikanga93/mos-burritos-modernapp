@@ -64,7 +64,7 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 500;
   color: var(--text-light);
   transition: all 0.3s ease;
@@ -101,7 +101,7 @@
   border: none;
   border-radius: 25px;
   cursor: pointer;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 500;
   transition: all 0.3s ease;
   box-shadow: 0 3px 10px rgba(76, 175, 80, 0.3);
@@ -161,7 +161,7 @@
   cursor: pointer;
   width: 100%;
   text-align: left;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
 }
 
 .profile-menu-item:hover {

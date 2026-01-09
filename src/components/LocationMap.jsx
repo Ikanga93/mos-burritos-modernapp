@@ -1,6 +1,6 @@
 import React from 'react'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
-import { MapPin, Clock, Phone } from 'lucide-react'
+import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap } from 'react-leaflet'
+import { MapPin, Clock, Phone, Home } from 'lucide-react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { businessConfig } from '../config/businessConfig'
@@ -27,6 +27,27 @@ const mosBurritosIcon = new L.Icon({
     iconAnchor: [16, 40],
     popupAnchor: [0, -40]
 })
+
+// Reset View Button Component
+const ResetViewButton = ({ center, zoom }) => {
+    const map = useMap()
+
+    const handleReset = () => {
+        map.setView(center, zoom, {
+            animate: true,
+            duration: 0.5
+        })
+    }
+
+    React.useEffect(() => {
+        const resetButton = document.querySelector('.map-reset-button')
+        if (resetButton) {
+            resetButton.onclick = handleReset
+        }
+    }, [map])
+
+    return null
+}
 
 const LocationMap = ({ locations = [], liveLocations = [] }) => {
     // Default center (Champaign, IL - Mo's Burritos Restaurant)
@@ -89,16 +110,22 @@ const LocationMap = ({ locations = [], liveLocations = [] }) => {
 
     return (
         <div className="location-map-wrapper">
+            <button className="map-reset-button" title="Reset to default view">
+                <Home size={20} />
+            </button>
             <MapContainer
                 center={defaultCenter}
                 zoom={defaultZoom}
                 scrollWheelZoom={false}
                 className="location-map"
+                zoomControl={false}
             >
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                     url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
                 />
+                <ZoomControl position="topright" />
+                <ResetViewButton center={defaultCenter} zoom={defaultZoom} />
 
                 {allMarkers.map((marker) => (
                     <Marker

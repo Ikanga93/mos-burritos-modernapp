@@ -76,7 +76,7 @@
 }
 
 .auth-title {
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-size: 2.5rem;
   font-weight: 700;
   color: var(--text-dark);
@@ -135,7 +135,7 @@
 }
 
 .form-label {
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 600;
   font-size: 0.95rem;
   color: var(--text-dark);
@@ -154,7 +154,7 @@
   padding: 1rem 1.25rem;
   border: 2px solid var(--border-color);
   border-radius: 16px;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-size: 1rem;
   background: white;
   transition: all 0.3s ease;
@@ -179,7 +179,7 @@
   padding: 1rem 1.5rem;
   border: none;
   border-radius: 16px;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;

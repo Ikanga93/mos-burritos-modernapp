@@ -51,7 +51,7 @@
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 500;
   color: var(--text-light);
 }
@@ -103,7 +103,7 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 500;
   font-size: 0.9rem;
 }
@@ -139,7 +139,7 @@
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 500;
 }
 
@@ -415,7 +415,7 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 500;
   transition: all 0.3s ease;
 }
@@ -441,7 +441,7 @@
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 500;
   transition: all 0.3s ease;
   background: #f44336;
@@ -686,7 +686,7 @@
   padding: 12px 15px;
   border: 2px solid #e0e0e0;
   border-radius: 10px;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-size: 1rem;
   transition: border-color 0.3s ease;
 }
@@ -706,7 +706,7 @@
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 600;
   transition: all 0.3s ease;
   margin: 0 auto;
@@ -821,7 +821,7 @@
   padding: 12px 24px;
   border-radius: 10px;
   cursor: pointer;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 500;
   transition: all 0.3s ease;
 }
@@ -2085,7 +2085,7 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 500;
   font-size: 0.9rem;
 }
@@ -2113,7 +2113,7 @@
   font-size: 0.9rem;
   font-weight: 500;
   transition: all 0.3s ease;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
 }
 
 .clear-filter-btn:hover {

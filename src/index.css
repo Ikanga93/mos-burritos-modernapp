@@ -19,7 +19,7 @@
 }
 
 body {
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   line-height: 1.6;
   color: var(--text-dark);
   background: linear-gradient(135deg, var(--cream) 0%, #FFF3E0 100%);
@@ -44,7 +44,7 @@ body {
   padding: 14px 24px;
   border: none;
   border-radius: 12px;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;

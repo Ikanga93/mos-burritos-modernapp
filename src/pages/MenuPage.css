@@ -60,7 +60,7 @@
   padding: 15px 20px;
   border: 2px solid white;
   border-radius: 25px;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-size: 1.1rem;
   background: white;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
@@ -102,7 +102,7 @@
   border: 2px solid var(--cream);
   background: var(--cream);
   border-radius: 25px;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 500;
   color: var(--text-dark);
   cursor: pointer;
@@ -281,7 +281,7 @@
   color: var(--text-dark);
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -332,7 +332,7 @@
   font-weight: 600;
   font-size: 0.9rem;
   color: var(--dark-brown);
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
 }
 
 .quantity-buttons {
@@ -366,7 +366,7 @@
   font-weight: 600;
   font-size: 0.9rem;
   color: var(--dark-brown);
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   min-width: 24px;
   text-align: center;
 }
@@ -395,7 +395,7 @@
   color: white;
   border: none;
   border-radius: 20px;
-  font-family: 'Fredoka', sans-serif;
+  font-family: 'Quicksand', sans-serif;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
