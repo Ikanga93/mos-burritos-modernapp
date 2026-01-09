@@ -66,8 +66,70 @@ const DiningLocationsModal = ({ onClose }) => {
   );
 };
 
+const PickupLocationsModal = ({ onClose }) => {
+  // Show all active locations (restaurants and food trucks)
+  const allLocations = businessConfig.locations.filter(loc => loc.status === 'active');
+
+  return (
+    <div className="dining-modal-overlay" onClick={onClose}>
+      <div className="dining-modal-content pickup-modal" onClick={e => e.stopPropagation()}>
+        <button className="modal-close-button" onClick={onClose}>
+          <X size={24} />
+        </button>
+        <h3>Pick Up Locations</h3>
+        <p className="modal-subtitle">Order online from any of our locations</p>
+        <div className="modal-location-list">
+          {allLocations.map(loc => (
+            <div key={loc.id} className="modal-location-item">
+              <div className="modal-location-info">
+                <h4>
+                  <MapPin size={16} />
+                  {loc.name}
+                  {loc.type === 'mobile' && <span className="location-badge">Food Truck</span>}
+                </h4>
+                <p>
+                  <span style={{ width: '16px' }}></span>
+                  {loc.address}
+                </p>
+                <div className="modal-location-hours">
+                  <Clock size={14} />
+                  <span className="hours-label">Open:</span> {loc.hours}
+                </div>
+              </div>
+              <div className="modal-actions-group">
+                <a
+                  href="/menu"
+                  className="modal-order-btn"
+                >
+                  Order Online
+                </a>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${loc.coordinates.lat},${loc.coordinates.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="modal-directions-btn"
+                >
+                  <Navigation size={16} />
+                  Directions
+                </a>
+                <a
+                  href={`tel:${loc.phone.replace(/\D/g, '')}`}
+                  className="modal-call-btn"
+                >
+                  <Phone size={16} />
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const HomePage = () => {
   const [showDiningModal, setShowDiningModal] = React.useState(false);
+  const [showPickupModal, setShowPickupModal] = React.useState(false);
 
   return (
     <>
@@ -92,9 +154,15 @@ const HomePage = () => {
               </div>
               <h3>Pick Up</h3>
               <p>Order ahead and skip the line. Your food will be hot and ready when you arrive at our restaurant or food trucks.</p>
-              <a href="/menu" className="ordering-link">
+              <button
+                className="ordering-link"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowPickupModal(true);
+                }}
+              >
                 Order Now <ArrowRight size={16} />
-              </a>
+              </button>
             </div>
 
             <div className="ordering-card card-dining">
@@ -284,8 +352,9 @@ const HomePage = () => {
 
       <Contact />
 
-      {/* Dining Modal */}
+      {/* Modals */}
       {showDiningModal && <DiningLocationsModal onClose={() => setShowDiningModal(false)} />}
+      {showPickupModal && <PickupLocationsModal onClose={() => setShowPickupModal(false)} />}
     </>
   )
 }
