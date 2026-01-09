@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { ChefHat, Leaf, Award, Heart, User, MapPin, Utensils, ShoppingBag, Truck, ArrowRight, X, Navigation, Phone } from 'lucide-react'
 import Hero from '../components/Hero'
 import Contact from '../components/Contact'
@@ -125,10 +126,10 @@ const HomePage = () => {
             Mo's Burritos has two restaurants and three food trucks that serve the Champaign County area and surrounding places.
           </p>
           <div className="locations-button-container">
-            <a href="/locations" className="locations-cta-button">
+            <Link to="/location" className="locations-cta-button">
               <MapPin size={20} />
               See Locations
-            </a>
+            </Link>
           </div>
         </div>
       </section>

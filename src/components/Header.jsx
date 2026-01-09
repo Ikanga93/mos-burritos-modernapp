@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, ShoppingCart, User, ChevronDown, LogOut } from 'lucide-react'
+import { Menu, X, ShoppingCart, User, ChevronDown, LogOut, Home, Utensils, Info, PartyPopper, MapPin } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useCustomerAuth } from '../contexts/CustomerAuthContext'
 import './Header.css'
@@ -74,35 +74,40 @@ const Header = ({ onCartOpen }) => {
               className={location.pathname === '/' ? 'nav-link active' : 'nav-link'}
               onClick={() => setIsMenuOpen(false)}
             >
-              Home
+              <Home size={20} className="nav-icon" />
+              <span>Home</span>
             </Link>
             <Link
               to="/menu"
               className={location.pathname === '/menu' ? 'nav-link active' : 'nav-link'}
               onClick={() => setIsMenuOpen(false)}
             >
-              Menu
+              <Utensils size={20} className="nav-icon" />
+              <span>Menu</span>
             </Link>
             <Link
               to="/about"
               className={location.pathname === '/about' ? 'nav-link active' : 'nav-link'}
               onClick={() => setIsMenuOpen(false)}
             >
-              About
+              <Info size={20} className="nav-icon" />
+              <span>About</span>
             </Link>
             <Link
               to="/catering"
               className={location.pathname === '/catering' ? 'nav-link active' : 'nav-link'}
               onClick={() => setIsMenuOpen(false)}
             >
-              Catering
+              <PartyPopper size={20} className="nav-icon" />
+              <span>Catering</span>
             </Link>
             <Link
               to="/location"
               className={location.pathname === '/location' ? 'nav-link active' : 'nav-link'}
               onClick={() => setIsMenuOpen(false)}
             >
-              Locations
+              <MapPin size={20} className="nav-icon" />
+              <span>Locations</span>
             </Link>
 
             {/* Mobile Authentication */}
@@ -140,7 +145,7 @@ const Header = ({ onCartOpen }) => {
                 </div>
               )}
             </div>
-          </nav>
+          </nav >
 
           <div className="header-actions">
             {/* Desktop Authentication */}
@@ -210,9 +215,9 @@ const Header = ({ onCartOpen }) => {
               {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
-        </div>
-      </div>
-    </header>
+        </div >
+      </div >
+    </header >
   )
 }
 

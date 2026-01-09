@@ -16,6 +16,7 @@ const LocationPage = () => {
 
   // Fetch both scheduled and live locations on component mount
   React.useEffect(() => {
+    window.scrollTo(0, 0)
     const fetchLocations = async () => {
       try {
         // Fetch scheduled locations from admin dashboard
