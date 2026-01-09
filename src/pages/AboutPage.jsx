@@ -65,64 +65,65 @@ const AboutPage = () => {
       <section className="about-features section">
         <div className="container">
           <h2 className="section-title">What Makes Us Special</h2>
-          <div className="features-grid">
-            <div className="feature-card">
-              <div className="feature-icon">
+
+          <div className="features-timeline">
+            <div className="timeline-item left">
+              <div className="timeline-icon">
                 <Heart />
               </div>
-              <div className="feature-content">
+              <div className="timeline-content">
                 <h3>Made with Love</h3>
                 <p>Every dish prepared with passion and traditional family recipes passed down through generations</p>
               </div>
             </div>
 
-            <div className="feature-card">
-              <div className="feature-icon">
-                <Award />
-              </div>
-              <div className="feature-content">
+            <div className="timeline-item right">
+              <div className="timeline-content">
                 <h3>Award Winning</h3>
                 <p>Best Food Truck 2023 - City Food Awards. Recognized for authentic flavors and quality</p>
               </div>
+              <div className="timeline-icon">
+                <Award />
+              </div>
             </div>
 
-            <div className="feature-card">
-              <div className="feature-icon">
+            <div className="timeline-item left">
+              <div className="timeline-icon">
                 <Users />
               </div>
-              <div className="feature-content">
+              <div className="timeline-content">
                 <h3>Community Favorite</h3>
                 <p>Proudly serving our community for over 5 years with thousands of satisfied customers</p>
               </div>
             </div>
 
-            <div className="feature-card">
-              <div className="feature-icon">
-                <Star />
-              </div>
-              <div className="feature-content">
+            <div className="timeline-item right">
+              <div className="timeline-content">
                 <h3>Fresh Ingredients</h3>
                 <p>We source the freshest ingredients daily and prepare everything from scratch</p>
               </div>
+              <div className="timeline-icon">
+                <Star />
+              </div>
             </div>
 
-            <div className="feature-card">
-              <div className="feature-icon">
+            <div className="timeline-item left">
+              <div className="timeline-icon">
                 <Clock />
               </div>
-              <div className="feature-content">
+              <div className="timeline-content">
                 <h3>Traditional Methods</h3>
                 <p>Using time-honored cooking techniques to ensure authentic taste in every bite</p>
               </div>
             </div>
 
-            <div className="feature-card">
-              <div className="feature-icon">
-                <MapPin />
-              </div>
-              <div className="feature-content">
+            <div className="timeline-item right">
+              <div className="timeline-content">
                 <h3>Mobile Service</h3>
                 <p>We bring the flavors of Mexico directly to your neighborhood and events</p>
+              </div>
+              <div className="timeline-icon">
+                <MapPin />
               </div>
             </div>
           </div>
@@ -138,18 +139,30 @@ const AboutPage = () => {
               We believe that food is more than sustenance – it's a way to connect cultures,
               create memories, and bring joy to everyday moments.
             </p>
-            <div className="mission-values">
-              <div className="value">
-                <h4>Authenticity</h4>
-                <p>Staying true to traditional Mexican recipes and cooking methods</p>
+
+            <div className="mission-values-list">
+              <div className="value-item">
+                <div className="value-number">01</div>
+                <div className="value-details">
+                  <h4>Authenticity</h4>
+                  <p>Staying true to traditional Mexican recipes and cooking methods</p>
+                </div>
               </div>
-              <div className="value">
-                <h4>Quality</h4>
-                <p>Using only the finest ingredients and maintaining high standards</p>
+
+              <div className="value-item">
+                <div className="value-number">02</div>
+                <div className="value-details">
+                  <h4>Quality</h4>
+                  <p>Using only the finest ingredients and maintaining high standards</p>
+                </div>
               </div>
-              <div className="value">
-                <h4>Community</h4>
-                <p>Building relationships and serving our neighbors with pride</p>
+
+              <div className="value-item">
+                <div className="value-number">03</div>
+                <div className="value-details">
+                  <h4>Community</h4>
+                  <p>Building relationships and serving our neighbors with pride</p>
+                </div>
               </div>
             </div>
           </div>
@@ -159,4 +172,4 @@ const AboutPage = () => {
   )
 }
 
-export default AboutPage 
+export default AboutPage
