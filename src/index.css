@@ -32,6 +32,18 @@ body {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Prevent horizontal scroll on mobile */
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+#root {
+  overflow-x: hidden;
+  width: 100%;
 }
 
 .container {
@@ -579,6 +591,115 @@ body {
   }
 }
 
+/* Mobile Improvements (Small Phones - 480px) */
+@media (max-width: 480px) {
+  .section {
+    padding: 50px 0;
+  }
+
+  .section-title {
+    font-size: 1.75rem;
+    margin-bottom: 12px;
+  }
+
+  .section-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 30px;
+    padding: 0 12px;
+  }
+
+  .btn {
+    padding: 12px 20px;
+    font-size: 0.95rem;
+    min-height: 44px;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  /* Why Choose Us - Mobile */
+  .why-choose-us {
+    padding: 50px 0;
+  }
+
+  .features-grid {
+    gap: 20px;
+    margin-bottom: 30px;
+  }
+
+  .feature-item {
+    padding: 24px 16px;
+  }
+
+  .feature-icon {
+    margin-bottom: 12px;
+  }
+
+  .feature-icon svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .feature-item h3 {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+
+  .feature-item p {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  /* Testimonials - Mobile */
+  .testimonials {
+    padding: 50px 0;
+  }
+
+  .testimonials .section-title {
+    font-size: 1.75rem;
+    margin-bottom: 12px;
+  }
+
+  .testimonials .section-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 30px;
+  }
+
+  .reviews-scroll {
+    gap: 16px;
+    padding: 16px 0 24px 0;
+  }
+
+  .review-card {
+    min-width: 270px;
+    max-width: 300px;
+    padding: 20px;
+  }
+
+  .reviewer-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .reviewer-info strong {
+    font-size: 0.95rem;
+  }
+
+  .reviewer-info span {
+    font-size: 0.8rem;
+  }
+
+  .review-time {
+    font-size: 0.7rem;
+  }
+
+  .review-card p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+}
+
 /* Hero Section */
 .hero {
   background: linear-gradient(45deg, #FFD700, #FFC107);
@@ -830,5 +951,73 @@ select:focus {
 
   .stat-number {
     font-size: 3.25rem;
+  }
+}
+
+/* Mobile Improvements for Statistics (Small Phones) */
+@media (max-width: 480px) {
+  .statistics-section {
+    padding: 50px 0;
+  }
+
+  .stats-title {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+
+  .stats-subtitle {
+    font-size: 0.9rem;
+    padding: 0 12px;
+    margin-bottom: 35px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .stat-card {
+    padding: 28px 20px;
+  }
+
+  .stat-icon {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 16px;
+  }
+
+  .stat-icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .stat-number {
+    font-size: 2rem;
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-size: 0.9rem;
+  }
+
+  /* Mobile touch target improvements */
+  a, button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improve text readability on mobile */
+  p, li {
+    line-height: 1.6;
+  }
+
+  /* Container padding adjustments for mobile */
+  .container {
+    padding: 0 16px;
+  }
+
+  /* Improve spacing between sections */
+  .section + .section {
+    margin-top: 0;
   }
 }

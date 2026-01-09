@@ -4,6 +4,7 @@ import { ChefHat, Leaf, Award, Heart, User, MapPin, Utensils, ShoppingBag, Truck
 import Hero from '../components/Hero'
 import Contact from '../components/Contact'
 import Statistics from '../components/Statistics'
+import MostOrdered from '../components/MostOrdered'
 import { businessConfig } from '../config/businessConfig'
 import './HomePage.css'
 
@@ -64,6 +65,9 @@ const HomePage = () => {
   return (
     <>
       <Hero />
+
+      {/* Most Ordered Section */}
+      <MostOrdered />
 
       {/* Ways to Order Section */}
       <section className="ordering-section">
