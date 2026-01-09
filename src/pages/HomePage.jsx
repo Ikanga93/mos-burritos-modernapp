@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { ChefHat, Leaf, Award, Heart, User, MapPin, Utensils, ShoppingBag, Truck, ArrowRight, X, Navigation, Phone } from 'lucide-react'
+import { ChefHat, Leaf, Award, Heart, User, MapPin, Utensils, ShoppingBag, Truck, ArrowRight, X, Navigation, Phone, Clock } from 'lucide-react'
 import Hero from '../components/Hero'
 import Contact from '../components/Contact'
 import Statistics from '../components/Statistics'
@@ -28,9 +28,16 @@ const DiningLocationsModal = ({ onClose }) => {
           {restaurants.map(loc => (
             <div key={loc.id} className="modal-location-item">
               <div className="modal-location-info">
-                <h4>{loc.name}</h4>
-                <p>{loc.address}</p>
+                <h4>
+                  <MapPin size={16} />
+                  {loc.name}
+                </h4>
+                <p>
+                  <span style={{ width: '16px' }}></span>
+                  {loc.address}
+                </p>
                 <div className="modal-location-hours">
+                  <Clock size={14} />
                   <span className="hours-label">Open:</span> {loc.hours}
                 </div>
               </div>
