@@ -1,7 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Phone, Mail, Facebook } from 'lucide-react'
-import Logo from './Logo'
+import { Mail, Facebook, Instagram } from 'lucide-react'
 import './Footer.css'
 
 const Footer = () => {
@@ -11,15 +10,32 @@ const Footer = () => {
         <div className="footer-content">
           <div className="footer-brand">
             <div className="footer-logo">
-              <Logo size={60} className="footer-logo-image" />
+              <img
+                src="/images/logo/burritos-logo.png"
+                alt="Mo's Burritos Logo"
+                className="footer-logo-image"
+              />
               <div className="footer-brand-text">
                 <h3>Mo's Burritos</h3>
                 <p>Authentic Mexican & Salvadorian cuisine made with love and tradition.</p>
               </div>
             </div>
-            <div className="footer-emoji">🌮❤️🇲🇽</div>
+            <div className="footer-social">
+              <h4>Follow Us</h4>
+              <div className="contact-icons">
+                <a href="mailto:mosrestaurant19@gmail.com" className="contact-icon-link" title="Email us">
+                  <Mail size={22} />
+                </a>
+                <a href="https://www.facebook.com/profile.php?id=100066724737090" target="_blank" rel="noopener noreferrer" className="contact-icon-link" title="Follow us on Facebook">
+                  <Facebook size={22} />
+                </a>
+                <a href="https://www.instagram.com/burritosmos" target="_blank" rel="noopener noreferrer" className="contact-icon-link" title="Follow us on Instagram">
+                  <Instagram size={22} />
+                </a>
+              </div>
+            </div>
           </div>
-          
+
           <div className="footer-links">
             <div className="footer-section">
               <h4>Quick Links</h4>
@@ -31,28 +47,13 @@ const Footer = () => {
                 <li><Link to="/location">Location</Link></li>
               </ul>
             </div>
-            
-            <div className="footer-section"> 
+
+            <div className="footer-section">
+              <h4>Hours</h4>
               <div className="business-hours">
-                <h4>Hours</h4>
                 <p>Mon-Thu: 11AM-9PM</p>
                 <p>Fri-Sat: 11AM-10PM</p>
                 <p>Sun: 12PM-8PM</p>
-              </div>
-            </div>
-
-            <div className="footer-section">
-              <h4>Connect With Us</h4>
-              <div className="contact-icons">
-                <a href="mailto:mosrestaurant19@gmail.com" className="contact-icon-link" title="Email us">
-                  
-                </a>
-                <a href="https://www.facebook.com/profile.php?id=100066724737090" target="_blank" rel="noopener noreferrer" className="contact-icon-link" title="Follow us on Facebook">
-                  
-                </a>
-                <a href="https://www.instagram.com/burritosmos" target="_blank" rel="noopener noreferrer" className="contact-icon-link" title="Follow us on Instagram">
-                  
-                </a>
               </div>
             </div>
 
@@ -68,9 +69,9 @@ const Footer = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="footer-bottom">
-          <p>&copy; 2025 Mo's Burritos Restaurant. Made with ❤️ and lots of spice!</p>
+          <p>&copy; 2026 Mo's Burritos. Made with ❤️ by <a href="https://gekuke.com" target="_blank" rel="noopener noreferrer" className="developer-link">Gilchrist Ekuke</a></p>
         </div>
       </div>
     </footer>

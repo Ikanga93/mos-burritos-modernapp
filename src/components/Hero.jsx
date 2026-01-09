@@ -1,8 +1,7 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
 import './Hero.css'
 
-const Hero = () => {
+const Hero = ({ onOrderOnlineClick }) => {
   return (
     <section id="home" className="hero">
       <div className="hero-background">
@@ -25,9 +24,9 @@ const Hero = () => {
             </p>
 
             <div className="hero-buttons">
-              <Link to="/menu" className="cta-button">
+              <button onClick={onOrderOnlineClick} className="cta-button">
                 Order Online
-              </Link>
+              </button>
             </div>
           </div>
         </div>

@@ -1,9 +1,9 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { ChefHat, Leaf, Award, Heart, User, MapPin, Utensils, ShoppingBag, Truck, ArrowRight, X, Navigation, Phone, Clock } from 'lucide-react'
+import { User, MapPin, Utensils, ShoppingBag, Truck, ArrowRight, X, Navigation, Phone, Clock } from 'lucide-react'
 import Hero from '../components/Hero'
-import Contact from '../components/Contact'
 import MostOrdered from '../components/MostOrdered'
+import WhyChooseUs from '../components/WhyChooseUs'
 import { businessConfig } from '../config/businessConfig'
 import './HomePage.css'
 import '../components/Testimonials.css'
@@ -206,7 +206,7 @@ const HomePage = () => {
 
   return (
     <>
-      <Hero />
+      <Hero onOrderOnlineClick={() => setShowPickupModal(true)} />
 
       {/* Most Ordered Section */}
       <MostOrdered />
@@ -418,7 +418,7 @@ const HomePage = () => {
               <div className="truck-image-overlay"></div>
             </div>
             <div className="book-truck-info">
-              <h2 className="book-truck-title">Book Our Food Truck</h2>
+              <h2 className="book-truck-title">Call to Book Our Food Truck</h2>
               <p className="book-truck-subtitle">Bring the Fiesta to Your Event!</p>
               <p className="book-truck-description">
                 Make your next event unforgettable with Mo's Burritos food truck! Whether it's a corporate gathering, wedding, birthday party, or community event, we bring authentic Mexican and Salvadorian flavors right to your doorstep.
@@ -437,8 +437,8 @@ const HomePage = () => {
                   <span>Serves Groups of All Sizes</span>
                 </div>
               </div>
-              <a href="/contact" className="book-truck-btn">
-                Book Now for Your Event
+              <a href="tel:+12173843600" className="book-truck-btn">
+                Call Now to Book
               </a>
             </div>
           </div>
@@ -446,42 +446,7 @@ const HomePage = () => {
       </section>
 
       {/* Why Choose Mo's Burritos Section */}
-      <section className="why-choose-us">
-        <div className="container">
-          <h2 className="section-title">Why Choose Mo's Burritos?</h2>
-          <p className="section-subtitle">
-            Experience the authentic flavors of Mexico and El Salvador in every bite
-          </p>
-
-          <div className="features-grid">
-            <div className="feature-item">
-              <div className="feature-icon"><ChefHat size={48} strokeWidth={1.5} /></div>
-              <h3>Family Recipes</h3>
-              <p>Passed down through three generations of Mexican cooking tradition, our recipes are authentic and time-tested.</p>
-            </div>
-
-            <div className="feature-item">
-              <div className="feature-icon"><Leaf size={48} strokeWidth={1.5} /></div>
-              <h3>Fresh Ingredients</h3>
-              <p>We source the freshest local ingredients and authentic Mexican spices to ensure every bite is perfect.</p>
-            </div>
-
-            <div className="feature-item">
-              <div className="feature-icon"><Award size={48} strokeWidth={1.5} /></div>
-              <h3>Award Winning</h3>
-              <p>Recognized by the local community for outstanding food quality and exceptional customer service.</p>
-            </div>
-
-            <div className="feature-item">
-              <div className="feature-icon"><Heart size={48} strokeWidth={1.5} /></div>
-              <h3>Made with Love</h3>
-              <p>Every dish is prepared with passion and care, bringing you the true taste of Mexico with every meal.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <Contact />
+      <WhyChooseUs />
 
       {/* Modals */}
       {showDiningModal && <DiningLocationsModal onClose={() => setShowDiningModal(false)} />}

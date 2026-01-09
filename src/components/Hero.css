@@ -123,6 +123,7 @@
   text-decoration: none !important;
   box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4) !important;
   transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  cursor: pointer !important;
 }
 
 .cta-button:hover {
