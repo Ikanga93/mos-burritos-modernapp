@@ -31,9 +31,12 @@ const AppContent = () => {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const location = useLocation()
 
-  // Check if current route is an admin page
-  const isAdminPage = location.pathname.startsWith('/dashboard') || 
-                     location.pathname.startsWith('/admin')
+  // Check if current route is an admin page or catering page
+  const isAdminPage = location.pathname.startsWith('/dashboard') ||
+    location.pathname.startsWith('/admin')
+
+  // Check if current route is catering page (no header/footer)
+  const isCateringPage = location.pathname === '/catering'
 
   // Check if we should open cart on menu page (when redirected from login)
   useEffect(() => {
@@ -55,108 +58,108 @@ const AppContent = () => {
   }
 
   return (
-      <div className="App">
-      {/* Only show customer header on customer pages */}
-      {!isAdminPage && (
-        <Header 
+    <div className="App">
+      {/* Only show customer header on customer pages (except catering) */}
+      {!isAdminPage && !isCateringPage && (
+        <Header
           onCartOpen={handleCartOpen}
         />
       )}
-        
-        <Routes>
-          <Route 
-            path="/" 
-            element={<HomePage />} 
-          />
-          <Route 
-            path="/menu" 
-            element={<MenuPage />} 
-          />
-        <Route 
-          path="/about" 
-          element={<AboutPage />} 
+
+      <Routes>
+        <Route
+          path="/"
+          element={<HomePage />}
         />
-        <Route 
-          path="/catering" 
-          element={<CateringPage />} 
+        <Route
+          path="/menu"
+          element={<MenuPage />}
         />
-          <Route 
-            path="/location" 
-            element={<LocationPage />} 
-          />
-        <Route 
-          path="/login" 
-          element={<LoginPage />} 
+        <Route
+          path="/about"
+          element={<AboutPage />}
         />
-        <Route 
-          path="/register" 
-          element={<RegisterPage />} 
+        <Route
+          path="/catering"
+          element={<CateringPage />}
         />
-        <Route 
-          path="/admin/login" 
-          element={<AdminLoginPage />} 
+        <Route
+          path="/location"
+          element={<LocationPage />}
         />
-        <Route 
-          path="/admin/register" 
-          element={<AdminRegisterPage />} 
+        <Route
+          path="/login"
+          element={<LoginPage />}
         />
-        <Route 
-          path="/cart" 
-          element={<Cart />} 
+        <Route
+          path="/register"
+          element={<RegisterPage />}
         />
-        <Route 
-          path="/checkout" 
-          element={<Checkout />} 
+        <Route
+          path="/admin/login"
+          element={<AdminLoginPage />}
         />
-        <Route 
-          path="/order-confirmation/:orderId" 
-          element={<OrderConfirmation />} 
+        <Route
+          path="/admin/register"
+          element={<AdminRegisterPage />}
         />
-        <Route 
-          path="/order-tracking/:orderId" 
-          element={<OrderTracking />} 
+        <Route
+          path="/cart"
+          element={<Cart />}
         />
-        <Route 
-          path="/order-tracking" 
-          element={<OrderTracking />} 
+        <Route
+          path="/checkout"
+          element={<Checkout />}
         />
-        <Route 
-          path="/orders" 
+        <Route
+          path="/order-confirmation/:orderId"
+          element={<OrderConfirmation />}
+        />
+        <Route
+          path="/order-tracking/:orderId"
+          element={<OrderTracking />}
+        />
+        <Route
+          path="/order-tracking"
+          element={<OrderTracking />}
+        />
+        <Route
+          path="/orders"
           element={
             <CustomerProtectedRoute>
               <OrdersPage />
             </CustomerProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <AdminProtectedRoute>
               <Dashboard />
             </AdminProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/order-success" 
-          element={<OrderSuccessPage />} 
+        <Route
+          path="/order-success"
+          element={<OrderSuccessPage />}
         />
-        <Route 
-          path="*" 
-          element={<NotFound />} 
+        <Route
+          path="*"
+          element={<NotFound />}
         />
-        </Routes>
-        
-      {/* Only show customer footer on customer pages */}
-      {!isAdminPage && <Footer />}
-        
+      </Routes>
+
+      {/* Only show customer footer on customer pages (except catering) */}
+      {!isAdminPage && !isCateringPage && <Footer />}
+
       {/* Only show cart on customer pages */}
       {!isAdminPage && (
-        <Cart 
+        <Cart
           isOpen={isCartOpen}
           onClose={handleCartClose}
         />
       )}
-      </div>
+    </div>
   )
 }
 

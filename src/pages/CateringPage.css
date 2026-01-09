@@ -5,12 +5,63 @@
 .catering-hero {
   position: relative;
   min-height: 60vh;
-  background: linear-gradient(135deg, #32CD32 0%, #FFD700 100%);
   display: flex;
   align-items: center;
   color: white;
   text-align: center;
   overflow: hidden;
+}
+
+.hero-image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.6);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.back-button {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  color: #D32F2F;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.back-button:hover {
+  background: white;
+  transform: translateX(-5px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.back-button span {
+  font-size: 1rem;
 }
 
 .catering-services {
@@ -29,14 +80,14 @@
   background: white;
   padding: 2.5rem;
   border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .service-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
 .service-icon {
@@ -82,7 +133,7 @@
   background: white;
   border-radius: 20px;
   padding: 2.5rem 2rem;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   text-align: center;
   transition: all 0.3s ease;
   border: 3px solid #32CD32;
@@ -92,7 +143,7 @@
 
 .package-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 }
 
 .package-card.featured {
@@ -174,7 +225,7 @@
   background: white;
   padding: 2rem;
   border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   text-align: center;
   transition: transform 0.3s ease;
 }
@@ -262,7 +313,7 @@
   background: white;
   padding: 2.5rem;
   border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 .catering-form-form .form-row {
@@ -363,30 +414,39 @@
   .packages-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .package-card.featured {
     transform: none;
   }
-  
+
   .form-content {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
-  
+
   .catering-form-form .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   .catering-form-container {
     padding: 2rem;
   }
-  
+
   .services-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .event-types-grid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .back-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .back-button span {
+    display: none;
   }
 }
 
@@ -394,23 +454,23 @@
   .catering-hero {
     padding: 100px 0 60px;
   }
-  
+
   .catering-services,
   .catering-packages,
   .event-types,
   .catering-form {
     padding: 60px 0;
   }
-  
+
   .catering-form-container {
     padding: 1.5rem;
   }
-  
+
   .package-card {
     padding: 2rem;
   }
-  
+
   .service-card {
     padding: 2rem;
   }
-} 
+}

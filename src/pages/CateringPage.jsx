@@ -1,8 +1,11 @@
 import React, { useState } from 'react'
-import { Users, Calendar, MapPin, Clock, Send, Phone, Mail, Star, Award, Heart } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Users, Calendar, MapPin, Clock, Send, Phone, Mail, Star, Award, Heart, ArrowLeft } from 'lucide-react'
 import './CateringPage.css'
 
 const CateringPage = () => {
+  const navigate = useNavigate()
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -44,10 +47,21 @@ const CateringPage = () => {
   return (
     <div className="catering-page">
       <div className="catering-hero">
-        <div className="container">
+        <button onClick={() => navigate(-1)} className="back-button" aria-label="Go back">
+          <ArrowLeft size={24} />
+          <span>Back</span>
+        </button>
+        <div className="hero-image-overlay">
+          <img
+            src="/images/Gemini_Generated_Image_4navud4navud4nav.png"
+            alt="Mo's Burritos Catering"
+            className="hero-image"
+          />
+        </div>
+        <div className="container hero-content">
           <h1 className="page-title">Catering Services</h1>
           <p className="page-subtitle">
-            Bring authentic Mexican flavors to your special occasion! Perfect for parties, 
+            Bring authentic Mexican flavors to your special occasion! Perfect for parties,
             corporate events, weddings, and community gatherings.
           </p>
         </div>
@@ -56,7 +70,7 @@ const CateringPage = () => {
       <section className="catering-services section">
         <div className="container">
           <h2 className="section-title">Why Choose Mo's Burritos Catering?</h2>
-          
+
           <div className="services-grid">
             <div className="service-card">
               <div className="service-icon">
@@ -112,7 +126,7 @@ const CateringPage = () => {
       <section className="catering-packages section">
         <div className="container">
           <h2 className="section-title">Catering Packages</h2>
-          
+
           <div className="packages-grid">
             <div className="package-card">
               <h3>Taco Bar Package</h3>
@@ -165,38 +179,38 @@ const CateringPage = () => {
       <section className="event-types section">
         <div className="container">
           <h2 className="section-title">Perfect For Any Occasion</h2>
-          
+
           <div className="event-types-grid">
             <div className="event-type">
               <div className="event-emoji">🎉</div>
               <h4>Birthday Parties</h4>
               <p>Make birthdays memorable with authentic Mexican flavors</p>
             </div>
-            
+
             <div className="event-type">
               <div className="event-emoji">💼</div>
               <h4>Corporate Events</h4>
               <p>Impress clients and employees with professional catering</p>
             </div>
-            
+
             <div className="event-type">
               <div className="event-emoji">💒</div>
               <h4>Weddings</h4>
               <p>Add authentic Mexican cuisine to your special day</p>
             </div>
-            
+
             <div className="event-type">
               <div className="event-emoji">🏫</div>
               <h4>School Events</h4>
               <p>Popular with students and staff for fundraisers and celebrations</p>
             </div>
-            
+
             <div className="event-type">
               <div className="event-emoji">🏘️</div>
               <h4>Community Events</h4>
               <p>Bring neighborhoods together with delicious food</p>
             </div>
-            
+
             <div className="event-type">
               <div className="event-emoji">🎪</div>
               <h4>Festivals</h4>
@@ -212,7 +226,7 @@ const CateringPage = () => {
             <div className="form-info">
               <h2>Get Your Custom Quote</h2>
               <p>Fill out the form below and we'll provide you with a detailed quote within 24 hours.</p>
-              
+
               <div className="contact-info">
                 <h4>Questions? Contact Us Directly:</h4>
                 <div className="contact-methods">
@@ -241,7 +255,7 @@ const CateringPage = () => {
                       required
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <input
                       type="email"
@@ -265,7 +279,7 @@ const CateringPage = () => {
                       required
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <select
                       name="eventType"
@@ -296,7 +310,7 @@ const CateringPage = () => {
                       required
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <input
                       type="time"
@@ -332,7 +346,7 @@ const CateringPage = () => {
                       required
                     />
                   </div>
-                  
+
                   <div className="form-group">
                     <select
                       name="duration"
@@ -349,7 +363,7 @@ const CateringPage = () => {
                     </select>
                   </div>
                 </div>
-                
+
                 <div className="form-group">
                   <textarea
                     name="specialRequests"
@@ -359,7 +373,7 @@ const CateringPage = () => {
                     onChange={handleChange}
                   ></textarea>
                 </div>
-                
+
                 <button type="submit" className="btn btn-primary btn-large">
                   <Send size={20} />
                   Request Catering Quote
