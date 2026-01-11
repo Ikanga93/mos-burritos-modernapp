@@ -1,12 +1,15 @@
 """
 Mo's Burritos - Menu Routes
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List
+import base64
+import uuid
 
 from ..database import get_db
 from ..models import Location, MenuCategory, MenuItem, User
+from ..models.menu import MenuItemOptionGroup, MenuItemOption
 from ..schemas import (
     CategoryCreate,
     CategoryUpdate,
@@ -356,5 +359,298 @@ async def toggle_item_availability(
     
     item.is_available = not item.is_available
     db.commit()
-    
+
     return {"is_available": item.is_available}
+
+
+# ==================== Image Upload Endpoint ====================
+
+@router.post("/items/{item_id}/upload-image")
+async def upload_menu_item_image(
+    item_id: str,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Upload image for menu item
+
+    For now, stores image as base64 data URL.
+    In production, use cloud storage (S3, Cloudinary, etc.)
+    """
+    item = db.query(MenuItem).filter(MenuItem.id == item_id).first()
+
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Menu item not found"
+        )
+
+    # Check permissions
+    if current_user.role.value != UserRole.OWNER.value:
+        if not can_access_location(db, current_user, item.location_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have access to this location"
+            )
+
+    # Validate file type
+    allowed_types = ["image/jpeg", "image/png", "image/jpg", "image/webp"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only JPEG, PNG, and WebP images are allowed"
+        )
+
+    # Read file and convert to base64
+    contents = await file.read()
+    base64_image = base64.b64encode(contents).decode('utf-8')
+    data_url = f"data:{file.content_type};base64,{base64_image}"
+
+    # Store data URL in database
+    item.image_url = data_url
+    db.commit()
+    db.refresh(item)
+
+    return {"image_url": data_url, "message": "Image uploaded successfully"}
+
+
+# ==================== Option Groups Endpoints ====================
+
+@router.get("/items/{item_id}/option-groups")
+async def get_item_option_groups(
+    item_id: str,
+    db: Session = Depends(get_db)
+):
+    """Get all option groups for a menu item (public)"""
+    option_groups = db.query(MenuItemOptionGroup).filter(
+        MenuItemOptionGroup.menu_item_id == item_id
+    ).order_by(MenuItemOptionGroup.display_order).all()
+
+    result = []
+    for group in option_groups:
+        options = db.query(MenuItemOption).filter(
+            MenuItemOption.option_group_id == group.id
+        ).order_by(MenuItemOption.display_order).all()
+
+        result.append({
+            "id": group.id,
+            "name": group.name,
+            "is_required": group.is_required,
+            "allow_multiple": group.allow_multiple,
+            "min_selections": group.min_selections,
+            "max_selections": group.max_selections,
+            "display_order": group.display_order,
+            "options": [
+                {
+                    "id": opt.id,
+                    "name": opt.name,
+                    "price_modifier": opt.price_modifier,
+                    "is_default": opt.is_default,
+                    "display_order": opt.display_order
+                }
+                for opt in options
+            ]
+        })
+
+    return result
+
+
+@router.post("/items/{item_id}/option-groups")
+async def create_option_group(
+    item_id: str,
+    group_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Create an option group for a menu item"""
+    item = db.query(MenuItem).filter(MenuItem.id == item_id).first()
+
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Menu item not found"
+        )
+
+    # Check permissions
+    if current_user.role.value != UserRole.OWNER.value:
+        if not can_access_location(db, current_user, item.location_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have access to this location"
+            )
+
+    # Create option group
+    new_group = MenuItemOptionGroup(
+        menu_item_id=item_id,
+        name=group_data.get("name"),
+        is_required=group_data.get("is_required", False),
+        allow_multiple=group_data.get("allow_multiple", False),
+        min_selections=group_data.get("min_selections", 0),
+        max_selections=group_data.get("max_selections"),
+        display_order=group_data.get("display_order", 0)
+    )
+    db.add(new_group)
+    db.commit()
+    db.refresh(new_group)
+
+    # Create options if provided
+    if "options" in group_data and group_data["options"]:
+        for opt_data in group_data["options"]:
+            new_option = MenuItemOption(
+                option_group_id=new_group.id,
+                name=opt_data.get("name"),
+                price_modifier=opt_data.get("price_modifier", 0.0),
+                is_default=opt_data.get("is_default", False),
+                display_order=opt_data.get("display_order", 0)
+            )
+            db.add(new_option)
+        db.commit()
+
+    return {"id": new_group.id, "message": "Option group created successfully"}
+
+
+@router.put("/option-groups/{group_id}")
+async def update_option_group(
+    group_id: str,
+    group_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update an option group"""
+    group = db.query(MenuItemOptionGroup).filter(MenuItemOptionGroup.id == group_id).first()
+
+    if not group:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Option group not found"
+        )
+
+    # Get menu item to check permissions
+    item = db.query(MenuItem).filter(MenuItem.id == group.menu_item_id).first()
+    if current_user.role.value != UserRole.OWNER.value:
+        if not can_access_location(db, current_user, item.location_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have access to this location"
+            )
+
+    # Update group fields
+    if "name" in group_data:
+        group.name = group_data["name"]
+    if "is_required" in group_data:
+        group.is_required = group_data["is_required"]
+    if "allow_multiple" in group_data:
+        group.allow_multiple = group_data["allow_multiple"]
+    if "min_selections" in group_data:
+        group.min_selections = group_data["min_selections"]
+    if "max_selections" in group_data:
+        group.max_selections = group_data["max_selections"]
+    if "display_order" in group_data:
+        group.display_order = group_data["display_order"]
+
+    db.commit()
+
+    return {"message": "Option group updated successfully"}
+
+
+@router.delete("/option-groups/{group_id}")
+async def delete_option_group(
+    group_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete an option group and all its options"""
+    group = db.query(MenuItemOptionGroup).filter(MenuItemOptionGroup.id == group_id).first()
+
+    if not group:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Option group not found"
+        )
+
+    # Get menu item to check permissions
+    item = db.query(MenuItem).filter(MenuItem.id == group.menu_item_id).first()
+    if current_user.role.value != UserRole.OWNER.value:
+        if not can_access_location(db, current_user, item.location_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have access to this location"
+            )
+
+    # Delete will cascade to options
+    db.delete(group)
+    db.commit()
+
+    return {"message": "Option group deleted successfully"}
+
+
+# ==================== Individual Options Endpoints ====================
+
+@router.post("/option-groups/{group_id}/options")
+async def create_option(
+    group_id: str,
+    option_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Add an option to an option group"""
+    group = db.query(MenuItemOptionGroup).filter(MenuItemOptionGroup.id == group_id).first()
+
+    if not group:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Option group not found"
+        )
+
+    # Check permissions
+    item = db.query(MenuItem).filter(MenuItem.id == group.menu_item_id).first()
+    if current_user.role.value != UserRole.OWNER.value:
+        if not can_access_location(db, current_user, item.location_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have access to this location"
+            )
+
+    new_option = MenuItemOption(
+        option_group_id=group_id,
+        name=option_data.get("name"),
+        price_modifier=option_data.get("price_modifier", 0.0),
+        is_default=option_data.get("is_default", False),
+        display_order=option_data.get("display_order", 0)
+    )
+    db.add(new_option)
+    db.commit()
+    db.refresh(new_option)
+
+    return {"id": new_option.id, "message": "Option created successfully"}
+
+
+@router.delete("/options/{option_id}")
+async def delete_option(
+    option_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete an individual option"""
+    option = db.query(MenuItemOption).filter(MenuItemOption.id == option_id).first()
+
+    if not option:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Option not found"
+        )
+
+    # Check permissions
+    group = db.query(MenuItemOptionGroup).filter(MenuItemOptionGroup.id == option.option_group_id).first()
+    item = db.query(MenuItem).filter(MenuItem.id == group.menu_item_id).first()
+    if current_user.role.value != UserRole.OWNER.value:
+        if not can_access_location(db, current_user, item.location_id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have access to this location"
+            )
+
+    db.delete(option)
+    db.commit()
+
+    return {"message": "Option deleted successfully"}
