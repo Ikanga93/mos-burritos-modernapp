@@ -1,9 +1,11 @@
 """
 Mo's Burritos FastAPI Backend - Main Application Entry Point
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from pathlib import Path
+import uuid
 
 from .config import settings
 from .database import Base, engine
@@ -16,6 +18,7 @@ from .routers import (
     users_router,
     payment_router,
     live_locations_router,
+    admin_router,
 )
 from .services import get_password_hash
 from .models.user import UserRole
@@ -99,6 +102,7 @@ app.include_router(locations_router, prefix="/api")
 app.include_router(menu_router, prefix="/api")
 app.include_router(orders_router, prefix="/api")
 app.include_router(users_router, prefix="/api")
+app.include_router(admin_router, prefix="/api")
 app.include_router(payment_router)
 app.include_router(live_locations_router, prefix="/api")
 
@@ -122,4 +126,35 @@ async def root():
         "message": "Welcome to Mo's Burritos API",
         "docs": "/docs",
         "health": "/health"
+    }
+
+
+@app.post("/api/upload-menu-image")
+async def upload_menu_image(
+    image: UploadFile = File(...),
+):
+    """Upload a menu item image"""
+    from .middleware import get_current_user
+    from .database import get_db
+
+    # Validate file type
+    allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
+    if image.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type. Allowed types: {', '.join(allowed_types)}"
+        )
+
+    # Generate a unique filename
+    file_ext = Path(image.filename).suffix if image.filename else '.jpg'
+    unique_filename = f"{uuid.uuid4()}{file_ext}"
+
+    # For now, return a placeholder URL
+    # TODO: Implement actual file upload to Supabase Storage or S3
+    image_url = f"/uploads/menu/{unique_filename}"
+
+    return {
+        "success": True,
+        "url": image_url,
+        "message": "Image received (cloud storage not configured yet)"
     }

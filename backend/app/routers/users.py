@@ -91,6 +91,40 @@ async def get_user(
     )
 
 
+@router.get("/{user_id}/locations", response_model=List[LocationAssignment])
+async def get_user_locations(
+    user_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get a user's assigned locations"""
+    # Users can view their own locations, owner can view anyone's
+    if current_user.id != user_id and current_user.role.value != UserRole.OWNER.value:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only view your own locations"
+        )
+
+    # Get location assignments
+    assignments = db.query(UserLocation).filter(
+        UserLocation.user_id == user_id,
+        UserLocation.is_active == True
+    ).all()
+
+    locations = []
+    for assignment in assignments:
+        location = db.query(Location).filter(Location.id == assignment.location_id).first()
+        if location:
+            locations.append(LocationAssignment(
+                location_id=location.id,
+                location_name=location.name,
+                role=LocationRole(assignment.role.value),
+                assigned_at=assignment.assigned_at
+            ))
+
+    return locations
+
+
 @router.post("", response_model=UserResponse)
 async def create_user(
     user_data: UserCreate,
