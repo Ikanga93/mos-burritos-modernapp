@@ -13,7 +13,9 @@ from ..schemas.payment import (
     PaymentIntentRequest,
     PaymentIntentResponse,
     VerifyPaymentRequest,
-    VerifyPaymentResponse
+    VerifyPaymentResponse,
+    CheckoutSessionRequest,
+    CheckoutSessionResponse
 )
 from ..middleware import get_current_user
 
@@ -184,4 +186,61 @@ async def stripe_webhook(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Webhook processing failed: {str(e)}"
+        )
+
+
+@router.post("/create-checkout-session", response_model=CheckoutSessionResponse)
+async def create_checkout_session(
+    request: CheckoutSessionRequest,
+    db: Session = Depends(get_db)
+):
+    """Create a Stripe Checkout Session and return the URL to redirect to"""
+    try:
+        # Get base URL from environment or use default
+        base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+        
+        # Build line items for Stripe
+        line_items = []
+        for item in request.items:
+            line_items.append({
+                'price_data': {
+                    'currency': request.currency,
+                    'product_data': {
+                        'name': item.get('name', 'Menu Item'),
+                    },
+                    'unit_amount': int(float(item.get('price', 0)) * 100),  # Convert to cents
+                },
+                'quantity': item.get('quantity', 1),
+            })
+        
+        # Create Stripe Checkout Session
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=line_items,
+            mode='payment',
+            success_url=f"{base_url}/order-success?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{base_url}/order-confirmation",
+            customer_email=request.customerInfo.get('email'),
+            metadata={
+                'customer_name': request.customerInfo.get('name', ''),
+                'customer_email': request.customerInfo.get('email', ''),
+                'customer_phone': request.customerInfo.get('phone', ''),
+                'location_id': request.locationId,
+                'notes': request.notes or '',
+            },
+        )
+
+        return CheckoutSessionResponse(
+            sessionId=session.id,
+            url=session.url
+        )
+    except stripe.error.StripeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Stripe error: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Checkout session creation failed: {str(e)}"
         )

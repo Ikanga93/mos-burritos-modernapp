@@ -30,3 +30,19 @@ class VerifyPaymentResponse(BaseModel):
     success: bool
     message: str
     order_id: Optional[str] = None
+
+
+class CheckoutSessionRequest(BaseModel):
+    """Request to create a Stripe Checkout Session"""
+    amount: int = Field(..., description="Amount in cents")
+    currency: str = Field(default="usd", description="Currency code")
+    customerInfo: Dict = Field(..., description="Customer information")
+    items: List[Dict] = Field(..., description="Order items")
+    locationId: str = Field(..., description="Location ID for the order")
+    notes: Optional[str] = Field(None, description="Special instructions")
+
+
+class CheckoutSessionResponse(BaseModel):
+    """Response from creating a checkout session"""
+    sessionId: str = Field(..., description="Stripe checkout session ID")
+    url: str = Field(..., description="Stripe checkout URL to redirect to")

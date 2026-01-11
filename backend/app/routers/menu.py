@@ -394,11 +394,11 @@ async def upload_menu_item_image(
             )
 
     # Validate file type
-    allowed_types = ["image/jpeg", "image/png", "image/jpg", "image/webp"]
+    allowed_types = ["image/jpeg", "image/png", "image/jpg", "image/webp", "image/avif"]
     if file.content_type not in allowed_types:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only JPEG, PNG, and WebP images are allowed"
+            detail="Only JPEG, PNG, WebP, and AVIF images are allowed"
         )
 
     # Read file and convert to base64

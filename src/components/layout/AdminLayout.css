@@ -1,0 +1,298 @@
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+    background: #f5f6fa;
+}
+
+/* Sidebar */
+.admin-sidebar {
+    width: 260px;
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 100;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.sidebar-close-btn {
+    display: none;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.sidebar-close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-logo {
+    width: 60px;
+    height: auto;
+    margin-bottom: 0.75rem;
+}
+
+.sidebar-header h2 {
+    color: white;
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem;
+}
+
+.role-badge {
+    display: inline-block;
+    background: rgba(255, 107, 53, 0.2);
+    color: #FF6B35;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    text-transform: capitalize;
+}
+
+/* Location Switcher */
+.location-switcher {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.location-switcher label {
+    display: block;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+}
+
+.location-switch-select {
+    width: 100%;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: white;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.location-switch-select:focus {
+    outline: none;
+    border-color: #FF6B35;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.location-switch-select option {
+    background: #1a1a2e;
+    color: white;
+}
+
+.single-location-badge {
+    margin-top: 1rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+/* Navigation */
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
+    overflow-y: auto;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.2s;
+    border: none;
+    border-left: 3px solid transparent;
+    background: transparent;
+    font-size: 1rem;
+    cursor: pointer;
+    text-align: left;
+}
+
+.nav-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.nav-item.active {
+    background: rgba(255, 107, 53, 0.1);
+    color: #FF6B35;
+    border-left-color: #FF6B35;
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.admin-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-name {
+    color: white;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.admin-email {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.75rem;
+}
+
+.sidebar-footer .logout-btn {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.sidebar-footer .logout-btn:hover {
+    background: rgba(220, 53, 69, 0.3);
+}
+
+/* Main Content */
+.admin-main {
+    flex: 1;
+    margin-left: 260px;
+    min-height: 100vh;
+}
+
+/* Mobile Menu Toggle Button */
+.mobile-menu-toggle {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1001;
+    background: #1a1a2e;
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: background 0.2s;
+}
+
+.mobile-menu-toggle:hover {
+    background: #16213e;
+}
+
+/* Sidebar Overlay for Mobile */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99;
+    backdrop-filter: blur(2px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .mobile-menu-toggle {
+        display: block;
+    }
+
+    .sidebar-overlay {
+        display: block;
+    }
+
+    .sidebar-close-btn {
+        display: block;
+    }
+
+    .admin-sidebar {
+        width: 260px;
+        left: -260px;
+        transition: left 0.3s ease-in-out;
+    }
+
+    .admin-sidebar.open {
+        left: 0;
+    }
+
+    .admin-main {
+        margin-left: 0;
+        padding-top: 4rem; /* Add space for mobile menu button */
+    }
+
+    /* Ensure nav items are fully visible on mobile */
+    .nav-item span {
+        display: inline-block;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+    .admin-sidebar {
+        width: 100%;
+        max-width: 280px;
+    }
+
+    .mobile-menu-toggle {
+        top: 0.75rem;
+        left: 0.75rem;
+        padding: 0.625rem;
+    }
+
+    .admin-main {
+        padding-top: 3.5rem;
+    }
+
+    /* Make sure text doesn't get cut off */
+    .nav-item {
+        font-size: 0.95rem;
+        padding: 0.875rem 1.25rem;
+    }
+
+    .sidebar-header h2 {
+        font-size: 1rem;
+    }
+
+    .sidebar-logo {
+        width: 50px;
+    }
+}

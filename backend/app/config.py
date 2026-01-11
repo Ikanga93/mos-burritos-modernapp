@@ -19,10 +19,6 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
     
-    # Admin defaults
-    admin_email: str = "admin@mosburrito.com"
-    admin_password: str = "admin123"
-    
     # Stripe
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""

@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import { API_BASE_URL } from '../config/api'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
 const CustomerAuthContext = createContext(null)
 
@@ -12,206 +11,180 @@ export const useCustomerAuth = () => {
 }
 
 export const CustomerAuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [customer, setCustomer] = useState(null)
+  const [accessToken, setAccessToken] = useState(null)
+  const [refreshToken, setRefreshToken] = useState(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Map backend snake_case fields to frontend camelCase
-  const mapUserFields = (backendUser) => {
-    if (!backendUser) return null
-    return {
-      ...backendUser,
-      firstName: backendUser.first_name || backendUser.firstName,
-      lastName: backendUser.last_name || backendUser.lastName,
-    }
-  }
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
+  // Initialize auth state from localStorage
   useEffect(() => {
-    // Check for stored customer tokens on mount
-    const accessToken = localStorage.getItem('customerAccessToken')
-    const refreshToken = localStorage.getItem('customerRefreshToken')
+    const storedAccessToken = localStorage.getItem('customerAccessToken')
+    const storedRefreshToken = localStorage.getItem('customerRefreshToken')
 
-    if (accessToken) {
-      fetchUser(accessToken)
+    if (storedAccessToken && storedRefreshToken) {
+      setAccessToken(storedAccessToken)
+      setRefreshToken(storedRefreshToken)
+      // Fetch current user
+      fetchCurrentUser(storedAccessToken)
     } else {
-      setLoading(false)
+      setIsLoading(false)
     }
   }, [])
 
-  const fetchUser = async (token) => {
+  // Fetch current user info
+  const fetchCurrentUser = async (token) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      const response = await fetch(`${apiUrl}/api/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch user')
-      }
-
-      const userData = await response.json()
-
-      // Only set user if they are a customer
-      if (userData.role === 'customer') {
-        setUser(mapUserFields(userData))
+      if (response.ok) {
+        const data = await response.json()
+        setCustomer(data)
+        setIsAuthenticated(true)
       } else {
-        // If not a customer, clear tokens
-        localStorage.removeItem('customerAccessToken')
-        localStorage.removeItem('customerRefreshToken')
+        // Token is invalid, clear auth
+        clearAuth()
       }
     } catch (error) {
-      console.error('Error fetching customer user:', error)
-      // If token is invalid, clear storage
-      localStorage.removeItem('customerAccessToken')
-      localStorage.removeItem('customerRefreshToken')
+      console.error('Error fetching current user:', error)
+      clearAuth()
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
+  // Login
+  const login = async (email, password) => {
+    try {
+      const response = await fetch(`${apiUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.detail || 'Login failed')
+      }
+
+      const data = await response.json()
+
+      // Store tokens
+      localStorage.setItem('customerAccessToken', data.access_token)
+      localStorage.setItem('customerRefreshToken', data.refresh_token)
+
+      setAccessToken(data.access_token)
+      setRefreshToken(data.refresh_token)
+      setCustomer(data.user)
+      setIsAuthenticated(true)
+
+      return { success: true, user: data.user }
+    } catch (error) {
+      console.error('Login error:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  // Register
   const register = async (userData) => {
     try {
-      setError(null)
-      
-      // Ensure role is customer
-      const customerData = {
-        ...userData,
-        role: 'customer'
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      const response = await fetch(`${apiUrl}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(customerData)
+        body: JSON.stringify(userData)
       })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.detail || 'Registration failed')
+      }
 
       const data = await response.json()
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Registration failed')
-      }
+      // Auto-login after registration
+      localStorage.setItem('customerAccessToken', data.access_token)
+      localStorage.setItem('customerRefreshToken', data.refresh_token)
 
-      // Verify the registered user is a customer
-      if (data.user.role !== 'customer') {
-        throw new Error('Invalid registration - not a customer account')
-      }
+      setAccessToken(data.access_token)
+      setRefreshToken(data.refresh_token)
+      setCustomer(data.user)
+      setIsAuthenticated(true)
 
-      // Store customer tokens
-      localStorage.setItem('customerAccessToken', data.accessToken)
-      localStorage.setItem('customerRefreshToken', data.refreshToken)
-      setUser(mapUserFields(data.user))
-
-      return data
+      return { success: true, user: data.user }
     } catch (error) {
-      setError(error.message)
-      throw error
+      console.error('Registration error:', error)
+      return { success: false, error: error.message }
     }
   }
 
-  const login = async (credentials) => {
-    try {
-      setError(null)
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(credentials)
-      })
+  // Logout
+  const logout = useCallback(() => {
+    clearAuth()
+  }, [])
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed')
-      }
-
-      // Verify the logged in user is a customer
-      if (data.user.role !== 'customer') {
-        throw new Error('Access denied. Customer credentials required.')
-      }
-
-      // Store customer tokens
-      localStorage.setItem('customerAccessToken', data.accessToken)
-      localStorage.setItem('customerRefreshToken', data.refreshToken)
-      setUser(mapUserFields(data.user))
-
-      return data
-    } catch (error) {
-      setError(error.message)
-      throw error
-    }
+  // Clear authentication
+  const clearAuth = () => {
+    localStorage.removeItem('customerAccessToken')
+    localStorage.removeItem('customerRefreshToken')
+    setAccessToken(null)
+    setRefreshToken(null)
+    setCustomer(null)
+    setIsAuthenticated(false)
   }
 
-  const logout = async () => {
-    try {
-      const refreshToken = localStorage.getItem('customerRefreshToken')
-      if (refreshToken) {
-        await fetch(`${API_BASE_URL}/api/auth/logout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('customerAccessToken')}`
-          },
-          body: JSON.stringify({ refreshToken })
-        })
-      }
-    } catch (error) {
-      console.error('Customer logout error:', error)
-    } finally {
-      // Clear customer storage and state regardless of API call success
-      localStorage.removeItem('customerAccessToken')
-      localStorage.removeItem('customerRefreshToken')
-      setUser(null)
-    }
-  }
-
+  // Refresh access token
   const refreshAccessToken = async () => {
-    try {
-      const refreshToken = localStorage.getItem('customerRefreshToken')
-      if (!refreshToken) {
-        throw new Error('No refresh token available')
-      }
+    const currentRefreshToken = refreshToken || localStorage.getItem('customerRefreshToken')
 
-      const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+    if (!currentRefreshToken) {
+      clearAuth()
+      return null
+    }
+
+    try {
+      const response = await fetch(`${apiUrl}/api/auth/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ refreshToken })
+        body: JSON.stringify({ refresh_token: currentRefreshToken })
       })
+
+      if (!response.ok) {
+        throw new Error('Token refresh failed')
+      }
 
       const data = await response.json()
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Token refresh failed')
-      }
+      localStorage.setItem('customerAccessToken', data.access_token)
+      setAccessToken(data.access_token)
 
-      // Verify refreshed user is still a customer
-      if (data.user.role !== 'customer') {
-        throw new Error('Invalid user role after refresh')
-      }
-
-      localStorage.setItem('customerAccessToken', data.accessToken)
-      setUser(mapUserFields(data.user))
-
-      return data.accessToken
+      return data.access_token
     } catch (error) {
-      console.error('Customer token refresh error:', error)
-      // If refresh fails, logout
-      logout()
-      throw error
+      console.error('Token refresh error:', error)
+      clearAuth()
+      return null
     }
   }
 
   const value = {
-    user,
-    loading,
-    error,
-    register,
+    customer,
+    accessToken,
+    refreshToken,
+    isAuthenticated,
+    isLoading,
     login,
+    register,
     logout,
     refreshAccessToken
   }
@@ -221,4 +194,6 @@ export const CustomerAuthProvider = ({ children }) => {
       {children}
     </CustomerAuthContext.Provider>
   )
-} 
+}
+
+export default CustomerAuthProvider
