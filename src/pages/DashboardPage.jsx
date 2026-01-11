@@ -51,7 +51,6 @@ import DashboardHeader from '../components/DashboardHeader'
 import MarketingBar from '../components/MarketingBar'
 import AdminLocationSelector from '../components/AdminLocationSelector'
 import ApiService from '../services/ApiService'
-import io from 'socket.io-client'
 import API_BASE_URL from '../config/api.js'
 import './DashboardPage.css'
 
@@ -59,7 +58,6 @@ const DashboardPage = ({ onLogout }) => {
   const { config } = useBusinessConfig()
   const [activeTab, setActiveTab] = useState('orders')
   const [orders, setOrders] = useState([])
-  const [socket, setSocket] = useState(null)
   const [isLoadingOrders, setIsLoadingOrders] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -227,103 +225,8 @@ const DashboardPage = ({ onLogout }) => {
           // This is okay - live locations is a new feature that admins will populate
         }
 
-        // Try to connect to Socket.IO for real-time updates (optional)
-        try {
-          console.log('🔌 Attempting to connect to Socket.IO at:', API_BASE_URL)
-          const newSocket = io(API_BASE_URL, {
-            transports: ['websocket', 'polling'],
-            timeout: 10000,
-            reconnection: true,
-            reconnectionAttempts: 5,
-            reconnectionDelay: 1000
-          })
-          setSocket(newSocket)
-
-          // Socket connection events
-          newSocket.on('connect', () => {
-            console.log('✅ Socket.IO connected successfully')
-            // Join admin room for real-time notifications
-            newSocket.emit('join-admin')
-            console.log('📡 Joined admin room for real-time updates')
-          })
-
-          newSocket.on('connect_error', (error) => {
-            console.error('❌ Socket.IO connection error:', error)
-          })
-
-          newSocket.on('disconnect', (reason) => {
-            console.warn('⚠️ Socket.IO disconnected:', reason)
-          })
-
-          newSocket.on('reconnect', (attemptNumber) => {
-            console.log('🔄 Socket.IO reconnected after', attemptNumber, 'attempts')
-            // Re-join admin room after reconnection
-            newSocket.emit('join-admin')
-          })
-
-          // Listen for real-time order updates
-          newSocket.on('orderUpdate', (updatedOrder) => {
-            console.log('📊 Received order update via socket:', updatedOrder.id)
-            setOrders(prevOrders =>
-              prevOrders.map(order =>
-                order.id === updatedOrder.id ? updatedOrder : order
-              )
-            )
-          })
-
-          // Listen for new orders
-          newSocket.on('new-order', (newOrder) => {
-            console.log('🆕 Received new order via socket:', newOrder.id, newOrder.customer_name)
-            setOrders(prevOrders => {
-              // Check if order already exists to prevent duplicates
-              const existingOrder = prevOrders.find(order => order.id === newOrder.id)
-              if (existingOrder) {
-                console.log('⚠️ Order already exists, updating instead of adding')
-                return prevOrders.map(order =>
-                  order.id === newOrder.id ? newOrder : order
-                )
-              }
-              console.log('✅ Adding new order to dashboard')
-              return [newOrder, ...prevOrders]
-            })
-            
-            // Also recalculate analytics with the new order
-            setTimeout(() => {
-              calculateCustomerAnalytics([newOrder, ...orders])
-              calculateOrderAnalytics([newOrder, ...orders])
-            }, 100)
-          })
-
-          // Listen for order status updates  
-          newSocket.on('order-updated', (updatedOrder) => {
-            console.log('🔄 Received order status update via socket:', updatedOrder.id, updatedOrder.status)
-            setOrders(prevOrders =>
-              prevOrders.map(order =>
-                order.id === updatedOrder.id ? updatedOrder : order
-              )
-            )
-          })
-
-          // Listen for order deletions
-          newSocket.on('orderDeleted', (deletedOrderId) => {
-            console.log('🗑️ Received order deletion via socket:', deletedOrderId)
-            setOrders(prevOrders =>
-              prevOrders.filter(order => order.id !== deletedOrderId)
-            )
-          })
-
-          // Test socket connection
-          setTimeout(() => {
-            if (newSocket.connected) {
-              console.log('✅ Socket.IO connection verified - real-time updates active')
-            } else {
-              console.warn('⚠️ Socket.IO not connected - orders may not update automatically')
-            }
-          }, 2000)
-
-        } catch (socketError) {
-          console.warn('❌ Socket.IO connection failed, continuing without real-time updates:', socketError)
-        }
+        // Socket.IO has been removed - real-time updates will be re-implemented with WebSockets later
+        // For now, users will need to manually refresh to see updates
 
         setError(null)
       } catch (error) {
@@ -335,12 +238,6 @@ const DashboardPage = ({ onLogout }) => {
     }
 
     initializeDashboard()
-
-    return () => {
-      if (socket) {
-        socket.close()
-      }
-    }
   }, [])
 
   // Location change handler
@@ -393,17 +290,15 @@ const DashboardPage = ({ onLogout }) => {
     await loadOrders(true)
   }
 
-  // Set up automatic refresh every 30 seconds as backup
+  // Set up automatic refresh every 30 seconds
   useEffect(() => {
     const refreshInterval = setInterval(() => {
-      if (!socket || !socket.connected) {
-        console.log('🔄 Socket not connected, auto-refreshing orders...')
-        loadOrders(false) // Don't show loading indicator for background refresh
-      }
+      console.log('🔄 Auto-refreshing orders...')
+      loadOrders(false) // Don't show loading indicator for background refresh
     }, 30000) // 30 seconds
 
     return () => clearInterval(refreshInterval)
-  }, [socket])
+  }, [])
 
   const loadMenuItems = async () => {
     try {
@@ -3139,7 +3034,7 @@ const DashboardPage = ({ onLogout }) => {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+          'Authorization': `Bearer ${localStorage.getItem('adminAccessToken')}`
         },
         body: JSON.stringify({
           confirmPassword: deleteConfirmPassword

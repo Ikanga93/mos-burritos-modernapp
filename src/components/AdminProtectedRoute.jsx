@@ -22,11 +22,13 @@ const AdminProtectedRoute = ({ children }) => {
     return <Navigate to="/admin/login" state={{ from: location }} replace />
   }
 
-  if (user.role !== 'admin') {
-    // If somehow a non-admin got here, redirect to admin login
+  // Check if user has admin privileges (owner, manager, or staff)
+  const adminRoles = ['owner', 'manager', 'staff']
+  if (!adminRoles.includes(user.role)) {
+    // If user is a customer, redirect to admin login
     return <Navigate to="/admin/login" replace />
   }
-  
+
   return children
 }
 

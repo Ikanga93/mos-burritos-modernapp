@@ -16,6 +16,16 @@ export const CustomerAuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  // Map backend snake_case fields to frontend camelCase
+  const mapUserFields = (backendUser) => {
+    if (!backendUser) return null
+    return {
+      ...backendUser,
+      firstName: backendUser.first_name || backendUser.firstName,
+      lastName: backendUser.last_name || backendUser.lastName,
+    }
+  }
+
   useEffect(() => {
     // Check for stored customer tokens on mount
     const accessToken = localStorage.getItem('customerAccessToken')
@@ -41,10 +51,10 @@ export const CustomerAuthProvider = ({ children }) => {
       }
 
       const userData = await response.json()
-      
+
       // Only set user if they are a customer
       if (userData.role === 'customer') {
-        setUser(userData)
+        setUser(mapUserFields(userData))
       } else {
         // If not a customer, clear tokens
         localStorage.removeItem('customerAccessToken')
@@ -92,7 +102,7 @@ export const CustomerAuthProvider = ({ children }) => {
       // Store customer tokens
       localStorage.setItem('customerAccessToken', data.accessToken)
       localStorage.setItem('customerRefreshToken', data.refreshToken)
-      setUser(data.user)
+      setUser(mapUserFields(data.user))
 
       return data
     } catch (error) {
@@ -126,7 +136,7 @@ export const CustomerAuthProvider = ({ children }) => {
       // Store customer tokens
       localStorage.setItem('customerAccessToken', data.accessToken)
       localStorage.setItem('customerRefreshToken', data.refreshToken)
-      setUser(data.user)
+      setUser(mapUserFields(data.user))
 
       return data
     } catch (error) {
@@ -185,7 +195,7 @@ export const CustomerAuthProvider = ({ children }) => {
       }
 
       localStorage.setItem('customerAccessToken', data.accessToken)
-      setUser(data.user)
+      setUser(mapUserFields(data.user))
 
       return data.accessToken
     } catch (error) {

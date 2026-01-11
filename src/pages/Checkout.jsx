@@ -17,6 +17,8 @@ const CheckoutForm = () => {
     email: user?.email || '',
     phone: user?.phone || ''
   })
+  const [locations, setLocations] = useState([])
+  const [selectedLocation, setSelectedLocation] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const stripe = useStripe()
@@ -30,6 +32,23 @@ const CheckoutForm = () => {
       navigate('/menu')
     }
   }, [cartItems, navigate])
+
+  useEffect(() => {
+    // Fetch locations on mount
+    const fetchLocations = async () => {
+      try {
+        const data = await ApiService.getLocations()
+        setLocations(data)
+        // Default to first location
+        if (data.length > 0) {
+          setSelectedLocation(data[0])
+        }
+      } catch (error) {
+        console.error('Error fetching locations:', error)
+      }
+    }
+    fetchLocations()
+  }, [])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -75,13 +94,19 @@ const CheckoutForm = () => {
       } else if (paymentIntent.status === 'succeeded') {
         // Create order
         const orderData = {
+          location_id: selectedLocation?.id, // Include location_id
           customer_name: customerInfo.name,
           customer_email: customerInfo.email,
           customer_phone: customerInfo.phone,
-          items: cartItems,
-          total: total,
+          items: cartItems.map(item => ({
+            item_id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity
+          })),
+          payment_method: 'card',
           payment_intent_id: paymentIntent.id,
-          status: 'pending'
+          payment_status: 'paid'
         }
 
         const order = await ApiService.createOrder(orderData)
@@ -237,6 +262,36 @@ const CheckoutForm = () => {
                     fontSize: '1rem'
                   }}
                 />
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{
+                  display: 'block',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '0.5rem'
+                }}>Pickup Location *</label>
+                <select
+                  value={selectedLocation?.id || ''}
+                  onChange={(e) => {
+                    const location = locations.find(loc => loc.id === e.target.value)
+                    setSelectedLocation(location)
+                  }}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '6px',
+                    fontSize: '1rem',
+                    background: 'white'
+                  }}
+                >
+                  {locations.map(location => (
+                    <option key={location.id} value={location.id}>
+                      {location.name} - {location.address}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

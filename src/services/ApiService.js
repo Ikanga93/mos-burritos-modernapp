@@ -199,11 +199,10 @@ class ApiService {
     return this.parseResponse(response)
   }
 
-  static async resetOrderToCooking(orderId, timeRemaining = 15) {
-    const response = await this.makeAuthenticatedRequest(`${this.BASE_URL}/orders/${orderId}/reset-to-cooking`, {
+  static async resetOrderToCooking(orderId, estimatedTime = 15) {
+    const response = await this.makeAuthenticatedRequest(`${this.BASE_URL}/orders/${orderId}/reset-to-cooking?estimated_time=${estimatedTime}`, {
       method: 'PUT',
-      headers: this.getAdminAuthHeaders(),
-      body: JSON.stringify({ timeRemaining })
+      headers: this.getAdminAuthHeaders()
     })
     if (!response.ok) throw new Error('Failed to reset order to cooking')
     return this.parseResponse(response)
@@ -227,7 +226,7 @@ class ApiService {
   }
 
   static async addMenuItem(menuData) {
-    const response = await this.makeAuthenticatedRequest(`${this.BASE_URL}/menu`, {
+    const response = await this.makeAuthenticatedRequest(`${this.BASE_URL}/menu/items`, {
       method: 'POST',
       headers: this.getAdminAuthHeaders(),
       body: JSON.stringify(menuData)
@@ -237,7 +236,7 @@ class ApiService {
   }
 
   static async updateMenuItem(itemId, updates) {
-    const response = await this.makeAuthenticatedRequest(`${this.BASE_URL}/menu/${itemId}`, {
+    const response = await this.makeAuthenticatedRequest(`${this.BASE_URL}/menu/items/${itemId}`, {
       method: 'PUT',
       headers: this.getAdminAuthHeaders(),
       body: JSON.stringify(updates)
@@ -247,11 +246,20 @@ class ApiService {
   }
 
   static async deleteMenuItem(itemId) {
-    const response = await this.makeAuthenticatedRequest(`${this.BASE_URL}/menu/${itemId}`, {
+    const response = await this.makeAuthenticatedRequest(`${this.BASE_URL}/menu/items/${itemId}`, {
       method: 'DELETE',
       headers: this.getAdminAuthHeaders()
     })
     if (!response.ok) throw new Error('Failed to delete menu item')
+    return this.parseResponse(response)
+  }
+
+  static async toggleMenuItemAvailability(itemId) {
+    const response = await this.makeAuthenticatedRequest(`${this.BASE_URL}/menu/items/${itemId}/toggle`, {
+      method: 'PATCH',
+      headers: this.getAdminAuthHeaders()
+    })
+    if (!response.ok) throw new Error('Failed to toggle menu item availability')
     return this.parseResponse(response)
   }
 
@@ -476,6 +484,29 @@ class ApiService {
     })
     if (!response.ok) {
       throw new Error('Failed to fetch customers')
+    }
+    return this.parseResponse(response)
+  }
+
+  // Delete customer - admin only
+  static async deleteCustomer(customerId) {
+    const response = await this.makeAuthenticatedRequest(`${this.BASE_URL}/admin/customers/${customerId}`, {
+      method: 'DELETE',
+      headers: this.getAdminAuthHeaders()
+    })
+    if (!response.ok) {
+      throw new Error('Failed to delete customer')
+    }
+    return this.parseResponse(response)
+  }
+
+  // Dashboard Stats
+  static async getDashboardStats(locationId) {
+    const response = await this.makeAuthenticatedRequest(`${this.BASE_URL}/orders/dashboard/${locationId}`, {
+      headers: this.getAdminAuthHeaders()
+    })
+    if (!response.ok) {
+      throw new Error('Failed to fetch dashboard stats')
     }
     return this.parseResponse(response)
   }

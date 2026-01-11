@@ -294,7 +294,7 @@ export const getEnvironmentConfig = () => {
 
   const envConfigs = {
     development: {
-      apiUrl: 'http://localhost:3001',
+      apiUrl: 'http://localhost:8000',
       enableDebug: true
     },
     production: {

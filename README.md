@@ -1,6 +1,6 @@
-# Fernando's Food Truck - Complete Order Management System
+# Mo's Burrito App - Complete Order Management System
 
-A full-stack food truck application with real-time order management, Stripe payment processing, and customer order tracking.
+A full-stack restaurant and food truck application with multi-location support, Stripe payment processing, and customer order tracking.
 
 ## Features
 
@@ -8,23 +8,23 @@ A full-stack food truck application with real-time order management, Stripe paym
 - 🌮 Browse menu with real-time availability
 - 🛒 Shopping cart with location selection
 - 💳 Secure Stripe payment processing
-- 📱 Real-time order tracking
+- 📱 Order tracking
 - 📍 Multiple pickup locations support
 
 ### Restaurant Admin Features
-- 📊 Real-time order dashboard
-- 🔔 Live order notifications
-- ⏱️ Order status management with timers
-- 📋 Menu management
-- 📍 Location management
-- ⚙️ Business settings
+- 📊 Order dashboard with analytics
+- ⏱️ Order status management
+- 📋 Menu management per location
+- 📍 Multi-location management
+- 👥 User and staff management
+- ⚙️ Role-based access control
 
 ### Technical Features
-- 🔄 Real-time updates with Socket.IO
-- 💾 SQLite database for order storage
-- 🔐 Secure admin authentication
+- 💾 SQLite/PostgreSQL database support
+- 🔐 Secure JWT authentication
 - 📱 Responsive design
 - 🎨 Modern UI with animations
+- 🏢 Multi-location architecture
 
 ## Tech Stack
 
@@ -32,70 +32,79 @@ A full-stack food truck application with real-time order management, Stripe paym
 - React 18
 - React Router
 - Stripe Elements
-- Socket.IO Client
 - Lucide React Icons
 - CSS3 with custom properties
 
 ### Backend
-- Node.js with Express
-- SQLite database
+- Python 3.12
+- FastAPI
+- SQLAlchemy ORM
+- Pydantic for validation
+- JWT authentication
 - Stripe API
-- Socket.IO
-- UUID for order IDs
+- Uvicorn ASGI server
 
 ## Setup Instructions
 
-### 1. Install Dependencies
+### 1. Frontend Setup
 
 ```bash
+# Install dependencies
 npm install
-```
 
-### 2. Stripe Configuration
+# Create .env file (copy from .env.example)
+cp .env.example .env
 
-1. Create a Stripe account at [stripe.com](https://stripe.com)
-2. Get your API keys from the Stripe Dashboard
-3. Create a `.env` file in the root directory:
-
-```env
-# Stripe Configuration
+# Update .env with your configuration
+VITE_API_URL=http://localhost:8000
 STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
-STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
 
-# Server Configuration
-PORT=3001
-NODE_ENV=development
+# Start frontend
+npm run dev
 ```
 
-4. Set the frontend environment variable:
+The frontend will be available at http://localhost:5173
+
+### 2. Backend Setup
 
 ```bash
-# For development, create .env.local
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
+# Navigate to backend directory
+cd backend
+
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On macOS/Linux:
+source venv/bin/activate
+# On Windows:
+# venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Create .env file in backend directory
+# See backend/.env.example for required variables
+
+# Start backend server
+uvicorn app.main:app --reload
 ```
+
+The backend API will be available at http://localhost:8000
 
 ### 3. Database Setup
 
-The SQLite database will be created automatically when you start the server. No additional setup required.
+The SQLite database will be created automatically when you start the backend server. No additional setup required.
 
-### 4. Start the Application
+For production, configure PostgreSQL connection in backend/.env
 
-```bash
-# Start both frontend and backend
-npm run dev
+### 4. Default Admin Account
 
-# Or start them separately:
-# Backend only
-npm run server
+The backend creates a default admin account on first run:
+- Email: `admin@mosburrito.com`
+- Password: `admin123`
 
-# Frontend only (in another terminal)
-npm start
-```
-
-The application will be available at:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3001
+**Important**: Change this password in production!
 
 ## Usage
 
@@ -103,7 +112,7 @@ The application will be available at:
 
 1. **Browse Menu**: Visit the homepage to see available items
 2. **Add to Cart**: Click "Add to Cart" on menu items
-3. **Checkout**: 
+3. **Checkout**:
    - Click the cart icon to open cart
    - Select pickup location
    - Enter customer information
@@ -114,13 +123,12 @@ The application will be available at:
 ### For Restaurant Staff
 
 1. **Login**: Visit `/admin-login` or click "Staff" in footer
-   - Username: `fernando`
+   - Email: `admin@mosburrito.com`
    - Password: `admin123`
-2. **Dashboard**: View and manage orders in real-time
+2. **Dashboard**: View and manage orders
 3. **Order Management**:
-   - Confirm pending orders
-   - Start cooking confirmed orders
-   - Mark orders as ready
+   - View pending orders
+   - Update order status
    - Complete orders when picked up
 
 ## Stripe Test Cards
@@ -135,83 +143,120 @@ Use any future expiry date, any 3-digit CVC, and any postal code.
 
 ## API Endpoints
 
-### Orders
-- `POST /api/orders` - Create new order
-- `GET /api/orders` - Get all orders (admin)
-- `GET /api/orders/:orderId` - Get specific order
-- `PATCH /api/orders/:orderId/status` - Update order status
+### Authentication (`/api/auth`)
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - Customer registration
+- `GET /api/auth/me` - Get current user
+- `POST /api/auth/refresh` - Refresh access token
 
-### Payments
-- `POST /api/create-payment-intent` - Create Stripe payment intent
-- `POST /api/webhook` - Stripe webhook handler
+### Users (`/api/users`)
+- `GET /api/users` - List all users (owner only)
+- `GET /api/users/{user_id}` - Get user details
+- `POST /api/users` - Create new user (owner only)
+- `PUT /api/users/{user_id}` - Update user
 
-## Real-time Features
+### Locations (`/api/locations`)
+- `GET /api/locations` - List all locations (public)
+- `GET /api/locations/{location_id}` - Get location details
+- `POST /api/locations` - Create location (owner only)
+- `PUT /api/locations/{location_id}` - Update location
 
-The application uses Socket.IO for real-time updates:
+### Menu (`/api/menu`)
+- `GET /api/menu/location/{location_id}` - Get full menu (public)
+- `POST /api/menu/categories` - Create category
+- `POST /api/menu/items` - Create menu item
+- `PUT /api/menu/items/{item_id}` - Update menu item
 
-- **New orders** appear instantly on admin dashboard
-- **Order status changes** update customer tracking in real-time
-- **Cooking timers** count down automatically
-- **Desktop notifications** for new orders (admin)
+### Orders (`/api/orders`)
+- `POST /api/orders` - Create order (public)
+- `GET /api/orders` - List orders (filtered by user access)
+- `GET /api/orders/{order_id}` - Get order details
+- `PATCH /api/orders/{order_id}/status` - Update order status
+- `GET /api/orders/dashboard/{location_id}` - Get dashboard stats
 
 ## Database Schema
 
+### Users Table
+- User accounts with role-based access (owner/manager/staff/customer)
+- Email authentication with bcrypt-hashed passwords
+- Profile information and location assignments
+
+### Locations Table
+- Restaurant or food truck locations
+- Physical address details and coordinates
+- JSON-based schedule/hours
+
+### Menu Tables
+- Categories per location
+- Items within categories
+- Pricing, descriptions, availability
+
 ### Orders Table
-- `id` - Unique order ID (ORD-XXXXXXXX)
-- `customer_name` - Customer name
-- `customer_phone` - Customer phone
-- `customer_email` - Customer email (optional)
-- `items` - JSON array of ordered items
-- `subtotal` - Order subtotal
-- `tax` - Tax amount
-- `total` - Total amount
-- `status` - Order status (pending, confirmed, cooking, ready, completed)
-- `location_id` - Pickup location ID
-- `order_time` - Order timestamp
-- `estimated_time` - Estimated preparation time
-- `time_remaining` - Remaining cooking time
-- `stripe_payment_intent_id` - Stripe payment ID
-- `payment_status` - Payment status
+- Customer orders linked to locations
+- Order items (JSON array)
+- Financial totals and tax
+- Status tracking and payment info
 
 ## Customization
 
 The application is built with a flexible business configuration system. You can customize:
 
 - Business name and branding
-- Menu items and pricing
+- Menu items and pricing (per location)
 - Locations and schedules
 - Contact information
-- Features and capabilities
+- User roles and permissions
 
-See `src/config/businessConfig.js` for configuration options.
+See `src/config/businessConfig.js` for frontend configuration options.
 
 ## Deployment
 
-### Frontend (Vercel/Netlify)
+### Frontend
 1. Build the frontend: `npm run build`
-2. Deploy the `dist` folder
+2. Deploy the `dist` folder to Vercel, Netlify, or any static hosting
 3. Set environment variables in your hosting platform
 
-### Backend (Railway/Heroku)
-1. Deploy the server folder
-2. Set environment variables
-3. Configure Stripe webhooks to point to your deployed backend
+### Backend
+1. Choose a Python hosting platform (Railway, Heroku, AWS, etc.)
+2. Set environment variables (see backend/.env.example)
+3. Configure PostgreSQL database for production
+4. Deploy the backend folder
+5. Configure Stripe webhooks to point to your deployed backend
+
+**Note**: Deployment guides for Railway have been removed. Choose a hosting solution that best fits your needs.
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Orders not appearing**: Check if backend server is running on port 3001
-2. **Payment failing**: Verify Stripe keys are correctly set
-3. **Real-time updates not working**: Check Socket.IO connection in browser console
-4. **Database errors**: Ensure write permissions in project directory
+1. **Frontend not connecting to backend**:
+   - Check that backend is running on port 8000
+   - Verify VITE_API_URL in .env points to correct backend URL
+
+2. **Payment failing**:
+   - Verify Stripe keys are correctly set
+   - Check backend logs for Stripe errors
+
+3. **401 Unauthorized errors**:
+   - Check JWT token validity
+   - Ensure you're logged in with correct credentials
+
+4. **Database errors**:
+   - Ensure write permissions in backend directory
+   - Check database connection string in backend/.env
 
 ### Development Tips
 
-- Use browser dev tools to monitor Socket.IO connections
-- Check server logs for API errors
+- Check browser console for frontend errors
+- Check backend terminal for API errors
 - Use Stripe Dashboard to monitor test payments
-- Enable browser notifications for order alerts
+- Access API documentation at http://localhost:8000/docs (Swagger UI)
+
+## API Documentation
+
+The backend provides interactive API documentation:
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
 
 ## Contributing
 
@@ -227,5 +272,4 @@ This project is licensed under the MIT License.
 
 ## Support
 
-For support or questions, please contact the development team or create an issue in the repository. # mo-s-burrito-app
-# mos-burritos-modernapp
+For support or questions, please create an issue in the repository.

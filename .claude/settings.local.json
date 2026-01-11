@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sqlite3:*)",
+      "Bash(ls:*)",
+      "Bash(npm install:*)",
+      "Bash(grep:*)",
+      "Bash(python -m uvicorn:*)",
+      "Bash(python3 -m uvicorn:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(curl:*)",
+      "Bash(source venv/bin/activate:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)"
+    ]
+  }
+}

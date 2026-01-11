@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { CheckCircle, Clock, ChefHat, Bell, MapPin, AlertCircle } from 'lucide-react'
 import { useSearchParams, useParams } from 'react-router-dom'
 import ApiService from '../services/api'
-import SocketService from '../services/socket'
 import './OrderTrackingPage.css'
 
 const OrderTrackingPage = () => {
@@ -40,22 +39,27 @@ const OrderTrackingPage = () => {
           }
         }
 
-        // Connect to Socket.IO for real-time updates
-        SocketService.connect()
-        SocketService.joinOrderTracking(orderId)
+        // Socket.IO has been removed - real-time updates will be re-implemented with WebSockets later
+        // For now, users will need to manually refresh to see order updates
 
         // Load order data
         const orderData = await ApiService.getOrder(orderId)
-        setOrder(orderData)
-        setIsLoading(false)
 
-        // Set up real-time listener for order updates
-        SocketService.onOrderStatusUpdated((updatedOrder) => {
-          if (updatedOrder.id === orderId) {
-            console.log('Order status updated:', updatedOrder)
-            setOrder(updatedOrder)
-          }
-        })
+        // Map backend fields to frontend expectations
+        const mappedOrder = {
+          ...orderData,
+          // Map created_at to order_date for compatibility
+          order_date: orderData.created_at || orderData.order_date,
+          // Map status: 'preparing' -> 'cooking', 'pending' -> 'pending_payment'
+          status: orderData.status === 'preparing' ? 'cooking' :
+                  orderData.status === 'pending' ? 'pending_payment' :
+                  orderData.status,
+          // Map payment_status: 'paid' -> 'completed'
+          payment_status: orderData.payment_status === 'paid' ? 'completed' : orderData.payment_status
+        }
+
+        setOrder(mappedOrder)
+        setIsLoading(false)
 
       } catch (error) {
         console.error('Error loading order:', error)
@@ -65,12 +69,6 @@ const OrderTrackingPage = () => {
     }
 
     loadOrder()
-
-    // Cleanup on unmount
-    return () => {
-      SocketService.removeListener('order-status-updated')
-      SocketService.disconnect()
-    }
   }, [orderId, sessionId, paymentVerified])
 
   // Helper function to get current time in Central Time

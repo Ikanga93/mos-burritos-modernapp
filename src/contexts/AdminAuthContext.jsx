@@ -53,12 +53,12 @@ export const AdminAuthProvider = ({ children }) => {
           }
           
           const userData = await retryResponse.json()
-          
-          // Only set user if they are an admin
-          if (userData.role === 'admin') {
+
+          // Only set user if they are an admin (owner, manager, or staff)
+          if (userData.role === 'owner' || userData.role === 'manager' || userData.role === 'staff') {
             setUser(userData)
           } else {
-            // If not an admin, clear tokens
+            // If customer, clear tokens
             localStorage.removeItem('adminAccessToken')
             localStorage.removeItem('adminRefreshToken')
           }
@@ -77,12 +77,12 @@ export const AdminAuthProvider = ({ children }) => {
       }
 
       const userData = await response.json()
-      
-      // Only set user if they are an admin
-      if (userData.role === 'admin') {
+
+      // Only set user if they are an admin (owner, manager, or staff)
+      if (userData.role === 'owner' || userData.role === 'manager' || userData.role === 'staff') {
         setUser(userData)
       } else {
-        // If not an admin, clear tokens
+        // If customer, clear tokens
         localStorage.removeItem('adminAccessToken')
         localStorage.removeItem('adminRefreshToken')
       }
@@ -102,19 +102,15 @@ export const AdminAuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       setError(null)
-      
-      // Ensure role is admin
-      const adminData = {
-        ...userData,
-        role: 'admin'
-      }
 
+      // Note: Backend register endpoint creates CUSTOMER accounts only
+      // For admin accounts, use the backend's admin user creation endpoint
       const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(adminData)
+        body: JSON.stringify(userData)
       })
 
       const data = await response.json()
@@ -123,8 +119,8 @@ export const AdminAuthProvider = ({ children }) => {
         throw new Error(data.error || 'Registration failed')
       }
 
-      // Verify the registered user is an admin
-      if (data.user.role !== 'admin') {
+      // Verify the registered user is an admin (owner, manager, or staff)
+      if (data.user && data.user.role !== 'owner' && data.user.role !== 'manager' && data.user.role !== 'staff') {
         throw new Error('Invalid registration - not an admin account')
       }
 
@@ -151,6 +147,9 @@ export const AdminAuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       setError(null)
+      console.log('🔐 Attempting login with:', credentials.email)
+      console.log('🔐 API URL:', `${API_BASE_URL}/api/auth/login`)
+
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
@@ -159,21 +158,29 @@ export const AdminAuthProvider = ({ children }) => {
         body: JSON.stringify(credentials)
       })
 
+      console.log('🔐 Login response status:', response.status)
       const data = await response.json()
+      console.log('🔐 Login response data:', data)
 
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed')
+        console.error('🔐 Login failed:', data)
+        throw new Error(data.detail || data.error || 'Login failed')
       }
 
-      // Verify the logged in user is an admin
-      if (data.user.role !== 'admin') {
+      console.log('🔐 User role:', data.user?.role)
+
+      // Verify the logged in user is an admin (owner, manager, or staff - not customer)
+      if (!data.user || (data.user.role !== 'owner' && data.user.role !== 'manager' && data.user.role !== 'staff')) {
+        console.error('🔐 Access denied. User role:', data.user?.role)
         throw new Error('Access denied. Admin credentials required.')
       }
+
+      console.log('🔐 Storing tokens and user data...')
 
       // Store admin tokens
       localStorage.setItem('adminAccessToken', data.accessToken)
       localStorage.setItem('adminRefreshToken', data.refreshToken)
-      
+
       // Store user information with location data
       const userInfo = {
         ...data.user,
@@ -183,8 +190,10 @@ export const AdminAuthProvider = ({ children }) => {
       localStorage.setItem('currentUser', JSON.stringify(userInfo))
       setUser(userInfo)
 
+      console.log('🔐 Login successful! User:', userInfo)
       return data
     } catch (error) {
+      console.error('🔐 Login error:', error)
       setError(error.message)
       throw error
     }
@@ -232,16 +241,26 @@ export const AdminAuthProvider = ({ children }) => {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Token refresh failed')
+        throw new Error(data.detail || data.error || 'Token refresh failed')
       }
 
-      // Verify refreshed user is still an admin
-      if (data.user.role !== 'admin') {
+      // Verify refreshed user is still an admin (owner, manager, or staff)
+      if (!data.user || (data.user.role !== 'owner' && data.user.role !== 'manager' && data.user.role !== 'staff')) {
         throw new Error('Invalid user role after refresh')
       }
 
+      // Store new tokens
       localStorage.setItem('adminAccessToken', data.accessToken)
-      setUser(data.user)
+      localStorage.setItem('adminRefreshToken', data.refreshToken)
+
+      // Store user information with location data
+      const userInfo = {
+        ...data.user,
+        assignedLocations: data.assignedLocations || [],
+        currentLocation: data.currentLocation || null
+      }
+      localStorage.setItem('currentUser', JSON.stringify(userInfo))
+      setUser(userInfo)
 
       return data.accessToken
     } catch (error) {
