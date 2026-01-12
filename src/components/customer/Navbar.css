@@ -1,3 +1,13 @@
+:root {
+  --navbar-height: 96px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --navbar-height: 110px;
+  }
+}
+
 .customer-navbar {
   position: fixed;
   top: 0;
@@ -45,7 +55,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 2rem;
-  min-height: 80px;
+  min-height: var(--navbar-height);
 }
 
 /* Logo */

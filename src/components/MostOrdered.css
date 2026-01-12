@@ -4,6 +4,13 @@
   padding: 60px 0;
   position: relative;
   overflow: hidden;
+  /* Full-width edge-to-edge */
+  width: 100vw;
+  max-width: 100vw;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw !important;
+  margin-right: -50vw !important;
 }
 
 .most-ordered-section::before {
