@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CheckCircle, Loader } from 'lucide-react'
 import { useCart } from '../../contexts/CartContext'
+import { useCustomerAuth } from '../../contexts/CustomerAuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import { orderApi } from '../../services/api/orderApi'
 import './OrderSuccessPage.css'
@@ -10,6 +11,7 @@ const OrderSuccessPage = () => {
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
     const { items, subtotal, tax, total, locationId, clearCart } = useCart()
+    const { isAuthenticated } = useCustomerAuth()
     const { showToast } = useToast()
     
     const [isProcessing, setIsProcessing] = useState(true)
@@ -38,8 +40,6 @@ const OrderSuccessPage = () => {
                 const { customerInfo, customerId, locationId: storedLocationId, items: storedItems, subtotal, tax, total } = JSON.parse(confirmationData)
 
                 // Create order in database
-                // Always use publicClient to avoid token expiration issues after Stripe redirect
-                // But include customer_id if user was authenticated
                 const orderData = {
                     location_id: storedLocationId || locationId,
                     customer_id: customerId || null,  // Link to account if authenticated
@@ -61,9 +61,14 @@ const OrderSuccessPage = () => {
                     notes: customerInfo.notes || ''
                 }
 
-                // Always use guest order creation (publicClient) to avoid token expiration
-                // The customer_id is included in the data to link to account
-                const order = await orderApi.createGuestOrder(orderData)
+                // Use authenticated order creation if user is logged in, otherwise guest order
+                // This ensures the order is properly linked to the user's account
+                let order
+                if (isAuthenticated && customerId) {
+                    order = await orderApi.createOrder(orderData)
+                } else {
+                    order = await orderApi.createGuestOrder(orderData)
+                }
 
                 // Payment verification happens via Stripe webhook in the background
                 // The webhook will update order status from PENDING -> CONFIRMED and payment_status to PAID

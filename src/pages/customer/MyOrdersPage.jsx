@@ -29,11 +29,14 @@ const MyOrdersPage = () => {
         else setIsLoading(true)
 
         try {
+            console.log('Fetching orders for user:', customer)
             const data = await orderApi.getMyOrders()
+            console.log('Orders received:', data)
             setOrders(Array.isArray(data) ? data : data.orders || [])
         } catch (error) {
             console.error('Error fetching orders:', error)
-            showToast('Could not load orders', 'error')
+            console.error('Error details:', error.response?.data)
+            showToast(error.response?.data?.detail || 'Could not load orders', 'error')
         } finally {
             setIsLoading(false)
             setIsRefreshing(false)

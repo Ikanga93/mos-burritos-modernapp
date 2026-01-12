@@ -141,23 +141,6 @@ async def get_orders(
     return orders
 
 
-@router.get("/{order_id}", response_model=OrderResponse)
-async def get_order(
-    order_id: str,
-    db: Session = Depends(get_db)
-):
-    """Get a specific order by ID (for tracking)"""
-    order = db.query(Order).filter(Order.id == order_id).first()
-    
-    if not order:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Order not found"
-        )
-    
-    return order
-
-
 @router.get("/my-orders", response_model=List[OrderResponse])
 async def get_my_orders(
     current_user: User = Depends(get_current_user),
@@ -184,6 +167,23 @@ async def get_customer_orders(
     ).order_by(Order.created_at.desc()).limit(limit).all()
 
     return orders
+
+
+@router.get("/{order_id}", response_model=OrderResponse)
+async def get_order(
+    order_id: str,
+    db: Session = Depends(get_db)
+):
+    """Get a specific order by ID (for tracking)"""
+    order = db.query(Order).filter(Order.id == order_id).first()
+    
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found"
+        )
+    
+    return order
 
 
 @router.patch("/{order_id}/status", response_model=OrderResponse)

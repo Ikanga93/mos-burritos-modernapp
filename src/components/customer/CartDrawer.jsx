@@ -10,7 +10,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
 
   const handleCheckout = () => {
     onClose()
-    navigate('/checkout')
+    navigate('/order-confirmation')
   }
 
   const handleQuantityChange = (cartId, newQuantity) => {

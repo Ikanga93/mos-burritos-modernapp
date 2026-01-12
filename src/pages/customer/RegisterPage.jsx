@@ -24,13 +24,18 @@ const RegisterPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated when page loads (not after registration)
   useEffect(() => {
-    if (isAuthenticated) {
-      const from = location.state?.from?.pathname || '/menu'
-      navigate(from, { replace: true })
+    // Only redirect on initial load, not after registration completes
+    if (isAuthenticated && !isLoading) {
+      const from = location.state?.from?.pathname
+      if (from === '/checkout' || from === '/order-confirmation') {
+        navigate('/order-confirmation', { replace: true })
+      } else {
+        navigate(from || '/menu', { replace: true })
+      }
     }
-  }, [isAuthenticated, navigate, location])
+  }, []) // Empty dependency array - only run on mount
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -275,7 +280,11 @@ const RegisterPage = () => {
         <div className="register-footer">
           <p>
             Already have an account?{' '}
-            <Link to="/login" className="login-link">
+            <Link 
+              to="/login" 
+              state={location.state}
+              className="login-link"
+            >
               Login here
             </Link>
           </p>

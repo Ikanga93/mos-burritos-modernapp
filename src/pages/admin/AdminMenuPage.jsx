@@ -21,7 +21,7 @@ const AdminMenuPage = () => {
     const [formData, setFormData] = useState({
         name: '', description: '', price: '', category_id: '', is_available: true
     })
-    
+
     // Category management state
     const [showCategoryModal, setShowCategoryModal] = useState(false)
     const [editingCategory, setEditingCategory] = useState(null)

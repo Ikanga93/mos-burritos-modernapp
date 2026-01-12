@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { getSupabaseSession, isSupabaseEnabled, signOutSupabase } from '../services/supabaseClient'
 
 const CustomerAuthContext = createContext(null)
 
@@ -18,23 +19,40 @@ export const CustomerAuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true)
 
   const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+  const isProduction = import.meta.env.VITE_ENVIRONMENT === 'production'
 
-  // Initialize auth state from localStorage
+  // Initialize auth state from localStorage or Supabase
   useEffect(() => {
-    // Clean up any old auth type tracking from previous hybrid system
-    localStorage.removeItem('authType')
+    const initAuth = async () => {
+      // Clean up any old auth type tracking from previous hybrid system
+      localStorage.removeItem('authType')
 
-    const storedAccessToken = localStorage.getItem('customerAccessToken')
-    const storedRefreshToken = localStorage.getItem('customerRefreshToken')
+      if (isProduction && isSupabaseEnabled()) {
+        // Production: Check Supabase session
+        const session = await getSupabaseSession()
+        if (session) {
+          setAccessToken(session.access_token)
+          setRefreshToken(session.refresh_token)
+          fetchCurrentUser(session.access_token)
+        } else {
+          setIsLoading(false)
+        }
+      } else {
+        // Development: Check localStorage for JWT
+        const storedAccessToken = localStorage.getItem('customerAccessToken')
+        const storedRefreshToken = localStorage.getItem('customerRefreshToken')
 
-    if (storedAccessToken && storedRefreshToken) {
-      setAccessToken(storedAccessToken)
-      setRefreshToken(storedRefreshToken)
-      // Fetch current user
-      fetchCurrentUser(storedAccessToken)
-    } else {
-      setIsLoading(false)
+        if (storedAccessToken && storedRefreshToken) {
+          setAccessToken(storedAccessToken)
+          setRefreshToken(storedRefreshToken)
+          fetchCurrentUser(storedAccessToken)
+        } else {
+          setIsLoading(false)
+        }
+      }
     }
+
+    initAuth()
   }, [])
 
   // Fetch current user info
@@ -87,10 +105,15 @@ export const CustomerAuthProvider = ({ children }) => {
     }
   }
 
-  // Login (Supabase only)
+  // Login (environment-aware)
   const login = async (email, password) => {
     try {
-      const response = await fetch(`${apiUrl}/api/auth/supabase/login`, {
+      // Use different endpoints based on environment
+      const endpoint = isProduction && isSupabaseEnabled()
+        ? `${apiUrl}/api/auth/supabase/login`
+        : `${apiUrl}/api/auth/login`
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -105,9 +128,11 @@ export const CustomerAuthProvider = ({ children }) => {
 
       const data = await response.json()
 
-      // Store Supabase tokens
-      localStorage.setItem('customerAccessToken', data.accessToken)
-      localStorage.setItem('customerRefreshToken', data.refreshToken)
+      // Store tokens (localStorage for dev, Supabase handles storage for prod)
+      if (!isProduction) {
+        localStorage.setItem('customerAccessToken', data.accessToken)
+        localStorage.setItem('customerRefreshToken', data.refreshToken)
+      }
 
       setAccessToken(data.accessToken)
       setRefreshToken(data.refreshToken)
@@ -121,10 +146,15 @@ export const CustomerAuthProvider = ({ children }) => {
     }
   }
 
-  // Register (using Supabase)
+  // Register (environment-aware)
   const register = async (userData) => {
     try {
-      const response = await fetch(`${apiUrl}/api/auth/supabase/register`, {
+      // Use different endpoints based on environment
+      const endpoint = isProduction && isSupabaseEnabled()
+        ? `${apiUrl}/api/auth/supabase/register`
+        : `${apiUrl}/api/auth/register`
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -139,9 +169,11 @@ export const CustomerAuthProvider = ({ children }) => {
 
       const data = await response.json()
 
-      // Auto-login after registration with Supabase tokens
-      localStorage.setItem('customerAccessToken', data.accessToken)
-      localStorage.setItem('customerRefreshToken', data.refreshToken)
+      // Store tokens (localStorage for dev, Supabase handles storage for prod)
+      if (!isProduction) {
+        localStorage.setItem('customerAccessToken', data.accessToken)
+        localStorage.setItem('customerRefreshToken', data.refreshToken)
+      }
 
       setAccessToken(data.accessToken)
       setRefreshToken(data.refreshToken)
@@ -155,8 +187,11 @@ export const CustomerAuthProvider = ({ children }) => {
     }
   }
 
-  // Logout
-  const logout = useCallback(() => {
+  // Logout (environment-aware)
+  const logout = useCallback(async () => {
+    if (isProduction && isSupabaseEnabled()) {
+      await signOutSupabase()
+    }
     clearAuth()
   }, [])
 
@@ -170,7 +205,7 @@ export const CustomerAuthProvider = ({ children }) => {
     setIsAuthenticated(false)
   }
 
-  // Refresh access token (Supabase only)
+  // Refresh access token (environment-aware)
   const refreshAccessTokenInternal = async () => {
     const currentRefreshToken = refreshToken || localStorage.getItem('customerRefreshToken')
 
@@ -180,7 +215,12 @@ export const CustomerAuthProvider = ({ children }) => {
     }
 
     try {
-      const response = await fetch(`${apiUrl}/api/auth/supabase/refresh`, {
+      // Use different endpoints based on environment
+      const endpoint = isProduction && isSupabaseEnabled()
+        ? `${apiUrl}/api/auth/supabase/refresh`
+        : `${apiUrl}/api/auth/refresh`
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -194,14 +234,19 @@ export const CustomerAuthProvider = ({ children }) => {
 
       const data = await response.json()
 
-      // Store new Supabase tokens
-      localStorage.setItem('customerAccessToken', data.access_token)
-      localStorage.setItem('customerRefreshToken', data.refresh_token)
+      // Store new tokens (different field names for JWT vs Supabase)
+      const newAccessToken = data.accessToken || data.access_token
+      const newRefreshToken = data.refreshToken || data.refresh_token
 
-      setAccessToken(data.access_token)
-      setRefreshToken(data.refresh_token)
+      if (!isProduction) {
+        localStorage.setItem('customerAccessToken', newAccessToken)
+        localStorage.setItem('customerRefreshToken', newRefreshToken)
+      }
 
-      return data.access_token
+      setAccessToken(newAccessToken)
+      setRefreshToken(newRefreshToken)
+
+      return newAccessToken
     } catch (error) {
       console.error('Token refresh error:', error)
       clearAuth()

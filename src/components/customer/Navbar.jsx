@@ -47,6 +47,7 @@ const Navbar = () => {
           {isAuthenticated ? (
             <>
               {/* Logged-in user links */}
+              <Link to="/menu" className="navbar-link">Menu</Link>
               <Link to="/my-orders" className="navbar-link">My Orders</Link>
               <Link to="/profile" className="navbar-link">Profile</Link>
             </>
@@ -104,6 +105,9 @@ const Navbar = () => {
           {isAuthenticated ? (
             <>
               {/* Logged-in user mobile links */}
+              <Link to="/menu" className="mobile-menu-link" onClick={closeMenu}>
+                Menu
+              </Link>
               <Link to="/my-orders" className="mobile-menu-link" onClick={closeMenu}>
                 My Orders
               </Link>

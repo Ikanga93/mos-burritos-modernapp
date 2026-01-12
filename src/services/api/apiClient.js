@@ -1,6 +1,8 @@
 import axios from 'axios'
+import { getSupabaseSession, isSupabaseEnabled } from '../supabaseClient'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const isProduction = import.meta.env.VITE_ENVIRONMENT === 'production'
 
 /**
  * Create Axios client for customer authentication
@@ -13,10 +15,22 @@ export const createCustomerClient = () => {
     }
   })
 
-  // Request interceptor - add access token
+  // Request interceptor - add access token (environment-aware)
   client.interceptors.request.use(
-    (config) => {
-      const token = localStorage.getItem('customerAccessToken')
+    async (config) => {
+      let token = null
+      
+      if (isProduction && isSupabaseEnabled()) {
+        // Production: Use Supabase session token
+        const session = await getSupabaseSession()
+        if (session?.access_token) {
+          token = session.access_token
+        }
+      } else {
+        // Development: Use JWT from localStorage
+        token = localStorage.getItem('customerAccessToken')
+      }
+      
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
       }
@@ -86,10 +100,22 @@ export const createAdminClient = () => {
     }
   })
 
-  // Request interceptor - add access token
+  // Request interceptor - add access token (environment-aware)
   client.interceptors.request.use(
-    (config) => {
-      const token = localStorage.getItem('adminAccessToken')
+    async (config) => {
+      let token = null
+      
+      if (isProduction && isSupabaseEnabled()) {
+        // Production: Use Supabase session token
+        const session = await getSupabaseSession()
+        if (session?.access_token) {
+          token = session.access_token
+        }
+      } else {
+        // Development: Use JWT from localStorage
+        token = localStorage.getItem('adminAccessToken')
+      }
+      
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
       }

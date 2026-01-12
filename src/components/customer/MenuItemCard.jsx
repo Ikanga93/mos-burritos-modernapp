@@ -39,7 +39,7 @@ const MenuItemCard = ({ item, locationId }) => {
             {item.description && (
               <p className="menu-item-description">{item.description}</p>
             )}
-          </div>
+            </div>
           <div className="menu-item-footer">
             <span className="menu-item-price">{formatPrice(item.price)}</span>
             {inCart && (
@@ -55,12 +55,12 @@ const MenuItemCard = ({ item, locationId }) => {
           {item.image_url ? (
             <div className="menu-item-image">
               <img src={item.image_url} alt={item.name} />
-            </div>
-          ) : (
-            <div className="menu-item-image-placeholder">
-              <span className="menu-item-emoji">
-                {item.emoji || '🌯'}
-              </span>
+        </div>
+      ) : (
+        <div className="menu-item-image-placeholder">
+          <span className="menu-item-emoji">
+            {item.emoji || '🌯'}
+          </span>
             </div>
           )}
           

@@ -130,7 +130,7 @@ const CheckoutForm = ({ customerInfo, setCustomerInfo, onSuccess }) => {
                     <div className="info-row">
                         <span className="info-label">Name:</span>
                         <span className="info-value">{customerInfo.name || 'Not provided'}</span>
-                    </div>
+                </div>
                     <div className="info-row">
                         <span className="info-label">Email:</span>
                         <span className="info-value">{customerInfo.email || 'Not provided'}</span>
@@ -143,7 +143,7 @@ const CheckoutForm = ({ customerInfo, setCustomerInfo, onSuccess }) => {
                         <div className="info-row">
                             <span className="info-label">Special Instructions:</span>
                             <span className="info-value">{customerInfo.notes}</span>
-                        </div>
+                </div>
                     )}
                 </div>
                 <p className="info-note">Information from your account. To update, visit your profile.</p>
@@ -158,7 +158,7 @@ const CheckoutForm = ({ customerInfo, setCustomerInfo, onSuccess }) => {
                             <strong>{selectedLocation.name}</strong>
                             <p>{selectedLocation.address}</p>
                             {selectedLocation.hours && (
-                                <p className="location-hours">{selectedLocation.hours}</p>
+                            <p className="location-hours">{selectedLocation.hours}</p>
                             )}
                         </>
                     ) : (
