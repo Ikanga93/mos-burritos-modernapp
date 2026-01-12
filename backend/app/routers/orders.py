@@ -326,6 +326,103 @@ async def reset_order_to_cooking(
     }
 
 
+@router.patch("/{order_id}/cancel", response_model=OrderResponse)
+async def cancel_order(
+    order_id: str,
+    reason: Optional[str] = None,
+    current_user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Cancel an order
+    - Customers can cancel their own orders if status is PENDING or CONFIRMED
+    - Staff/Admin can cancel any order at any time
+    - Guest customers can cancel via order ID (if they have it)
+    """
+    order = db.query(Order).filter(Order.id == order_id).first()
+
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found"
+        )
+
+    # Check if order is already cancelled or completed
+    if order.status == ModelOrderStatus.CANCELLED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Order is already cancelled"
+        )
+    
+    if order.status == ModelOrderStatus.COMPLETED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot cancel a completed order"
+        )
+
+    # Permission checks
+    is_staff = False
+    is_owner = False
+    
+    if current_user:
+        # Check if user is staff/admin/owner
+        is_staff = current_user.role.value in [UserRole.STAFF.value, UserRole.ADMIN.value, UserRole.OWNER.value]
+        is_owner = order.customer_id == current_user.id
+        
+        # Staff can cancel any order
+        if is_staff:
+            # Check location access for staff/admin
+            if current_user.role.value != UserRole.OWNER.value:
+                if not can_access_location(db, current_user, order.location_id):
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You don't have access to cancel orders for this location"
+                    )
+        # Customers can only cancel their own orders
+        elif not is_owner:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only cancel your own orders"
+            )
+        
+        # Customers can only cancel if order is in early stages
+        if is_owner and not is_staff:
+            if order.status not in [ModelOrderStatus.PENDING, ModelOrderStatus.CONFIRMED]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="You can only cancel orders that are pending or confirmed. Please contact the restaurant."
+                )
+
+    # Update order status
+    old_status = order.status
+    order.status = ModelOrderStatus.CANCELLED
+    order.completed_at = datetime.utcnow()
+
+    # Determine cancellation notes
+    if reason:
+        notes = reason
+    elif current_user and is_staff:
+        notes = f"Order cancelled by staff ({current_user.email})"
+    elif current_user and is_owner:
+        notes = f"Order cancelled by customer ({current_user.email})"
+    else:
+        notes = "Order cancelled"
+
+    # Add to status history
+    status_history = OrderStatusHistory(
+        order_id=order.id,
+        status=ModelOrderStatus.CANCELLED,
+        changed_by=current_user.id if current_user else None,
+        notes=notes
+    )
+    db.add(status_history)
+
+    db.commit()
+    db.refresh(order)
+
+    return order
+
+
 @router.delete("/{order_id}")
 async def delete_order(
     order_id: str,

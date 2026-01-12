@@ -268,3 +268,29 @@ async def create_checkout_session(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Checkout session creation failed: {str(e)}"
         )
+
+
+@router.get("/stripe-session/{session_id}")
+async def get_stripe_session(session_id: str):
+    """Retrieve Stripe session details including metadata"""
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+        
+        return {
+            "id": session.id,
+            "payment_status": session.payment_status,
+            "customer_email": session.customer_email,
+            "amount_total": session.amount_total,
+            "metadata": session.metadata,
+            "line_items": session.line_items if hasattr(session, 'line_items') else None
+        }
+    except stripe.error.StripeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Stripe error: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve session: {str(e)}"
+        )

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import {
     ShoppingBag, Clock, CheckCircle, ChefHat,
-    DollarSign, RefreshCw, Package, TrendingUp
+    DollarSign, RefreshCw, Package, TrendingUp, X, XCircle
 } from 'lucide-react'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { useToast } from '../../contexts/ToastContext'
@@ -29,6 +29,12 @@ const AdminDashboard = () => {
     const [stats, setStats] = useState(null)
     const [isLoading, setIsLoading] = useState(true)
     const [isRefreshing, setIsRefreshing] = useState(false)
+
+    // Cancel modal state
+    const [showCancelModal, setShowCancelModal] = useState(false)
+    const [cancelOrderId, setCancelOrderId] = useState(null)
+    const [cancelReason, setCancelReason] = useState('')
+    const [isCancelling, setIsCancelling] = useState(false)
 
     const isOwner = role === 'owner'
 
@@ -113,6 +119,35 @@ const AdminDashboard = () => {
             loadDashboardData(true)
         } catch (error) {
             showToast('Failed to update order', 'error')
+        }
+    }
+
+    const openCancelModal = (orderId) => {
+        setCancelOrderId(orderId)
+        setCancelReason('')
+        setShowCancelModal(true)
+    }
+
+    const closeCancelModal = () => {
+        setShowCancelModal(false)
+        setCancelOrderId(null)
+        setCancelReason('')
+    }
+
+    const handleCancelOrder = async () => {
+        if (!cancelOrderId) return
+
+        setIsCancelling(true)
+        try {
+            await orderApi.adminCancelOrder(cancelOrderId, cancelReason || 'Cancelled by restaurant staff')
+            showToast('Order cancelled successfully', 'success')
+            closeCancelModal()
+            loadDashboardData(true) // Refresh dashboard
+        } catch (error) {
+            console.error('Error cancelling order:', error)
+            showToast(error.response?.data?.detail || 'Failed to cancel order', 'error')
+        } finally {
+            setIsCancelling(false)
         }
     }
 
@@ -259,24 +294,44 @@ const AdminDashboard = () => {
 
                                     <div className="order-actions">
                                         {order.status === 'pending' && (
-                                            <button className="action-btn confirm" onClick={() => updateOrderStatus(order.id, 'confirmed')}>
-                                                Confirm
-                                            </button>
+                                            <>
+                                                <button className="action-btn confirm" onClick={() => updateOrderStatus(order.id, 'confirmed')}>
+                                                    Confirm
+                                                </button>
+                                                <button className="action-btn cancel-btn-small" onClick={() => openCancelModal(order.id)} title="Cancel Order">
+                                                    <XCircle size={14} />
+                                                </button>
+                                            </>
                                         )}
                                         {order.status === 'confirmed' && (
-                                            <button className="action-btn prepare" onClick={() => updateOrderStatus(order.id, 'preparing')}>
-                                                Start Preparing
-                                            </button>
+                                            <>
+                                                <button className="action-btn prepare" onClick={() => updateOrderStatus(order.id, 'preparing')}>
+                                                    Start Preparing
+                                                </button>
+                                                <button className="action-btn cancel-btn-small" onClick={() => openCancelModal(order.id)} title="Cancel Order">
+                                                    <XCircle size={14} />
+                                                </button>
+                                            </>
                                         )}
                                         {order.status === 'preparing' && (
-                                            <button className="action-btn ready" onClick={() => updateOrderStatus(order.id, 'ready')}>
-                                                Mark Ready
-                                            </button>
+                                            <>
+                                                <button className="action-btn ready" onClick={() => updateOrderStatus(order.id, 'ready')}>
+                                                    Mark Ready
+                                                </button>
+                                                <button className="action-btn cancel-btn-small" onClick={() => openCancelModal(order.id)} title="Cancel Order">
+                                                    <XCircle size={14} />
+                                                </button>
+                                            </>
                                         )}
                                         {order.status === 'ready' && (
-                                            <button className="action-btn complete" onClick={() => updateOrderStatus(order.id, 'completed')}>
-                                                Complete
-                                            </button>
+                                            <>
+                                                <button className="action-btn complete" onClick={() => updateOrderStatus(order.id, 'completed')}>
+                                                    Complete
+                                                </button>
+                                                <button className="action-btn cancel-btn-small" onClick={() => openCancelModal(order.id)} title="Cancel Order">
+                                                    <XCircle size={14} />
+                                                </button>
+                                            </>
                                         )}
                                     </div>
                                 </div>
@@ -285,6 +340,49 @@ const AdminDashboard = () => {
                     </div>
                 )}
             </section>
+
+            {/* Cancel Order Modal */}
+            {showCancelModal && (
+                <div className="modal-overlay" onClick={closeCancelModal}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Cancel Order</h2>
+                            <button className="close-modal-btn" onClick={closeCancelModal}>
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <p>Are you sure you want to cancel this order?</p>
+                            <div className="form-group">
+                                <label htmlFor="cancelReason">Cancellation Reason</label>
+                                <textarea
+                                    id="cancelReason"
+                                    value={cancelReason}
+                                    onChange={(e) => setCancelReason(e.target.value)}
+                                    placeholder="Enter reason for cancellation..."
+                                    rows={3}
+                                />
+                            </div>
+                        </div>
+                        <div className="modal-actions">
+                            <button
+                                className="secondary-btn"
+                                onClick={closeCancelModal}
+                                disabled={isCancelling}
+                            >
+                                Keep Order
+                            </button>
+                            <button
+                                className="danger-btn"
+                                onClick={handleCancelOrder}
+                                disabled={isCancelling}
+                            >
+                                {isCancelling ? 'Cancelling...' : 'Yes, Cancel Order'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

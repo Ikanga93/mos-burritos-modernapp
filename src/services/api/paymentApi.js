@@ -57,6 +57,14 @@ export const paymentApi = {
       notes: notes || ''
     })
     return response.data
+  },
+
+  /**
+   * Get Stripe session details by session ID
+   */
+  getStripeSession: async (sessionId) => {
+    const response = await publicClient.get(`/stripe-session/${sessionId}`)
+    return response.data
   }
 }
 

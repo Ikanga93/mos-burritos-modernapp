@@ -1,0 +1,42 @@
+services:
+  # Main API Service
+  - type: web
+    name: mos-burritos-api
+    runtime: python
+    region: oregon # Choose: oregon, frankfurt, singapore, ohio
+    plan: free
+    branch: main
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        sync: false # Set manually in Render dashboard
+      - key: JWT_SECRET_KEY
+        generateValue: true # Auto-generates a secure secret
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30
+      - key: REFRESH_TOKEN_EXPIRE_DAYS
+        value: 7
+      - key: STRIPE_SECRET_KEY
+        sync: false # Set manually in Render dashboard
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false # Set manually in Render dashboard
+      - key: FRONTEND_URL
+        sync: false # Set manually - your Vercel URL
+      - key: CORS_ORIGINS
+        sync: false # Set manually
+      - key: SUPABASE_URL
+        value: "" # Optional - for production auth
+      - key: SUPABASE_ANON_KEY
+        value: "" # Optional - for production auth
+      - key: SUPABASE_SERVICE_KEY
+        value: "" # Optional - for production auth
+    healthCheckPath: /health
+    autoDeploy: true

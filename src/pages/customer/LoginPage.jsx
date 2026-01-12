@@ -66,6 +66,10 @@ const LoginPage = () => {
       if (result.success) {
         showToast('Login successful! Welcome back.', 'success')
 
+        // Wait for customer data to be fully available in context
+        // The login function already waits 100ms, but we add a bit more for safety
+        await new Promise(resolve => setTimeout(resolve, 150))
+
         // Redirect to order confirmation if coming from checkout, otherwise intended page or menu
         const from = location.state?.from?.pathname
         if (from === '/checkout' || from === '/order-confirmation') {

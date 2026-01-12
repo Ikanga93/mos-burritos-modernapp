@@ -113,8 +113,18 @@ export const orderApi = {
   /**
    * Cancel an order (admin or customer)
    */
-  cancelOrder: async (orderId, reason) => {
+  cancelOrder: async (orderId, reason = null) => {
     const response = await customerClient.patch(`/orders/${orderId}/cancel`, {
+      reason
+    })
+    return response.data
+  },
+
+  /**
+   * Cancel an order as admin (admin client)
+   */
+  adminCancelOrder: async (orderId, reason = null) => {
+    const response = await adminClient.patch(`/orders/${orderId}/cancel`, {
       reason
     })
     return response.data

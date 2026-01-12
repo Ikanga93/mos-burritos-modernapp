@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Package, Clock, CheckCircle, ChefHat, MapPin, Phone, ArrowLeft, RefreshCw } from 'lucide-react'
+import { Package, Clock, CheckCircle, ChefHat, MapPin, Phone, ArrowLeft, RefreshCw, X, XCircle } from 'lucide-react'
 import { orderApi } from '../../services/api/orderApi'
 import { useToast } from '../../contexts/ToastContext'
+import { useCustomerAuth } from '../../contexts/CustomerAuthContext'
 import LoadingSpinner from '../../components/shared/LoadingSpinner'
 import './OrderTrackingPage.css'
 
@@ -18,11 +19,15 @@ const ORDER_STATUSES = {
 const OrderTrackingPage = () => {
     const { orderId } = useParams()
     const { showToast } = useToast()
+    const { customer, isAuthenticated } = useCustomerAuth()
 
     const [order, setOrder] = useState(null)
     const [isLoading, setIsLoading] = useState(true)
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [error, setError] = useState(null)
+    const [showCancelModal, setShowCancelModal] = useState(false)
+    const [cancelReason, setCancelReason] = useState('')
+    const [isCancelling, setIsCancelling] = useState(false)
 
     const fetchOrder = async (showRefreshSpinner = false) => {
         if (showRefreshSpinner) setIsRefreshing(true)
@@ -54,6 +59,27 @@ const OrderTrackingPage = () => {
     const handleRefresh = () => {
         fetchOrder(true)
         showToast('Order status refreshed', 'success')
+    }
+
+    const canCancelOrder = () => {
+        if (!order) return false
+        // Can only cancel if order is pending or confirmed
+        return ['pending', 'confirmed'].includes(order.status)
+    }
+
+    const handleCancelOrder = async () => {
+        setIsCancelling(true)
+        try {
+            await orderApi.cancelOrder(orderId, cancelReason || 'Cancelled by customer')
+            showToast('Order cancelled successfully', 'success')
+            setShowCancelModal(false)
+            fetchOrder(true) // Refresh order data
+        } catch (err) {
+            console.error('Error cancelling order:', err)
+            showToast(err.response?.data?.detail || 'Failed to cancel order', 'error')
+        } finally {
+            setIsCancelling(false)
+        }
     }
 
     const formatPrice = (price) => `$${parseFloat(price).toFixed(2)}`
@@ -243,7 +269,66 @@ const OrderTrackingPage = () => {
                         )}
                     </div>
                 </div>
+
+                {/* Cancel Order Button */}
+                {canCancelOrder() && (
+                    <div className="cancel-order-section">
+                        <button
+                            className="cancel-order-btn"
+                            onClick={() => setShowCancelModal(true)}
+                        >
+                            <XCircle size={20} />
+                            Cancel Order
+                        </button>
+                        <p className="cancel-notice">
+                            You can cancel this order while it's pending or confirmed. Once preparation begins, please contact the restaurant.
+                        </p>
+                    </div>
+                )}
             </div>
+
+            {/* Cancel Order Modal */}
+            {showCancelModal && (
+                <div className="modal-overlay" onClick={() => setShowCancelModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Cancel Order</h2>
+                            <button className="close-modal-btn" onClick={() => setShowCancelModal(false)}>
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="modal-body">
+                            <p>Are you sure you want to cancel this order?</p>
+                            <div className="form-group">
+                                <label htmlFor="cancelReason">Reason (Optional)</label>
+                                <textarea
+                                    id="cancelReason"
+                                    value={cancelReason}
+                                    onChange={(e) => setCancelReason(e.target.value)}
+                                    placeholder="Let us know why you're cancelling..."
+                                    rows={3}
+                                />
+                            </div>
+                        </div>
+                        <div className="modal-actions">
+                            <button
+                                className="secondary-btn"
+                                onClick={() => setShowCancelModal(false)}
+                                disabled={isCancelling}
+                            >
+                                Keep Order
+                            </button>
+                            <button
+                                className="danger-btn"
+                                onClick={handleCancelOrder}
+                                disabled={isCancelling}
+                            >
+                                {isCancelling ? 'Cancelling...' : 'Yes, Cancel Order'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

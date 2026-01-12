@@ -12,12 +12,13 @@ const OrderConfirmationPage = () => {
     const navigate = useNavigate()
     const { items, subtotal, tax, total, locationId } = useCart()
     const { locations } = useLocation()
-    const { customer, isAuthenticated } = useCustomerAuth()
+    const { customer, isAuthenticated, isLoading: authLoading } = useCustomerAuth()
     const { showToast } = useToast()
 
     const [notes, setNotes] = useState('')
     const [isCreatingSession, setIsCreatingSession] = useState(false)
     const [isGuestCheckout, setIsGuestCheckout] = useState(false)
+    const [isCustomerDataReady, setIsCustomerDataReady] = useState(false)
 
     // Guest form fields
     const [guestName, setGuestName] = useState('')
@@ -51,6 +52,17 @@ const OrderConfirmationPage = () => {
             navigate('/menu')
         }
     }, [items, navigate])
+
+    // Watch for customer data to become available after login/registration
+    useEffect(() => {
+        if (isAuthenticated && customer) {
+            // Customer data is now available
+            setIsCustomerDataReady(true)
+        } else if (!isAuthenticated) {
+            // Not authenticated, so no customer data to wait for
+            setIsCustomerDataReady(true)
+        }
+    }, [isAuthenticated, customer])
 
     const handleAuthenticatedCheckout = () => {
         navigate('/login', { state: { from: { pathname: '/order-confirmation' } } })
@@ -120,6 +132,23 @@ const OrderConfirmationPage = () => {
 
     if (items.length === 0) {
         return null
+    }
+
+    // Show loading state if authenticated but customer data not yet loaded
+    if (isAuthenticated && !isCustomerDataReady && authLoading) {
+        return (
+            <div className="order-confirmation-page">
+                <div className="confirmation-container">
+                    <div className="confirmation-header">
+                        <h1>Loading Your Information...</h1>
+                        <p className="subtitle">Please wait while we load your account details</p>
+                    </div>
+                    <div className="confirmation-content" style={{ textAlign: 'center', padding: '2rem' }}>
+                        <Loader size={48} className="spin" style={{ margin: '0 auto' }} />
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     return (
