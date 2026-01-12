@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Mail, Lock, User, Phone, UserPlus, Chrome } from 'lucide-react'
+import { Mail, Lock, User, Phone, UserPlus } from 'lucide-react'
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext'
 import { useToast } from '../../contexts/ToastContext'
 
@@ -159,6 +159,22 @@ const RegisterPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="register-form">
+          {/* Google Sign Up Button */}
+          <button
+            type="button"
+            className="google-signin-btn"
+            onClick={handleGoogleSignUp}
+            disabled={isLoading}
+          >
+            <img src="/images/google-logo.svg" alt="Google" className="google-logo" />
+            Continue with Google
+          </button>
+
+          {/* OR Divider */}
+          <div className="auth-divider">
+            <span>OR</span>
+          </div>
+
           {errors.general && (
             <div className="form-error-banner">
               {errors.general}
@@ -293,22 +309,6 @@ const RegisterPage = () => {
                 Create Account
               </>
             )}
-          </button>
-
-          {/* OR Divider */}
-          <div className="auth-divider">
-            <span>OR</span>
-          </div>
-
-          {/* Google Sign Up Button */}
-          <button
-            type="button"
-            className="google-signin-btn"
-            onClick={handleGoogleSignUp}
-            disabled={isLoading}
-          >
-            <Chrome size={20} />
-            Sign up with Google
           </button>
         </form>
 

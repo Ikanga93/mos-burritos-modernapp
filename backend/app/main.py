@@ -31,8 +31,13 @@ async def lifespan(app: FastAPI):
     print(f"   Database: {'SQLite (dev)' if settings.is_development else 'PostgreSQL'}")
     
     # Create database tables
-    Base.metadata.create_all(bind=engine)
-    print("✅ Database tables created/verified")
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("✅ Database tables created/verified")
+    except Exception as e:
+        print(f"⚠️  Database connection failed (this is expected on Render free tier with Supabase): {e}")
+        print("   App will start but database operations may fail")
+        print("   Consider upgrading Render plan or switching to Fly.io")
     
     yield
     
