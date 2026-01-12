@@ -100,10 +100,10 @@ async def get_supabase_user_from_token(access_token: str) -> Optional[Dict[str, 
 async def refresh_supabase_session(refresh_token: str) -> Dict[str, Any]:
     """Refresh Supabase session using refresh token"""
     supabase = get_supabase_client()
-    
+
     try:
         response = supabase.auth.refresh_session(refresh_token)
-        
+
         if response.session:
             return {
                 "success": True,
@@ -115,9 +115,80 @@ async def refresh_supabase_session(refresh_token: str) -> Dict[str, Any]:
                 "user": {
                     "id": response.user.id,
                     "phone": response.user.phone,
+                    "email": response.user.email,
                 }
             }
         return {"success": False, "error": "Failed to refresh session"}
-        
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+async def sign_up_with_email(email: str, password: str, user_metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """
+    Sign up new user with email and password
+    """
+    supabase = get_supabase_client()
+
+    try:
+        response = supabase.auth.sign_up({
+            "email": email,
+            "password": password,
+            "options": {
+                "data": user_metadata or {}
+            }
+        })
+
+        if response.session:
+            return {
+                "success": True,
+                "session": {
+                    "access_token": response.session.access_token,
+                    "refresh_token": response.session.refresh_token,
+                    "expires_at": response.session.expires_at,
+                },
+                "user": {
+                    "id": response.user.id,
+                    "email": response.user.email,
+                    "created_at": str(response.user.created_at) if response.user.created_at else None,
+                }
+            }
+        else:
+            return {"success": False, "error": "Failed to create account"}
+
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+async def sign_in_with_email(email: str, password: str) -> Dict[str, Any]:
+    """
+    Sign in user with email and password
+    """
+    supabase = get_supabase_client()
+
+    try:
+        response = supabase.auth.sign_in_with_password({
+            "email": email,
+            "password": password
+        })
+
+        if response.session:
+            return {
+                "success": True,
+                "session": {
+                    "access_token": response.session.access_token,
+                    "refresh_token": response.session.refresh_token,
+                    "expires_at": response.session.expires_at,
+                },
+                "user": {
+                    "id": response.user.id,
+                    "email": response.user.email,
+                    "phone": response.user.phone,
+                    "created_at": str(response.user.created_at) if response.user.created_at else None,
+                }
+            }
+        else:
+            return {"success": False, "error": "Invalid credentials"}
+
     except Exception as e:
         return {"success": False, "error": str(e)}

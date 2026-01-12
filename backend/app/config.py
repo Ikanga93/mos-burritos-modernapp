@@ -9,31 +9,43 @@ import os
 class Settings(BaseSettings):
     # Environment
     environment: str = "development"
-    
+
     # Database
     database_url: str = ""
-    
+
     # JWT Settings
     jwt_secret_key: str = "dev-secret-key-change-in-production"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
-    
+
     # Stripe
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
-    
+
+    # Frontend URL for redirects
+    frontend_url: str = "http://localhost:5173"
+
     # Supabase
     supabase_url: str = ""
     supabase_anon_key: str = ""
     supabase_service_key: str = ""
-    
+
     # CORS
     cors_origins: str = "http://localhost:5173,http://localhost:3000"
-    
+
     @property
     def is_development(self) -> bool:
         return self.environment == "development"
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment == "production"
+
+    @property
+    def use_supabase_auth(self) -> bool:
+        """Use Supabase auth in production, JWT in development"""
+        return self.is_production
     
     @property
     def db_url(self) -> str:

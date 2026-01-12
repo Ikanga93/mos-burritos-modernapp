@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CheckCircle, Loader } from 'lucide-react'
 import { useCart } from '../../contexts/CartContext'
 import { useToast } from '../../contexts/ToastContext'
-import { paymentApi } from '../../services/api/paymentApi'
 import { orderApi } from '../../services/api/orderApi'
 import './OrderSuccessPage.css'
 
@@ -36,25 +35,19 @@ const OrderSuccessPage = () => {
                     return
                 }
 
-                const { customerInfo, locationId: storedLocationId, items: storedItems, subtotal, tax, total } = JSON.parse(confirmationData)
-
-                // Verify payment with Stripe
-                const verification = await paymentApi.verifyPayment(sessionId, '')
-
-                if (!verification.success) {
-                    setError(verification.message || 'Payment verification failed')
-                    setIsProcessing(false)
-                    return
-                }
+                const { customerInfo, customerId, locationId: storedLocationId, items: storedItems, subtotal, tax, total } = JSON.parse(confirmationData)
 
                 // Create order in database
+                // Always use publicClient to avoid token expiration issues after Stripe redirect
+                // But include customer_id if user was authenticated
                 const orderData = {
                     location_id: storedLocationId || locationId,
+                    customer_id: customerId || null,  // Link to account if authenticated
                     customer_name: customerInfo.name,
                     customer_email: customerInfo.email,
                     customer_phone: customerInfo.phone,
                     items: storedItems.map(item => ({
-                        menu_item_id: item.menu_item_id || item.id,
+                        item_id: item.menu_item_id || item.id,
                         name: item.name,
                         price: item.price,
                         quantity: item.quantity
@@ -62,12 +55,19 @@ const OrderSuccessPage = () => {
                     subtotal,
                     tax,
                     total,
-                    payment_intent_id: sessionId,
-                    payment_status: 'paid',
+                    stripe_session_id: sessionId,
+                    payment_status: 'pending',
+                    payment_method: 'online',
                     notes: customerInfo.notes || ''
                 }
 
-                const order = await orderApi.createOrder(orderData)
+                // Always use guest order creation (publicClient) to avoid token expiration
+                // The customer_id is included in the data to link to account
+                const order = await orderApi.createGuestOrder(orderData)
+
+                // Payment verification happens via Stripe webhook in the background
+                // The webhook will update order status from PENDING -> CONFIRMED and payment_status to PAID
+                // We just need to create the order with the stripe_session_id so webhook can find it
 
                 // Clear cart and session storage
                 clearCart()
@@ -76,12 +76,12 @@ const OrderSuccessPage = () => {
 
                 setOrderId(order.id)
                 setIsProcessing(false)
-                showToast('Order placed successfully!', 'success')
+                showToast('Order placed successfully! Payment is being processed.', 'success')
 
-                // Redirect to order tracking after 3 seconds
+                // Redirect to order tracking after 2 seconds
                 setTimeout(() => {
                     navigate(`/order-tracking/${order.id}`)
-                }, 3000)
+                }, 2000)
             } catch (error) {
                 console.error('Error processing order:', error)
                 setError(error.response?.data?.detail || error.message || 'Failed to process order')

@@ -153,15 +153,16 @@ function App() {
                             {/* Customer Menu & Ordering Routes */}
                             <Route path="/menu" element={<MenuPage />} />
 
+                            {/* Order Confirmation (Public - supports guest checkout) */}
+                            <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+
+                            {/* Order Success (Public - supports guest checkout) */}
+                            <Route path="/order-success" element={<OrderSuccessPage />} />
+
+                            {/* Order Tracking (Public) */}
+                            <Route path="/order-tracking/:orderId" element={<OrderTrackingPage />} />
+
                             {/* Protected Customer Routes */}
-                            <Route
-                                path="/order-confirmation"
-                                element={
-                                    <ProtectedRoute>
-                                        <OrderConfirmationPage />
-                                    </ProtectedRoute>
-                                }
-                            />
                             <Route
                                 path="/checkout"
                                 element={
@@ -188,19 +189,6 @@ function App() {
                                 </ProtectedRoute>
                               }
                             />
-
-                            {/* Order Success (after Stripe checkout) */}
-                            <Route
-                                path="/order-success"
-                                element={
-                                    <ProtectedRoute>
-                                        <OrderSuccessPage />
-                                    </ProtectedRoute>
-                                }
-                            />
-
-                            {/* Order Tracking (Public) */}
-                            <Route path="/order-tracking/:orderId" element={<OrderTrackingPage />} />
 
                             {/* 404 Not Found */}
                             <Route path="*" element={<NotFound />} />

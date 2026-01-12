@@ -8,7 +8,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 
 from ..database import get_db
-from ..models import Order, OrderStatusHistory, Location, User, OrderStatus as ModelOrderStatus
+from ..models import Order, OrderStatusHistory, Location, User, OrderStatus as ModelOrderStatus, PaymentStatus as ModelPaymentStatus
 from ..schemas import (
     OrderCreate,
     OrderUpdate,
@@ -63,6 +63,7 @@ async def create_order(
     # Create order
     new_order = Order(
         location_id=location_id,  # Use the resolved location_id
+        customer_id=order_data.customer_id,  # Link to user account if provided
         customer_name=order_data.customer_name,
         customer_phone=order_data.customer_phone,
         customer_email=order_data.customer_email,
@@ -72,6 +73,9 @@ async def create_order(
         total=total,
         notes=order_data.notes,
         payment_method=order_data.payment_method,
+        payment_status=ModelPaymentStatus(order_data.payment_status.value) if order_data.payment_status else ModelPaymentStatus.PENDING,
+        payment_intent_id=order_data.payment_intent_id,
+        stripe_session_id=order_data.stripe_session_id,
         status=ModelOrderStatus.PENDING
     )
     
@@ -152,6 +156,20 @@ async def get_order(
         )
     
     return order
+
+
+@router.get("/my-orders", response_model=List[OrderResponse])
+async def get_my_orders(
+    current_user: User = Depends(get_current_user),
+    limit: int = 50,
+    db: Session = Depends(get_db)
+):
+    """Get all orders for the authenticated customer"""
+    orders = db.query(Order).filter(
+        Order.customer_id == current_user.id
+    ).order_by(Order.created_at.desc()).limit(limit).all()
+
+    return orders
 
 
 @router.get("/customer/{customer_id}", response_model=List[OrderResponse])

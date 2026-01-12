@@ -18,12 +18,13 @@ from ..schemas.payment import (
     CheckoutSessionResponse
 )
 from ..middleware import get_current_user
+from ..config import settings
 
 router = APIRouter(prefix="/api", tags=["Payment"])
 
 # Initialize Stripe
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
+stripe.api_key = settings.stripe_secret_key
+STRIPE_WEBHOOK_SECRET = settings.stripe_webhook_secret
 
 
 @router.post("/create-payment-intent", response_model=PaymentIntentResponse)
@@ -145,7 +146,25 @@ async def stripe_webhook(
             event = json.loads(payload)
 
         # Handle the event
-        if event['type'] == 'payment_intent.succeeded':
+        if event['type'] == 'checkout.session.completed':
+            session = event['data']['object']
+
+            # Find order by stripe session ID
+            order = db.query(Order).filter(
+                Order.stripe_session_id == session['id']
+            ).first()
+
+            if order:
+                # Update order status to confirmed and paid
+                order.payment_status = ModelPaymentStatus.PAID
+                order.status = ModelOrderStatus.CONFIRMED
+                order.payment_intent_id = session.get('payment_intent')
+                db.commit()
+                db.refresh(order)
+
+                print(f"✅ Order #{order.id} confirmed via webhook - sent to restaurant #{order.location_id}")
+
+        elif event['type'] == 'payment_intent.succeeded':
             payment_intent = event['data']['object']
 
             # Find order by payment intent ID
@@ -157,6 +176,9 @@ async def stripe_webhook(
                 order.payment_status = ModelPaymentStatus.PAID
                 order.status = ModelOrderStatus.CONFIRMED
                 db.commit()
+                db.refresh(order)
+
+                print(f"✅ Order #{order.id} confirmed via webhook - sent to restaurant #{order.location_id}")
 
         elif event['type'] == 'payment_intent.payment_failed':
             payment_intent = event['data']['object']
@@ -169,6 +191,8 @@ async def stripe_webhook(
             if order:
                 order.payment_status = ModelPaymentStatus.FAILED
                 db.commit()
+
+                print(f"❌ Order #{order.id} payment failed")
 
         return {"status": "success"}
 
@@ -196,8 +220,8 @@ async def create_checkout_session(
 ):
     """Create a Stripe Checkout Session and return the URL to redirect to"""
     try:
-        # Get base URL from environment or use default
-        base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+        # Get base URL from settings
+        base_url = settings.frontend_url
         
         # Build line items for Stripe
         line_items = []

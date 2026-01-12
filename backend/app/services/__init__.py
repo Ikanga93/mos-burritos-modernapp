@@ -18,6 +18,8 @@ from .supabase_auth import (
     verify_phone_otp,
     get_supabase_user_from_token,
     refresh_supabase_session,
+    sign_in_with_email,
+    sign_up_with_email,
 )
 
 __all__ = [
@@ -35,5 +37,7 @@ __all__ = [
     "verify_phone_otp",
     "get_supabase_user_from_token",
     "refresh_supabase_session",
+    "sign_in_with_email",
+    "sign_up_with_email",
 ]
 

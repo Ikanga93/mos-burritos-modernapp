@@ -4,10 +4,18 @@ export const orderApi = {
   // === CUSTOMER ENDPOINTS ===
 
   /**
-   * Create a new order
+   * Create a new order (authenticated - for logged-in customers)
    */
   createOrder: async (orderData) => {
     const response = await customerClient.post('/orders', orderData)
+    return response.data
+  },
+
+  /**
+   * Create a guest order (no authentication required)
+   */
+  createGuestOrder: async (orderData) => {
+    const response = await publicClient.post('/orders', orderData)
     return response.data
   },
 

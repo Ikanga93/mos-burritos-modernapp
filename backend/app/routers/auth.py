@@ -18,10 +18,145 @@ from ..services import (
     decode_token,
     send_phone_otp,
     verify_phone_otp,
+    sign_in_with_email,
+    sign_up_with_email,
+    refresh_supabase_session,
+    get_supabase_user_from_token,
 )
 from ..middleware import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+
+# ==================== Unified Customer Auth (Environment-based) ====================
+
+@router.post("/customer/login", response_model=PhoneLoginResponse)
+async def customer_login(
+    credentials: UserLogin,
+    db: Session = Depends(get_db)
+):
+    """
+    Customer login - automatically uses:
+    - JWT in development
+    - Supabase in production
+    """
+    if settings.use_supabase_auth:
+        # Production: Use Supabase
+        return await supabase_login(credentials, db)
+    else:
+        # Development: Use JWT
+        user = authenticate_user(db, credentials.email, credentials.password)
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        token_data = {
+            "sub": user.id,
+            "email": user.email,
+            "role": user.role.value
+        }
+
+        access_token = create_access_token(token_data)
+        refresh_token = create_refresh_token(token_data)
+
+        return PhoneLoginResponse(
+            user=user,
+            accessToken=access_token,
+            refreshToken=refresh_token,
+            isNewUser=False
+        )
+
+
+@router.post("/customer/register", response_model=PhoneLoginResponse)
+async def customer_register(
+    user_data: UserRegister,
+    db: Session = Depends(get_db)
+):
+    """
+    Customer registration - automatically uses:
+    - JWT in development
+    - Supabase in production
+    """
+    # Check if email already exists
+    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+
+    if settings.use_supabase_auth:
+        # Production: Use Supabase
+        return await supabase_register(user_data, db)
+    else:
+        # Development: Use JWT
+        new_user = User(
+            email=user_data.email,
+            password_hash=get_password_hash(user_data.password),
+            first_name=user_data.first_name,
+            last_name=user_data.last_name,
+            phone=user_data.phone,
+            role=ModelUserRole.CUSTOMER,
+            is_active=True
+        )
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+
+        token_data = {
+            "sub": new_user.id,
+            "email": new_user.email,
+            "role": new_user.role.value
+        }
+
+        access_token = create_access_token(token_data)
+        refresh_token = create_refresh_token(token_data)
+
+        return PhoneLoginResponse(
+            user=new_user,
+            accessToken=access_token,
+            refreshToken=refresh_token,
+            isNewUser=True
+        )
+
+
+@router.post("/customer/refresh")
+async def customer_refresh(request: RefreshTokenRequest):
+    """
+    Customer token refresh - automatically uses:
+    - JWT in development
+    - Supabase in production
+    """
+    if settings.use_supabase_auth:
+        # Production: Use Supabase
+        return await supabase_refresh(request)
+    else:
+        # Development: Use JWT
+        token_data = decode_token(request.refreshToken)
+
+        if not token_data:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token"
+            )
+
+        new_token_data = {
+            "sub": token_data.user_id,
+            "email": token_data.email,
+            "role": token_data.role
+        }
+
+        new_access_token = create_access_token(new_token_data)
+        new_refresh_token = create_refresh_token(new_token_data)
+
+        return {
+            "access_token": new_access_token,
+            "refresh_token": new_refresh_token
+        }
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -181,6 +316,126 @@ async def logout(current_user: User = Depends(get_current_user)):
     # In a production system, you might want to blacklist the token here
     # For now, we rely on client-side token removal
     return {"message": "Logged out successfully"}
+
+
+# ==================== Supabase Email Auth Endpoints ====================
+
+@router.post("/supabase/login", response_model=PhoneLoginResponse)
+async def supabase_login(
+    credentials: UserLogin,
+    db: Session = Depends(get_db)
+):
+    """Login with email and password using Supabase Auth"""
+    result = await sign_in_with_email(credentials.email, credentials.password)
+
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=result.get("error", "Invalid credentials")
+        )
+
+    supabase_user = result["user"]
+    session = result["session"]
+
+    # Find or create user in our database
+    user = db.query(User).filter(
+        (User.supabase_id == supabase_user["id"]) |
+        (User.email == supabase_user["email"])
+    ).first()
+
+    if not user:
+        # Create new user
+        user = User(
+            supabase_id=supabase_user["id"],
+            email=supabase_user["email"],
+            role=ModelUserRole.CUSTOMER,
+            is_active=True
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    elif not user.supabase_id:
+        # Link existing user to Supabase
+        user.supabase_id = supabase_user["id"]
+        db.commit()
+
+    return PhoneLoginResponse(
+        user=user,
+        accessToken=session["access_token"],
+        refreshToken=session["refresh_token"],
+        isNewUser=False
+    )
+
+
+@router.post("/supabase/register", response_model=PhoneLoginResponse)
+async def supabase_register(
+    user_data: UserRegister,
+    db: Session = Depends(get_db)
+):
+    """Register new user with email and password using Supabase Auth"""
+    # Check if email already exists
+    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+
+    # Create user in Supabase
+    metadata = {
+        "first_name": user_data.first_name,
+        "last_name": user_data.last_name,
+        "phone": user_data.phone
+    }
+
+    result = await sign_up_with_email(user_data.email, user_data.password, metadata)
+
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result.get("error", "Failed to create account")
+        )
+
+    supabase_user = result["user"]
+    session = result["session"]
+
+    # Create user in our database
+    new_user = User(
+        supabase_id=supabase_user["id"],
+        email=user_data.email,
+        first_name=user_data.first_name,
+        last_name=user_data.last_name,
+        phone=user_data.phone,
+        role=ModelUserRole.CUSTOMER,
+        is_active=True
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return PhoneLoginResponse(
+        user=new_user,
+        accessToken=session["access_token"],
+        refreshToken=session["refresh_token"],
+        isNewUser=True
+    )
+
+
+@router.post("/supabase/refresh")
+async def supabase_refresh(request: RefreshTokenRequest):
+    """Refresh Supabase session"""
+    result = await refresh_supabase_session(request.refreshToken)
+
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=result.get("error", "Failed to refresh session")
+        )
+
+    return {
+        "access_token": result["session"]["access_token"],
+        "refresh_token": result["session"]["refresh_token"]
+    }
 
 
 # ==================== Phone Auth Endpoints ====================

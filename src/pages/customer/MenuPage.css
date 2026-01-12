@@ -81,61 +81,14 @@
   font-size: 1.2rem;
 }
 
-/* Menu Grid - Centered Cards with Fixed Width */
+/* Menu Grid - Responsive grid layout with fixed card size */
 .menu-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 300px);
+  gap: 0.875rem;
   margin-bottom: 2rem;
-  align-items: stretch;
-  max-width: 600px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Responsive - Multiple columns on larger screens, but cards maintain size */
-@media (min-width: 1200px) {
-  .menu-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
-    max-width: 1280px;
-    margin-left: auto;
-    margin-right: auto;
-    align-items: stretch;
-  }
-  
-  .menu-grid > * {
-    width: 100%;
-    max-width: 600px;
-    justify-self: center;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1199px) {
-  .menu-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    align-items: center;
-  }
-}
-
-/* Mobile */
-@media (max-width: 767px) {
-  .menu-grid {
-    gap: 0.875rem;
-  }
-  
-  .category-tabs {
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-  }
-  
-  .category-tab {
-    padding: 0.625rem 1.25rem;
-    font-size: 0.875rem;
-  }
+  justify-content: center;
+  width: 100%;
 }
 
 /* Floating Cart Button (Mobile) */

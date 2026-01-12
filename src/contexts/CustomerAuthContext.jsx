@@ -21,6 +21,9 @@ export const CustomerAuthProvider = ({ children }) => {
 
   // Initialize auth state from localStorage
   useEffect(() => {
+    // Clean up any old auth type tracking from previous hybrid system
+    localStorage.removeItem('authType')
+
     const storedAccessToken = localStorage.getItem('customerAccessToken')
     const storedRefreshToken = localStorage.getItem('customerRefreshToken')
 
@@ -47,8 +50,33 @@ export const CustomerAuthProvider = ({ children }) => {
         const data = await response.json()
         setCustomer(data)
         setIsAuthenticated(true)
+      } else if (response.status === 401) {
+        // Token expired, try to refresh
+        console.log('Access token expired, attempting refresh...')
+        const newToken = await refreshAccessTokenInternal()
+
+        if (newToken) {
+          // Retry with new token
+          const retryResponse = await fetch(`${apiUrl}/api/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${newToken}`
+            }
+          })
+
+          if (retryResponse.ok) {
+            const data = await retryResponse.json()
+            setCustomer(data)
+            setIsAuthenticated(true)
+          } else {
+            // Still failed, clear auth
+            clearAuth()
+          }
+        } else {
+          // Refresh failed, clear auth
+          clearAuth()
+        }
       } else {
-        // Token is invalid, clear auth
+        // Other error, clear auth
         clearAuth()
       }
     } catch (error) {
@@ -59,10 +87,10 @@ export const CustomerAuthProvider = ({ children }) => {
     }
   }
 
-  // Login
+  // Login (Supabase only)
   const login = async (email, password) => {
     try {
-      const response = await fetch(`${apiUrl}/api/auth/login`, {
+      const response = await fetch(`${apiUrl}/api/auth/supabase/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -72,17 +100,17 @@ export const CustomerAuthProvider = ({ children }) => {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.detail || 'Login failed')
+        throw new Error(error.detail || 'Invalid login credentials')
       }
 
       const data = await response.json()
 
-      // Store tokens
-      localStorage.setItem('customerAccessToken', data.access_token)
-      localStorage.setItem('customerRefreshToken', data.refresh_token)
+      // Store Supabase tokens
+      localStorage.setItem('customerAccessToken', data.accessToken)
+      localStorage.setItem('customerRefreshToken', data.refreshToken)
 
-      setAccessToken(data.access_token)
-      setRefreshToken(data.refresh_token)
+      setAccessToken(data.accessToken)
+      setRefreshToken(data.refreshToken)
       setCustomer(data.user)
       setIsAuthenticated(true)
 
@@ -93,10 +121,10 @@ export const CustomerAuthProvider = ({ children }) => {
     }
   }
 
-  // Register
+  // Register (using Supabase)
   const register = async (userData) => {
     try {
-      const response = await fetch(`${apiUrl}/api/auth/register`, {
+      const response = await fetch(`${apiUrl}/api/auth/supabase/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -111,12 +139,12 @@ export const CustomerAuthProvider = ({ children }) => {
 
       const data = await response.json()
 
-      // Auto-login after registration
-      localStorage.setItem('customerAccessToken', data.access_token)
-      localStorage.setItem('customerRefreshToken', data.refresh_token)
+      // Auto-login after registration with Supabase tokens
+      localStorage.setItem('customerAccessToken', data.accessToken)
+      localStorage.setItem('customerRefreshToken', data.refreshToken)
 
-      setAccessToken(data.access_token)
-      setRefreshToken(data.refresh_token)
+      setAccessToken(data.accessToken)
+      setRefreshToken(data.refreshToken)
       setCustomer(data.user)
       setIsAuthenticated(true)
 
@@ -142,8 +170,8 @@ export const CustomerAuthProvider = ({ children }) => {
     setIsAuthenticated(false)
   }
 
-  // Refresh access token
-  const refreshAccessToken = async () => {
+  // Refresh access token (Supabase only)
+  const refreshAccessTokenInternal = async () => {
     const currentRefreshToken = refreshToken || localStorage.getItem('customerRefreshToken')
 
     if (!currentRefreshToken) {
@@ -152,12 +180,12 @@ export const CustomerAuthProvider = ({ children }) => {
     }
 
     try {
-      const response = await fetch(`${apiUrl}/api/auth/refresh`, {
+      const response = await fetch(`${apiUrl}/api/auth/supabase/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ refresh_token: currentRefreshToken })
+        body: JSON.stringify({ refreshToken: currentRefreshToken })
       })
 
       if (!response.ok) {
@@ -166,8 +194,12 @@ export const CustomerAuthProvider = ({ children }) => {
 
       const data = await response.json()
 
+      // Store new Supabase tokens
       localStorage.setItem('customerAccessToken', data.access_token)
+      localStorage.setItem('customerRefreshToken', data.refresh_token)
+
       setAccessToken(data.access_token)
+      setRefreshToken(data.refresh_token)
 
       return data.access_token
     } catch (error) {
@@ -176,6 +208,9 @@ export const CustomerAuthProvider = ({ children }) => {
       return null
     }
   }
+
+  // Public refresh function
+  const refreshAccessToken = refreshAccessTokenInternal
 
   const value = {
     customer,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, User, Menu as MenuIcon, X, LogOut } from 'lucide-react'
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext'
@@ -7,9 +7,23 @@ import './Navbar.css'
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const { isAuthenticated, customer, logout } = useCustomerAuth()
   const { itemCount } = useCart()
   const navigate = useNavigate()
+
+  // Scroll detection for transparent/solid navbar transition
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollThreshold = 50
+      setIsScrolled(window.scrollY > scrollThreshold)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    handleScroll() // Set initial state
+
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const handleLogout = () => {
     logout()
@@ -20,7 +34,7 @@ const Navbar = () => {
   const closeMenu = () => setIsMenuOpen(false)
 
   return (
-    <nav className="customer-navbar">
+    <nav className={`customer-navbar ${isScrolled || isMenuOpen ? 'solid' : 'transparent'}`}>
       <div className="navbar-container">
         {/* Logo */}
         <Link to="/" className="navbar-logo" onClick={closeMenu}>

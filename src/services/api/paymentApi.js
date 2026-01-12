@@ -8,7 +8,7 @@ export const paymentApi = {
     const response = await publicClient.post('/create-payment-intent', {
       amount,
       currency,
-      customer_info: customerInfo,
+      customerInfo: customerInfo,
       items
     })
     return response.data
@@ -19,8 +19,8 @@ export const paymentApi = {
    */
   verifyPayment: async (sessionId, orderId) => {
     const response = await publicClient.post('/verify-payment', {
-      session_id: sessionId,
-      order_id: orderId
+      sessionId: sessionId,
+      orderId: orderId
     })
     return response.data
   },
@@ -51,9 +51,9 @@ export const paymentApi = {
     const response = await publicClient.post('/create-checkout-session', {
       amount,
       currency,
-      customer_info: customerInfo,
+      customerInfo: customerInfo,
       items,
-      location_id: locationId,
+      locationId: locationId,
       notes: notes || ''
     })
     return response.data

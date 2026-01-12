@@ -41,12 +41,16 @@ class OrderItem(BaseModel):
 # Order schemas
 class OrderCreate(BaseModel):
     location_id: Optional[str] = None  # Optional - will use first active location if not provided
+    customer_id: Optional[str] = None  # Optional - for linking to user account
     customer_name: str = Field(min_length=1)
     customer_phone: str = Field(min_length=10)
     customer_email: Optional[EmailStr] = None
     items: List[OrderItem]
     notes: Optional[str] = None
     payment_method: Optional[PaymentMethod] = None
+    payment_status: Optional[PaymentStatus] = None
+    stripe_session_id: Optional[str] = None
+    payment_intent_id: Optional[str] = None
 
 
 class OrderUpdate(BaseModel):
