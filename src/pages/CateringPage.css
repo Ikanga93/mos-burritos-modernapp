@@ -1,5 +1,6 @@
 .catering-page {
   min-height: 100vh;
+  margin-top: calc(var(--navbar-height) * -1);
 }
 
 .catering-hero {
@@ -164,7 +165,7 @@
 
 .back-button {
   position: absolute;
-  top: 20px;
+  top: calc(var(--navbar-height) + 20px);
   left: 20px;
   z-index: 3;
   display: flex;
@@ -571,6 +572,7 @@
   .back-button {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
+    top: calc(var(--navbar-height) + 15px);
   }
 
   .back-button span {

@@ -14,37 +14,10 @@
   left: 0;
   right: 0;
   width: 100%;
-  z-index: 1000;
+  z-index: 2000;
+  background-color: #1B5E20; /* Dark Green */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-/* Transparent state - default on homepage */
-.customer-navbar.transparent {
-  background-color: transparent;
-  box-shadow: none;
-}
-
-/* Subtle dark gradient overlay for text readability on transparent */
-.customer-navbar.transparent::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0) 100%);
-  z-index: -1;
-  pointer-events: none;
-}
-
-/* Solid state - when scrolled or menu open */
-.customer-navbar.solid {
-  background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.customer-navbar.solid::before {
-  display: none;
 }
 
 .navbar-container {
@@ -64,7 +37,7 @@
   align-items: center;
   gap: 0.75rem;
   text-decoration: none;
-  color: #333;
+  color: #FFFFFF; /* White on Green */
   font-weight: 700;
   font-size: 1.25rem;
   transition: color 0.3s ease, text-shadow 0.3s ease;
@@ -84,12 +57,6 @@
   .navbar-logo-text {
     display: inline;
   }
-}
-
-/* Transparent navbar logo - white text */
-.customer-navbar.transparent .navbar-logo {
-  color: #FFFFFF;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* Desktop Navigation Links */
@@ -112,24 +79,14 @@
 
 .navbar-link {
   text-decoration: none;
-  color: #555;
+  color: #FFFFFF; /* White on Green */
   font-weight: 500;
   transition: color 0.3s ease, text-shadow 0.3s ease;
   white-space: nowrap;
 }
 
 .navbar-link:hover {
-  color: #FF6B35;
-}
-
-/* Transparent navbar links - white text */
-.customer-navbar.transparent .navbar-link {
-  color: #FFFFFF;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
-}
-
-.customer-navbar.transparent .navbar-link:hover {
-  color: #FFD700;
+  color: #FFD700; /* Gold hover */
 }
 
 /* Right Actions */
@@ -147,21 +104,12 @@
   justify-content: center;
   padding: 0.5rem;
   border-radius: 8px;
-  color: #555;
+  color: #FFFFFF; /* White on Green */
   text-decoration: none;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .navbar-cart:hover {
-  background-color: #f5f5f5;
-}
-
-/* Transparent navbar cart - white icon */
-.customer-navbar.transparent .navbar-cart {
-  color: #FFFFFF;
-}
-
-.customer-navbar.transparent .navbar-cart:hover {
   background-color: rgba(255, 255, 255, 0.15);
 }
 
@@ -189,10 +137,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background-color: #f8f9fa;
+  background-color: rgba(255, 255, 255, 0.1); /* Subtle white bg */
   border: none;
   border-radius: 8px;
-  color: #555;
+  color: #FFFFFF; /* White on Green */
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
@@ -205,7 +153,7 @@
 }
 
 .navbar-user-button:hover {
-  background-color: #e9ecef;
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
 .navbar-user-button:hover+.user-dropdown,
@@ -251,65 +199,25 @@
   border-top: 1px solid #eee;
 }
 
-/* Login Button */
-.navbar-login-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background-color: #FF6B35;
-  color: white;
-  text-decoration: none;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: background-color 0.3s ease, color 0.3s ease, border 0.3s ease;
-  border: 2px solid transparent;
-}
-
-.navbar-login-btn:hover {
-  background-color: #e55a2b;
-}
-
-/* Transparent navbar login button - white border */
-.customer-navbar.transparent .navbar-login-btn {
-  background-color: transparent;
-  color: #FFFFFF;
-  border: 2px solid #FFFFFF;
-}
-
-.customer-navbar.transparent .navbar-login-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: #FFFFFF;
-}
-
-/* Logout Button */
+/* Login/Logout Buttons */
+.navbar-login-btn,
 .navbar-logout-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   background-color: transparent;
-  color: #dc3545;
-  border: 1px solid #dc3545;
+  color: #FFFFFF;
+  border: 2px solid #FFFFFF;
+  text-decoration: none;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
+.navbar-login-btn:hover,
 .navbar-logout-btn:hover {
-  background-color: #dc3545;
-  color: white;
-}
-
-/* Transparent navbar logout button - white border */
-.customer-navbar.transparent .navbar-logout-btn {
-  background-color: transparent;
-  color: #FFFFFF;
-  border: 2px solid #FFFFFF;
-}
-
-.customer-navbar.transparent .navbar-logout-btn:hover {
   background-color: rgba(255, 255, 255, 0.2);
   color: #FFFFFF;
 }
@@ -322,7 +230,7 @@
   padding: 0.5rem;
   background: none;
   border: none;
-  color: #555;
+  color: #FFFFFF; /* White on Green */
   cursor: pointer;
   transition: color 0.3s ease;
 }
@@ -333,23 +241,18 @@
   }
 }
 
-/* Transparent navbar menu toggle - white icon */
-.customer-navbar.transparent .navbar-menu-toggle {
-  color: #FFFFFF;
-}
-
 /* Mobile Menu */
 .navbar-mobile-menu {
   display: flex;
   flex-direction: column;
-  background-color: white;
-  border-top: 1px solid #eee;
+  background-color: #1B5E20; /* Dark Green */
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding: 1rem 0;
   position: absolute;
   top: 100%;
   left: 0;
   width: 100%;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 @media (min-width: 1024px) {
@@ -361,7 +264,7 @@
 .mobile-menu-link {
   padding: 0.75rem 1.5rem;
   text-decoration: none;
-  color: #555;
+  color: #FFFFFF;
   font-weight: 500;
   transition: background-color 0.2s;
   display: flex;
@@ -376,15 +279,15 @@
 }
 
 .mobile-menu-link:hover {
-  background-color: #f8f9fa;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .mobile-menu-divider {
   height: 1px;
-  background-color: #eee;
+  background-color: rgba(255, 255, 255, 0.1);
   margin: 0.5rem 0;
 }
 
 .logout-link {
-  color: #dc3545;
+  color: #FFCDD2; /* Light red for logout contrast */
 }

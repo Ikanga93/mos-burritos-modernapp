@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { getSupabaseSession, isSupabaseEnabled, signOutSupabase } from '../services/supabaseClient'
+import {
+  getSupabaseSession,
+  isSupabaseEnabled,
+  signOutSupabase,
+  handleOAuthCallback as handleSupabaseOAuthCallback,
+  signInWithGoogle as supabaseSignInWithGoogle
+} from '../services/supabaseClient'
 
 const CustomerAuthContext = createContext(null)
 
@@ -271,6 +277,55 @@ export const CustomerAuthProvider = ({ children }) => {
   // Public refresh function
   const refreshAccessToken = refreshAccessTokenInternal
 
+  // Sign in with Google OAuth
+  const signInWithGoogle = async () => {
+    if (!isProduction || !isSupabaseEnabled()) {
+      return {
+        success: false,
+        error: 'Google sign-in is only available in production mode'
+      }
+    }
+
+    try {
+      await supabaseSignInWithGoogle()
+      // Redirects to Google - execution stops here
+      return { success: true }
+    } catch (error) {
+      console.error('Google sign-in error:', error)
+      return {
+        success: false,
+        error: error.message || 'Failed to sign in with Google'
+      }
+    }
+  }
+
+  // Handle OAuth callback after redirect
+  const handleOAuthCallback = async () => {
+    try {
+      // Get session from Supabase (Supabase automatically detects OAuth session in URL)
+      const session = await handleSupabaseOAuthCallback()
+
+      if (!session) {
+        return { success: false, error: 'No session found' }
+      }
+
+      // Fetch user data from backend using the session token
+      // The existing fetchCurrentUser function already handles this
+      setAccessToken(session.access_token)
+      setRefreshToken(session.refresh_token)
+
+      await fetchCurrentUser(session.access_token)
+
+      return { success: true }
+    } catch (error) {
+      console.error('OAuth callback error:', error)
+      return {
+        success: false,
+        error: error.message || 'Authentication failed'
+      }
+    }
+  }
+
   const value = {
     customer,
     accessToken,
@@ -280,7 +335,9 @@ export const CustomerAuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    refreshAccessToken
+    refreshAccessToken,
+    signInWithGoogle,
+    handleOAuthCallback
   }
 
   return (

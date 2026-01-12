@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Mail, Lock, User, Phone, UserPlus } from 'lucide-react'
+import { Mail, Lock, User, Phone, UserPlus, Chrome } from 'lucide-react'
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext'
 import { useToast } from '../../contexts/ToastContext'
 
@@ -19,7 +19,7 @@ const RegisterPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
 
-  const { register, isAuthenticated } = useCustomerAuth()
+  const { register, isAuthenticated, signInWithGoogle } = useCustomerAuth()
   const { showToast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -127,6 +127,22 @@ const RegisterPage = () => {
       setErrors({ general: 'An unexpected error occurred. Please try again.' })
       showToast('An unexpected error occurred', 'error')
     } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleSignUp = async () => {
+    setIsLoading(true)
+    try {
+      const result = await signInWithGoogle()
+
+      if (!result.success) {
+        showToast(result.error || 'Google sign-up failed', 'error')
+        setIsLoading(false)
+      }
+      // If successful, will redirect to Google (loading stays true)
+    } catch (error) {
+      showToast('An unexpected error occurred', 'error')
       setIsLoading(false)
     }
   }
@@ -277,6 +293,22 @@ const RegisterPage = () => {
                 Create Account
               </>
             )}
+          </button>
+
+          {/* OR Divider */}
+          <div className="auth-divider">
+            <span>OR</span>
+          </div>
+
+          {/* Google Sign Up Button */}
+          <button
+            type="button"
+            className="google-signin-btn"
+            onClick={handleGoogleSignUp}
+            disabled={isLoading}
+          >
+            <Chrome size={20} />
+            Sign up with Google
           </button>
         </form>
 

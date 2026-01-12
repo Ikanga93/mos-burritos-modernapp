@@ -72,8 +72,50 @@ export const getSupabaseUser = async () => {
  */
 export const signOutSupabase = async () => {
   if (!supabase) return
-  
+
   await supabase.auth.signOut()
+}
+
+/**
+ * Sign in with Google OAuth
+ * Redirects to Google sign-in page
+ */
+export const signInWithGoogle = async () => {
+  if (!supabase) {
+    throw new Error('Supabase not initialized')
+  }
+
+  const redirectUrl = `${window.location.origin}/auth/callback`
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: redirectUrl,
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      }
+    }
+  })
+
+  if (error) throw error
+  return data
+}
+
+/**
+ * Handle OAuth callback - extracts session from URL after OAuth redirect
+ */
+export const handleOAuthCallback = async () => {
+  if (!supabase) return null
+
+  const { data: { session }, error } = await supabase.auth.getSession()
+
+  if (error) {
+    console.error('OAuth callback error:', error)
+    return null
+  }
+
+  return session
 }
 
 export default supabase

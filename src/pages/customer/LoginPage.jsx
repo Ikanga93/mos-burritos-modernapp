@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Mail, Lock, LogIn } from 'lucide-react'
+import { Mail, Lock, LogIn, Chrome } from 'lucide-react'
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext'
 import { useToast } from '../../contexts/ToastContext'
 
@@ -13,7 +13,7 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
 
-  const { login, isAuthenticated } = useCustomerAuth()
+  const { login, isAuthenticated, signInWithGoogle } = useCustomerAuth()
   const { showToast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -85,6 +85,22 @@ const LoginPage = () => {
       setErrors({ general: 'An unexpected error occurred. Please try again.' })
       showToast('An unexpected error occurred', 'error')
     } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true)
+    try {
+      const result = await signInWithGoogle()
+
+      if (!result.success) {
+        showToast(result.error || 'Google sign-in failed', 'error')
+        setIsLoading(false)
+      }
+      // If successful, will redirect to Google (loading stays true)
+    } catch (error) {
+      showToast('An unexpected error occurred', 'error')
       setIsLoading(false)
     }
   }
@@ -164,6 +180,22 @@ const LoginPage = () => {
                 Login
               </>
             )}
+          </button>
+
+          {/* OR Divider */}
+          <div className="auth-divider">
+            <span>OR</span>
+          </div>
+
+          {/* Google Sign In Button */}
+          <button
+            type="button"
+            className="google-signin-btn"
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
+          >
+            <Chrome size={20} />
+            Sign in with Google
           </button>
         </form>
 

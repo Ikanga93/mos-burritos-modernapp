@@ -1,5 +1,6 @@
 .location-page {
   min-height: 100vh;
+  margin-top: calc(var(--navbar-height) * -1); /* Pull up to start under navbar */
   padding-top: 0;
   position: relative;
 }
@@ -17,7 +18,7 @@
 /* Map Page Title */
 .map-page-title {
   position: absolute;
-  top: 20px;
+  top: calc(var(--navbar-height) + 20px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
@@ -38,7 +39,7 @@
 /* Map Back Button */
 .map-back-button {
   position: absolute;
-  top: 20px;
+  top: calc(var(--navbar-height) + 20px);
   left: 20px;
   z-index: 1000;
   display: flex;
@@ -54,6 +55,11 @@
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Move Leaflet Zoom Controls below navbar */
+.full-map-container .leaflet-top {
+  top: calc(var(--navbar-height) + 20px) !important;
 }
 
 .map-back-button:hover {
@@ -458,6 +464,7 @@
 
 @media (max-width: 768px) {
   .location-page {
+    margin-top: calc(var(--navbar-height) * -1);
     padding-top: 0;
   }
 
@@ -513,7 +520,7 @@
   .map-back-button {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
-    top: 15px;
+    top: calc(var(--navbar-height) + 15px);
     left: 15px;
   }
 
@@ -524,7 +531,7 @@
   .map-page-title {
     font-size: 1.5rem;
     padding: 0.5rem 1.5rem;
-    top: 15px;
+    top: calc(var(--navbar-height) + 15px);
   }
 }
 

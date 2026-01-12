@@ -1,6 +1,7 @@
 /* Modern About Page - No Cards, Creative Layouts */
 .about-page {
   min-height: 100vh;
+  margin-top: calc(var(--navbar-height) * -1);
   background: #ffffff;
 }
 
@@ -61,7 +62,7 @@
 
 .back-button {
   position: absolute;
-  top: 24px;
+  top: calc(var(--navbar-height) + 24px);
   left: 24px;
   z-index: 4;
   display: flex;
@@ -728,7 +729,7 @@
   .back-button {
     padding: 10px 16px;
     font-size: 0.9rem;
-    top: 16px;
+    top: calc(var(--navbar-height) + 16px);
     left: 16px;
   }
 

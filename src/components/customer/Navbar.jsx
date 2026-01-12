@@ -34,7 +34,7 @@ const Navbar = () => {
   const closeMenu = () => setIsMenuOpen(false)
 
   return (
-    <nav className={`customer-navbar ${isScrolled || isMenuOpen ? 'solid' : 'transparent'}`}>
+    <nav className="customer-navbar">
       <div className="navbar-container">
         {/* Logo */}
         <Link to="/" className="navbar-logo" onClick={closeMenu}>

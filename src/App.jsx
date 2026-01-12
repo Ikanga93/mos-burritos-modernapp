@@ -26,6 +26,7 @@ import NotFound from './pages/NotFound'
 // Customer Pages
 import LoginPage from './pages/customer/LoginPage'
 import RegisterPage from './pages/customer/RegisterPage'
+import AuthCallbackPage from './pages/customer/AuthCallbackPage'
 import MenuPage from './pages/customer/MenuPage'
 import OrderConfirmationPage from './pages/customer/OrderConfirmationPage'
 import CheckoutPage from './pages/customer/CheckoutPage'
@@ -149,6 +150,7 @@ function App() {
                             {/* Customer Auth Routes */}
                             <Route path="/login" element={<LoginPage />} />
                             <Route path="/register" element={<RegisterPage />} />
+                            <Route path="/auth/callback" element={<AuthCallbackPage />} />
 
                             {/* Customer Menu & Ordering Routes */}
                             <Route path="/menu" element={<MenuPage />} />
