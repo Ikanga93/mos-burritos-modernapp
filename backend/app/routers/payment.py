@@ -13,15 +13,18 @@ from ..schemas.payment import (
     PaymentIntentRequest,
     PaymentIntentResponse,
     VerifyPaymentRequest,
-    VerifyPaymentResponse
+    VerifyPaymentResponse,
+    CheckoutSessionRequest,
+    CheckoutSessionResponse
 )
 from ..middleware import get_current_user
+from ..config import settings
 
 router = APIRouter(prefix="/api", tags=["Payment"])
 
 # Initialize Stripe
-stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
-STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
+stripe.api_key = settings.stripe_secret_key
+STRIPE_WEBHOOK_SECRET = settings.stripe_webhook_secret
 
 
 @router.post("/create-payment-intent", response_model=PaymentIntentResponse)
@@ -143,7 +146,25 @@ async def stripe_webhook(
             event = json.loads(payload)
 
         # Handle the event
-        if event['type'] == 'payment_intent.succeeded':
+        if event['type'] == 'checkout.session.completed':
+            session = event['data']['object']
+
+            # Find order by stripe session ID
+            order = db.query(Order).filter(
+                Order.stripe_session_id == session['id']
+            ).first()
+
+            if order:
+                # Update order status to confirmed and paid
+                order.payment_status = ModelPaymentStatus.PAID
+                order.status = ModelOrderStatus.CONFIRMED
+                order.payment_intent_id = session.get('payment_intent')
+                db.commit()
+                db.refresh(order)
+
+                print(f"✅ Order #{order.id} confirmed via webhook - sent to restaurant #{order.location_id}")
+
+        elif event['type'] == 'payment_intent.succeeded':
             payment_intent = event['data']['object']
 
             # Find order by payment intent ID
@@ -155,6 +176,9 @@ async def stripe_webhook(
                 order.payment_status = ModelPaymentStatus.PAID
                 order.status = ModelOrderStatus.CONFIRMED
                 db.commit()
+                db.refresh(order)
+
+                print(f"✅ Order #{order.id} confirmed via webhook - sent to restaurant #{order.location_id}")
 
         elif event['type'] == 'payment_intent.payment_failed':
             payment_intent = event['data']['object']
@@ -167,6 +191,8 @@ async def stripe_webhook(
             if order:
                 order.payment_status = ModelPaymentStatus.FAILED
                 db.commit()
+
+                print(f"❌ Order #{order.id} payment failed")
 
         return {"status": "success"}
 
@@ -184,4 +210,87 @@ async def stripe_webhook(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Webhook processing failed: {str(e)}"
+        )
+
+
+@router.post("/create-checkout-session", response_model=CheckoutSessionResponse)
+async def create_checkout_session(
+    request: CheckoutSessionRequest,
+    db: Session = Depends(get_db)
+):
+    """Create a Stripe Checkout Session and return the URL to redirect to"""
+    try:
+        # Get base URL from settings
+        base_url = settings.frontend_url
+        
+        # Build line items for Stripe
+        line_items = []
+        for item in request.items:
+            line_items.append({
+                'price_data': {
+                    'currency': request.currency,
+                    'product_data': {
+                        'name': item.get('name', 'Menu Item'),
+                    },
+                    'unit_amount': int(float(item.get('price', 0)) * 100),  # Convert to cents
+                },
+                'quantity': item.get('quantity', 1),
+            })
+        
+        # Create Stripe Checkout Session
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=line_items,
+            mode='payment',
+            success_url=f"{base_url}/order-success?session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{base_url}/order-confirmation",
+            customer_email=request.customerInfo.get('email'),
+            metadata={
+                'customer_name': request.customerInfo.get('name', ''),
+                'customer_email': request.customerInfo.get('email', ''),
+                'customer_phone': request.customerInfo.get('phone', ''),
+                'location_id': request.locationId,
+                'notes': request.notes or '',
+            },
+        )
+
+        return CheckoutSessionResponse(
+            sessionId=session.id,
+            url=session.url
+        )
+    except stripe.error.StripeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Stripe error: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Checkout session creation failed: {str(e)}"
+        )
+
+
+@router.get("/stripe-session/{session_id}")
+async def get_stripe_session(session_id: str):
+    """Retrieve Stripe session details including metadata"""
+    try:
+        session = stripe.checkout.Session.retrieve(session_id)
+        
+        return {
+            "id": session.id,
+            "payment_status": session.payment_status,
+            "customer_email": session.customer_email,
+            "amount_total": session.amount_total,
+            "metadata": session.metadata,
+            "line_items": session.line_items if hasattr(session, 'line_items') else None
+        }
+    except stripe.error.StripeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Stripe error: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve session: {str(e)}"
         )

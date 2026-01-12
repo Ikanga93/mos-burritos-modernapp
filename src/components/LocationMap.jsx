@@ -180,12 +180,14 @@ const LocationMap = ({ locations = [], liveLocations = [] }) => {
                                     )}
                                 </div>
                                 <div className="popup-actions">
-                                    <a
-                                        href="/menu"
-                                        className="popup-order-btn"
-                                    >
-                                        Order Online
-                                    </a>
+                                    {marker.phone && (
+                                        <a
+                                            href={`tel:${marker.phone.replace(/\D/g, '')}`}
+                                            className="popup-order-btn"
+                                        >
+                                            Call to Order
+                                        </a>
+                                    )}
                                     <a
                                         href={`https://www.google.com/maps/dir/?api=1&destination=${marker.position[0]},${marker.position[1]}`}
                                         target="_blank"

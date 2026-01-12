@@ -49,6 +49,7 @@ class MenuItemBase(BaseModel):
 class MenuItemCreate(MenuItemBase):
     location_id: str
     category_id: str
+    is_available: Optional[bool] = True
 
 
 class MenuItemUpdate(BaseModel):

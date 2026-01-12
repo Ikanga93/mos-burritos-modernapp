@@ -8,7 +8,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 
 from ..database import get_db
-from ..models import Order, OrderStatusHistory, Location, User, OrderStatus as ModelOrderStatus
+from ..models import Order, OrderStatusHistory, Location, User, OrderStatus as ModelOrderStatus, PaymentStatus as ModelPaymentStatus
 from ..schemas import (
     OrderCreate,
     OrderUpdate,
@@ -63,6 +63,7 @@ async def create_order(
     # Create order
     new_order = Order(
         location_id=location_id,  # Use the resolved location_id
+        customer_id=order_data.customer_id,  # Link to user account if provided
         customer_name=order_data.customer_name,
         customer_phone=order_data.customer_phone,
         customer_email=order_data.customer_email,
@@ -72,6 +73,9 @@ async def create_order(
         total=total,
         notes=order_data.notes,
         payment_method=order_data.payment_method,
+        payment_status=ModelPaymentStatus(order_data.payment_status.value) if order_data.payment_status else ModelPaymentStatus.PENDING,
+        payment_intent_id=order_data.payment_intent_id,
+        stripe_session_id=order_data.stripe_session_id,
         status=ModelOrderStatus.PENDING
     )
     
@@ -137,6 +141,34 @@ async def get_orders(
     return orders
 
 
+@router.get("/my-orders", response_model=List[OrderResponse])
+async def get_my_orders(
+    current_user: User = Depends(get_current_user),
+    limit: int = 50,
+    db: Session = Depends(get_db)
+):
+    """Get all orders for the authenticated customer"""
+    orders = db.query(Order).filter(
+        Order.customer_id == current_user.id
+    ).order_by(Order.created_at.desc()).limit(limit).all()
+
+    return orders
+
+
+@router.get("/customer/{customer_id}", response_model=List[OrderResponse])
+async def get_customer_orders(
+    customer_id: str,
+    limit: int = 50,
+    db: Session = Depends(get_db)
+):
+    """Get all orders for a specific customer (public - for order tracking)"""
+    orders = db.query(Order).filter(
+        Order.customer_id == customer_id
+    ).order_by(Order.created_at.desc()).limit(limit).all()
+
+    return orders
+
+
 @router.get("/{order_id}", response_model=OrderResponse)
 async def get_order(
     order_id: str,
@@ -152,20 +184,6 @@ async def get_order(
         )
     
     return order
-
-
-@router.get("/customer/{customer_id}", response_model=List[OrderResponse])
-async def get_customer_orders(
-    customer_id: str,
-    limit: int = 50,
-    db: Session = Depends(get_db)
-):
-    """Get all orders for a specific customer (public - for order tracking)"""
-    orders = db.query(Order).filter(
-        Order.customer_id == customer_id
-    ).order_by(Order.created_at.desc()).limit(limit).all()
-
-    return orders
 
 
 @router.patch("/{order_id}/status", response_model=OrderResponse)
@@ -306,6 +324,103 @@ async def reset_order_to_cooking(
         "estimated_time": estimated_time,
         "estimated_completion": order.estimated_completion
     }
+
+
+@router.patch("/{order_id}/cancel", response_model=OrderResponse)
+async def cancel_order(
+    order_id: str,
+    reason: Optional[str] = None,
+    current_user: Optional[User] = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Cancel an order
+    - Customers can cancel their own orders if status is PENDING or CONFIRMED
+    - Staff/Admin can cancel any order at any time
+    - Guest customers can cancel via order ID (if they have it)
+    """
+    order = db.query(Order).filter(Order.id == order_id).first()
+
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Order not found"
+        )
+
+    # Check if order is already cancelled or completed
+    if order.status == ModelOrderStatus.CANCELLED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Order is already cancelled"
+        )
+    
+    if order.status == ModelOrderStatus.COMPLETED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot cancel a completed order"
+        )
+
+    # Permission checks
+    is_staff = False
+    is_owner = False
+    
+    if current_user:
+        # Check if user is staff/admin/owner
+        is_staff = current_user.role.value in [UserRole.STAFF.value, UserRole.ADMIN.value, UserRole.OWNER.value]
+        is_owner = order.customer_id == current_user.id
+        
+        # Staff can cancel any order
+        if is_staff:
+            # Check location access for staff/admin
+            if current_user.role.value != UserRole.OWNER.value:
+                if not can_access_location(db, current_user, order.location_id):
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="You don't have access to cancel orders for this location"
+                    )
+        # Customers can only cancel their own orders
+        elif not is_owner:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only cancel your own orders"
+            )
+        
+        # Customers can only cancel if order is in early stages
+        if is_owner and not is_staff:
+            if order.status not in [ModelOrderStatus.PENDING, ModelOrderStatus.CONFIRMED]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="You can only cancel orders that are pending or confirmed. Please contact the restaurant."
+                )
+
+    # Update order status
+    old_status = order.status
+    order.status = ModelOrderStatus.CANCELLED
+    order.completed_at = datetime.utcnow()
+
+    # Determine cancellation notes
+    if reason:
+        notes = reason
+    elif current_user and is_staff:
+        notes = f"Order cancelled by staff ({current_user.email})"
+    elif current_user and is_owner:
+        notes = f"Order cancelled by customer ({current_user.email})"
+    else:
+        notes = "Order cancelled"
+
+    # Add to status history
+    status_history = OrderStatusHistory(
+        order_id=order.id,
+        status=ModelOrderStatus.CANCELLED,
+        changed_by=current_user.id if current_user else None,
+        notes=notes
+    )
+    db.add(status_history)
+
+    db.commit()
+    db.refresh(order)
+
+    return order
 
 
 @router.delete("/{order_id}")

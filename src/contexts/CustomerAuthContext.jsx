@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import { API_BASE_URL } from '../config/api'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { getSupabaseSession, isSupabaseEnabled, signOutSupabase } from '../services/supabaseClient'
 
 const CustomerAuthContext = createContext(null)
 
@@ -12,206 +12,273 @@ export const useCustomerAuth = () => {
 }
 
 export const CustomerAuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [customer, setCustomer] = useState(null)
+  const [accessToken, setAccessToken] = useState(null)
+  const [refreshToken, setRefreshToken] = useState(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Map backend snake_case fields to frontend camelCase
-  const mapUserFields = (backendUser) => {
-    if (!backendUser) return null
-    return {
-      ...backendUser,
-      firstName: backendUser.first_name || backendUser.firstName,
-      lastName: backendUser.last_name || backendUser.lastName,
-    }
-  }
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+  const isProduction = import.meta.env.VITE_ENVIRONMENT === 'production'
 
+  // Initialize auth state from localStorage or Supabase
   useEffect(() => {
-    // Check for stored customer tokens on mount
-    const accessToken = localStorage.getItem('customerAccessToken')
-    const refreshToken = localStorage.getItem('customerRefreshToken')
+    const initAuth = async () => {
+      // Clean up any old auth type tracking from previous hybrid system
+      localStorage.removeItem('authType')
 
-    if (accessToken) {
-      fetchUser(accessToken)
-    } else {
-      setLoading(false)
+      if (isProduction && isSupabaseEnabled()) {
+        // Production: Check Supabase session
+        const session = await getSupabaseSession()
+        if (session) {
+          setAccessToken(session.access_token)
+          setRefreshToken(session.refresh_token)
+          fetchCurrentUser(session.access_token)
+        } else {
+          setIsLoading(false)
+        }
+      } else {
+        // Development: Check localStorage for JWT
+        const storedAccessToken = localStorage.getItem('customerAccessToken')
+        const storedRefreshToken = localStorage.getItem('customerRefreshToken')
+
+        if (storedAccessToken && storedRefreshToken) {
+          setAccessToken(storedAccessToken)
+          setRefreshToken(storedRefreshToken)
+          fetchCurrentUser(storedAccessToken)
+        } else {
+          setIsLoading(false)
+        }
+      }
     }
+
+    initAuth()
   }, [])
 
-  const fetchUser = async (token) => {
+  // Fetch current user info
+  const fetchCurrentUser = async (token) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      const response = await fetch(`${apiUrl}/api/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch user')
-      }
+      if (response.ok) {
+        const data = await response.json()
+        setCustomer(data)
+        setIsAuthenticated(true)
+      } else if (response.status === 401) {
+        // Token expired, try to refresh
+        console.log('Access token expired, attempting refresh...')
+        const newToken = await refreshAccessTokenInternal()
 
-      const userData = await response.json()
+        if (newToken) {
+          // Retry with new token
+          const retryResponse = await fetch(`${apiUrl}/api/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${newToken}`
+            }
+          })
 
-      // Only set user if they are a customer
-      if (userData.role === 'customer') {
-        setUser(mapUserFields(userData))
+          if (retryResponse.ok) {
+            const data = await retryResponse.json()
+            setCustomer(data)
+            setIsAuthenticated(true)
+          } else {
+            // Still failed, clear auth
+            clearAuth()
+          }
+        } else {
+          // Refresh failed, clear auth
+          clearAuth()
+        }
       } else {
-        // If not a customer, clear tokens
-        localStorage.removeItem('customerAccessToken')
-        localStorage.removeItem('customerRefreshToken')
+        // Other error, clear auth
+        clearAuth()
       }
     } catch (error) {
-      console.error('Error fetching customer user:', error)
-      // If token is invalid, clear storage
-      localStorage.removeItem('customerAccessToken')
-      localStorage.removeItem('customerRefreshToken')
+      console.error('Error fetching current user:', error)
+      clearAuth()
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
+  // Login (environment-aware)
+  const login = async (email, password) => {
+    try {
+      // Use different endpoints based on environment
+      const endpoint = isProduction && isSupabaseEnabled()
+        ? `${apiUrl}/api/auth/supabase/login`
+        : `${apiUrl}/api/auth/login`
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.detail || 'Invalid login credentials')
+      }
+
+      const data = await response.json()
+
+      // Store tokens (localStorage for dev, Supabase handles storage for prod)
+      if (!isProduction) {
+        localStorage.setItem('customerAccessToken', data.accessToken)
+        localStorage.setItem('customerRefreshToken', data.refreshToken)
+      }
+
+      setAccessToken(data.accessToken)
+      setRefreshToken(data.refreshToken)
+      
+      // Ensure customer data is fully set before resolving
+      // This prevents race conditions where redirect happens before customer is available
+      const userData = data.user
+      setCustomer(userData)
+      setIsAuthenticated(true)
+
+      // Wait a bit for state to propagate (React batches updates)
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      return { success: true, user: userData }
+    } catch (error) {
+      console.error('Login error:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  // Register (environment-aware)
   const register = async (userData) => {
     try {
-      setError(null)
+      // Use different endpoints based on environment
+      const endpoint = isProduction && isSupabaseEnabled()
+        ? `${apiUrl}/api/auth/supabase/register`
+        : `${apiUrl}/api/auth/register`
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.detail || 'Registration failed')
+      }
+
+      const data = await response.json()
+
+      // Store tokens (localStorage for dev, Supabase handles storage for prod)
+      if (!isProduction) {
+        localStorage.setItem('customerAccessToken', data.accessToken)
+        localStorage.setItem('customerRefreshToken', data.refreshToken)
+      }
+
+      setAccessToken(data.accessToken)
+      setRefreshToken(data.refreshToken)
       
-      // Ensure role is customer
-      const customerData = {
-        ...userData,
-        role: 'customer'
-      }
+      // Ensure customer data is fully set before resolving
+      // This prevents race conditions where redirect happens before customer is available
+      const userData = data.user
+      setCustomer(userData)
+      setIsAuthenticated(true)
 
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      // Wait a bit for state to propagate (React batches updates)
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      return { success: true, user: userData }
+    } catch (error) {
+      console.error('Registration error:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  // Logout (environment-aware)
+  const logout = useCallback(async () => {
+    if (isProduction && isSupabaseEnabled()) {
+      await signOutSupabase()
+    }
+    clearAuth()
+  }, [])
+
+  // Clear authentication
+  const clearAuth = () => {
+    localStorage.removeItem('customerAccessToken')
+    localStorage.removeItem('customerRefreshToken')
+    setAccessToken(null)
+    setRefreshToken(null)
+    setCustomer(null)
+    setIsAuthenticated(false)
+  }
+
+  // Refresh access token (environment-aware)
+  const refreshAccessTokenInternal = async () => {
+    const currentRefreshToken = refreshToken || localStorage.getItem('customerRefreshToken')
+
+    if (!currentRefreshToken) {
+      clearAuth()
+      return null
+    }
+
+    try {
+      // Use different endpoints based on environment
+      const endpoint = isProduction && isSupabaseEnabled()
+        ? `${apiUrl}/api/auth/supabase/refresh`
+        : `${apiUrl}/api/auth/refresh`
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(customerData)
+        body: JSON.stringify({ refreshToken: currentRefreshToken })
       })
+
+      if (!response.ok) {
+        throw new Error('Token refresh failed')
+      }
 
       const data = await response.json()
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Registration failed')
+      // Store new tokens (different field names for JWT vs Supabase)
+      const newAccessToken = data.accessToken || data.access_token
+      const newRefreshToken = data.refreshToken || data.refresh_token
+
+      if (!isProduction) {
+        localStorage.setItem('customerAccessToken', newAccessToken)
+        localStorage.setItem('customerRefreshToken', newRefreshToken)
       }
 
-      // Verify the registered user is a customer
-      if (data.user.role !== 'customer') {
-        throw new Error('Invalid registration - not a customer account')
-      }
+      setAccessToken(newAccessToken)
+      setRefreshToken(newRefreshToken)
 
-      // Store customer tokens
-      localStorage.setItem('customerAccessToken', data.accessToken)
-      localStorage.setItem('customerRefreshToken', data.refreshToken)
-      setUser(mapUserFields(data.user))
-
-      return data
+      return newAccessToken
     } catch (error) {
-      setError(error.message)
-      throw error
+      console.error('Token refresh error:', error)
+      clearAuth()
+      return null
     }
   }
 
-  const login = async (credentials) => {
-    try {
-      setError(null)
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(credentials)
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Login failed')
-      }
-
-      // Verify the logged in user is a customer
-      if (data.user.role !== 'customer') {
-        throw new Error('Access denied. Customer credentials required.')
-      }
-
-      // Store customer tokens
-      localStorage.setItem('customerAccessToken', data.accessToken)
-      localStorage.setItem('customerRefreshToken', data.refreshToken)
-      setUser(mapUserFields(data.user))
-
-      return data
-    } catch (error) {
-      setError(error.message)
-      throw error
-    }
-  }
-
-  const logout = async () => {
-    try {
-      const refreshToken = localStorage.getItem('customerRefreshToken')
-      if (refreshToken) {
-        await fetch(`${API_BASE_URL}/api/auth/logout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('customerAccessToken')}`
-          },
-          body: JSON.stringify({ refreshToken })
-        })
-      }
-    } catch (error) {
-      console.error('Customer logout error:', error)
-    } finally {
-      // Clear customer storage and state regardless of API call success
-      localStorage.removeItem('customerAccessToken')
-      localStorage.removeItem('customerRefreshToken')
-      setUser(null)
-    }
-  }
-
-  const refreshAccessToken = async () => {
-    try {
-      const refreshToken = localStorage.getItem('customerRefreshToken')
-      if (!refreshToken) {
-        throw new Error('No refresh token available')
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ refreshToken })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Token refresh failed')
-      }
-
-      // Verify refreshed user is still a customer
-      if (data.user.role !== 'customer') {
-        throw new Error('Invalid user role after refresh')
-      }
-
-      localStorage.setItem('customerAccessToken', data.accessToken)
-      setUser(mapUserFields(data.user))
-
-      return data.accessToken
-    } catch (error) {
-      console.error('Customer token refresh error:', error)
-      // If refresh fails, logout
-      logout()
-      throw error
-    }
-  }
+  // Public refresh function
+  const refreshAccessToken = refreshAccessTokenInternal
 
   const value = {
-    user,
-    loading,
-    error,
-    register,
+    customer,
+    accessToken,
+    refreshToken,
+    isAuthenticated,
+    isLoading,
     login,
+    register,
     logout,
     refreshAccessToken
   }
@@ -221,4 +288,6 @@ export const CustomerAuthProvider = ({ children }) => {
       {children}
     </CustomerAuthContext.Provider>
   )
-} 
+}
+
+export default CustomerAuthProvider

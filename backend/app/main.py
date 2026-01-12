@@ -20,8 +20,6 @@ from .routers import (
     live_locations_router,
     admin_router,
 )
-from .services import get_password_hash
-from .models.user import UserRole
 
 
 @asynccontextmanager
@@ -36,47 +34,10 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     print("✅ Database tables created/verified")
     
-    # Create default admin user if not exists
-    await create_default_admin()
-    
     yield
     
     # Shutdown
     print("👋 Shutting down Mo's Burritos Backend...")
-
-
-async def create_default_admin():
-    """Create default admin/owner user on first run"""
-    from .database import SessionLocal
-    
-    db = SessionLocal()
-    try:
-        # Check if any owner exists
-        existing_owner = db.query(User).filter(User.role == UserRole.OWNER).first()
-        
-        if not existing_owner:
-            print("🔧 Creating default owner user...")
-            
-            admin_user = User(
-                email=settings.admin_email,
-                password_hash=get_password_hash(settings.admin_password),
-                role=UserRole.OWNER,
-                first_name="Admin",
-                last_name="Owner",
-                is_active=True
-            )
-            
-            db.add(admin_user)
-            db.commit()
-            
-            print(f"✅ Default owner created:")
-            print(f"   Email: {settings.admin_email}")
-            print(f"   Password: {settings.admin_password}")
-            print("   ⚠️  Please change the default password!")
-        else:
-            print("✅ Owner user already exists")
-    finally:
-        db.close()
 
 
 # Create FastAPI application
@@ -138,7 +99,7 @@ async def upload_menu_image(
     from .database import get_db
 
     # Validate file type
-    allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
+    allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/avif']
     if image.content_type not in allowed_types:
         raise HTTPException(
             status_code=400,

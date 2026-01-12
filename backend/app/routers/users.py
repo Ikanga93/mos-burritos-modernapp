@@ -23,6 +23,58 @@ from ..services import get_password_hash
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
+# ==================== Owner Registration (First-Time Setup) ====================
+
+@router.get("/check-owner-exists")
+async def check_owner_exists(db: Session = Depends(get_db)):
+    """Check if an owner account already exists in the system"""
+    owner = db.query(User).filter(User.role == ModelUserRole.OWNER).first()
+    return {"exists": owner is not None}
+
+
+@router.post("/register-owner", response_model=UserResponse)
+async def register_owner(
+    user_data: UserCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Register the first owner account (one-time setup).
+    This endpoint only works if no owner exists yet.
+    """
+    # Check if owner already exists
+    existing_owner = db.query(User).filter(User.role == ModelUserRole.OWNER).first()
+    if existing_owner:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="An owner account already exists. Please contact the system administrator."
+        )
+    
+    # Check if email is already taken
+    existing_email = db.query(User).filter(User.email == user_data.email).first()
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # Create owner account
+    new_owner = User(
+        email=user_data.email,
+        password_hash=get_password_hash(user_data.password),
+        first_name=user_data.first_name,
+        last_name=user_data.last_name,
+        phone=user_data.phone,
+        role=ModelUserRole.OWNER,
+        is_active=True
+    )
+    
+    db.add(new_owner)
+    db.commit()
+    db.refresh(new_owner)
+    
+    return new_owner
+
+
 @router.get("", response_model=List[UserResponse])
 async def get_users(
     role_filter: UserRole = None,
@@ -140,13 +192,21 @@ async def create_user(
             detail="Email already registered"
         )
     
+    # Convert role string to Enum properly
+    model_role = ModelUserRole(user_data.role.value)
+    
+    # Handle empty phone string as None to avoid unique constraint violation
+    phone_val = user_data.phone
+    if phone_val is not None and not phone_val.strip():
+        phone_val = None
+    
     new_user = User(
         email=user_data.email,
         password_hash=get_password_hash(user_data.password),
         first_name=user_data.first_name,
         last_name=user_data.last_name,
-        phone=user_data.phone,
-        role=ModelUserRole(user_data.role.value)
+        phone=phone_val,
+        role=model_role
     )
     
     db.add(new_user)
@@ -180,6 +240,11 @@ async def update_user(
         )
     
     update_data = user_data.model_dump(exclude_unset=True)
+    
+    # Handle empty phone string to avoid unique constraint violation
+    if "phone" in update_data and update_data["phone"] is not None and not update_data["phone"].strip():
+        update_data["phone"] = None
+
     for field, value in update_data.items():
         setattr(user, field, value)
     

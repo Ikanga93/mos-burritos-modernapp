@@ -1,0 +1,241 @@
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+
+const CartContext = createContext(null)
+
+export const useCart = () => {
+  const context = useContext(CartContext)
+  if (!context) {
+    throw new Error('useCart must be used within a CartProvider')
+  }
+  return context
+}
+
+const TAX_RATE = 0.0825 // 8.25% tax rate
+
+export const CartProvider = ({ children }) => {
+  const [items, setItems] = useState([])
+  const [locationId, setLocationId] = useState(null)
+
+  // Initialize cart from localStorage on mount
+  useEffect(() => {
+    try {
+      const storedItems = localStorage.getItem('cart_items')
+      const storedLocationId = localStorage.getItem('cart_location_id')
+
+      if (storedItems) {
+        setItems(JSON.parse(storedItems))
+      }
+
+      if (storedLocationId) {
+        setLocationId(storedLocationId)
+      }
+    } catch (error) {
+      console.error('Error loading cart from localStorage:', error)
+    }
+  }, [])
+
+  // Persist cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('cart_items', JSON.stringify(items))
+    if (locationId) {
+      localStorage.setItem('cart_location_id', locationId)
+    } else {
+      localStorage.removeItem('cart_location_id')
+    }
+  }, [items, locationId])
+
+  // Calculate item price including options
+  const calculateItemPrice = (item) => {
+    let price = parseFloat(item.price)
+
+    // Add option modifiers
+    if (item.options) {
+      Object.values(item.options).forEach(optionGroup => {
+        if (Array.isArray(optionGroup)) {
+          optionGroup.forEach(option => {
+            price += parseFloat(option.price_modifier || 0)
+          })
+        }
+      })
+    }
+
+    return price
+  }
+
+  // Calculate subtotal
+  const subtotal = items.reduce((sum, item) => {
+    const itemPrice = calculateItemPrice(item)
+    return sum + (itemPrice * item.quantity)
+  }, 0)
+
+  // Calculate tax
+  const tax = subtotal * TAX_RATE
+
+  // Calculate total
+  const total = subtotal + tax
+
+  // Get item count
+  const itemCount = items.reduce((count, item) => count + item.quantity, 0)
+
+  // Validate location - can't mix items from different locations
+  const validateLocation = useCallback((newLocationId) => {
+    if (!locationId) {
+      // No location set yet, allow
+      return { valid: true }
+    }
+
+    if (locationId !== newLocationId) {
+      // Different location, not allowed
+      return {
+        valid: false,
+        message: 'Your cart contains items from a different location. Please clear your cart or choose the same location.'
+      }
+    }
+
+    return { valid: true }
+  }, [locationId])
+
+  // Compare options to check if two items have the same customizations
+  const optionsMatch = (options1, options2) => {
+    if (!options1 && !options2) return true
+    if (!options1 || !options2) return false
+
+    const keys1 = Object.keys(options1).sort()
+    const keys2 = Object.keys(options2).sort()
+
+    if (keys1.length !== keys2.length) return false
+    if (keys1.join(',') !== keys2.join(',')) return false
+
+    return keys1.every(key => {
+      const opts1 = options1[key]
+      const opts2 = options2[key]
+
+      if (opts1.length !== opts2.length) return false
+
+      const names1 = opts1.map(o => o.name).sort().join(',')
+      const names2 = opts2.map(o => o.name).sort().join(',')
+
+      return names1 === names2
+    })
+  }
+
+  // Add item to cart
+  const addItem = useCallback((item, quantity = 1) => {
+    const validation = validateLocation(item.location_id)
+
+    if (!validation.valid) {
+      return { success: false, error: validation.message }
+    }
+
+    setItems((prevItems) => {
+      // For items with options, check if exact same item+options exists
+      const existingItemIndex = prevItems.findIndex(i =>
+        i.menu_item_id === item.menu_item_id && optionsMatch(i.options, item.options)
+      )
+
+      if (existingItemIndex !== -1) {
+        // Update quantity of existing item with same options
+        return prevItems.map((i, idx) =>
+          idx === existingItemIndex
+            ? { ...i, quantity: i.quantity + quantity }
+            : i
+        )
+      } else {
+        // Add new item (or same item with different options)
+        return [...prevItems, {
+          cart_id: `${item.menu_item_id}-${Date.now()}`, // Unique ID for cart entries
+          menu_item_id: item.menu_item_id || item.id,
+          name: item.name,
+          price: item.price,
+          quantity,
+          location_id: item.location_id,
+          emoji: item.emoji,
+          image_url: item.image_url,
+          options: item.options || null
+        }]
+      }
+    })
+
+    // Set location if not already set
+    if (!locationId) {
+      setLocationId(item.location_id)
+    }
+
+    return { success: true }
+  }, [locationId, validateLocation])
+
+  // Remove item from cart (by cart_id or menu_item_id)
+  const removeItem = useCallback((itemId) => {
+    setItems((prevItems) => {
+      const newItems = prevItems.filter(item =>
+        item.cart_id !== itemId && item.menu_item_id !== itemId
+      )
+
+      // If cart is empty, clear location
+      if (newItems.length === 0) {
+        setLocationId(null)
+      }
+
+      return newItems
+    })
+  }, [])
+
+  // Update item quantity (by cart_id)
+  const updateQuantity = useCallback((cartId, quantity) => {
+    if (quantity <= 0) {
+      removeItem(cartId)
+      return
+    }
+
+    setItems((prevItems) =>
+      prevItems.map(item =>
+        item.cart_id === cartId
+          ? { ...item, quantity }
+          : item
+      )
+    )
+  }, [removeItem])
+
+  // Clear entire cart
+  const clearCart = useCallback(() => {
+    setItems([])
+    setLocationId(null)
+    localStorage.removeItem('cart_items')
+    localStorage.removeItem('cart_location_id')
+  }, [])
+
+  // Get item by menu_item_id (returns first match)
+  const getItem = useCallback((menuItemId) => {
+    return items.find(item => item.menu_item_id === menuItemId)
+  }, [items])
+
+  // Get all cart items for a specific menu item
+  const getCartItemsByMenuId = useCallback((menuItemId) => {
+    return items.filter(item => item.menu_item_id === menuItemId)
+  }, [items])
+
+  const value = {
+    items,
+    locationId,
+    itemCount,
+    subtotal: parseFloat(subtotal.toFixed(2)),
+    tax: parseFloat(tax.toFixed(2)),
+    total: parseFloat(total.toFixed(2)),
+    addItem,
+    removeItem,
+    updateQuantity,
+    clearCart,
+    getItem,
+    getCartItemsByMenuId,
+    calculateItemPrice,
+    validateLocation
+  }
+
+  return (
+    <CartContext.Provider value={value}>
+      {children}
+    </CartContext.Provider>
+  )
+}
+
+export default CartProvider

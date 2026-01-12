@@ -153,7 +153,7 @@ async def upload_menu_image(
         )
 
     # Validate file type
-    allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif']
     if file.content_type not in allowed_types:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -1,0 +1,25 @@
+.customer-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.customer-main {
+  flex: 1;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem 2rem 1.5rem;
+}
+
+/* Remove all padding for hero section at the top */
+.customer-main > .hero:first-child,
+.customer-main > :first-child {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .customer-main {
+    padding: 0 1rem 1rem 1rem;
+  }
+}

@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import { API_BASE_URL } from '../config/api'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
 const AdminAuthContext = createContext(null)
 
@@ -12,272 +11,257 @@ export const useAdminAuth = () => {
 }
 
 export const AdminAuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [admin, setAdmin] = useState(null)
+  const [accessToken, setAccessToken] = useState(null)
+  const [refreshToken, setRefreshToken] = useState(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [assignedLocations, setAssignedLocations] = useState([])
+  const [currentLocation, setCurrentLocation] = useState(null)
+  const [role, setRole] = useState(null)
 
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+  // Initialize auth state from localStorage
   useEffect(() => {
-    // Check for stored admin tokens on mount
-    const accessToken = localStorage.getItem('adminAccessToken')
-    const refreshToken = localStorage.getItem('adminRefreshToken')
+    const storedAccessToken = localStorage.getItem('adminAccessToken')
+    const storedRefreshToken = localStorage.getItem('adminRefreshToken')
+    const storedCurrentLocation = localStorage.getItem('adminCurrentLocation')
 
-    if (accessToken) {
-      fetchUser(accessToken)
+    if (storedAccessToken && storedRefreshToken) {
+      setAccessToken(storedAccessToken)
+      setRefreshToken(storedRefreshToken)
+
+      if (storedCurrentLocation) {
+        try {
+          setCurrentLocation(JSON.parse(storedCurrentLocation))
+        } catch (e) {
+          console.error('Error parsing stored location:', e)
+        }
+      }
+
+      // Fetch current user
+      fetchCurrentUser(storedAccessToken)
     } else {
-      setLoading(false)
+      setIsLoading(false)
     }
   }, [])
 
-  const fetchUser = async (token) => {
+  // Fetch current user info including assigned locations
+  const fetchCurrentUser = async (token) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      const response = await fetch(`${apiUrl}/api/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
 
-      if (response.status === 403 || response.status === 401) {
-        // Token might be expired, try to refresh
-        console.log('Access token expired, attempting refresh...')
-        try {
-          const newToken = await refreshAccessToken()
-          // Retry with new token
-          const retryResponse = await fetch(`${API_BASE_URL}/api/auth/me`, {
-            headers: {
-              'Authorization': `Bearer ${newToken}`
-            }
-          })
-          
-          if (!retryResponse.ok) {
-            throw new Error('Failed to fetch user after token refresh')
-          }
-          
-          const userData = await retryResponse.json()
+      if (response.ok) {
+        const data = await response.json()
+        setAdmin(data)
+        setRole(data.role)
+        setIsAuthenticated(true)
 
-          // Only set user if they are an admin (owner, manager, or staff)
-          if (userData.role === 'owner' || userData.role === 'manager' || userData.role === 'staff') {
-            setUser(userData)
-          } else {
-            // If customer, clear tokens
-            localStorage.removeItem('adminAccessToken')
-            localStorage.removeItem('adminRefreshToken')
-          }
-          return
-        } catch (refreshError) {
-          console.error('Token refresh failed:', refreshError)
-          // Clear tokens and continue with error handling
-          localStorage.removeItem('adminAccessToken')
-          localStorage.removeItem('adminRefreshToken')
-          throw new Error('Session expired. Please log in again.')
+        // Fetch user's assigned locations
+        if (data.role !== 'owner') {
+          await fetchAssignedLocations(data.id, token)
+        } else {
+          // Owner has access to all locations
+          await fetchAllLocations(token)
+        }
+      } else {
+        // Token is invalid, clear auth
+        clearAuth()
+      }
+    } catch (error) {
+      console.error('Error fetching current user:', error)
+      clearAuth()
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Fetch assigned locations for manager/staff
+  const fetchAssignedLocations = async (userId, token) => {
+    try {
+      const response = await fetch(`${apiUrl}/api/users/${userId}/locations`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setAssignedLocations(data.locations || [])
+
+        // Set first location as current if not already set
+        if (!currentLocation && data.locations && data.locations.length > 0) {
+          switchLocation(data.locations[0].location_id)
         }
       }
+    } catch (error) {
+      console.error('Error fetching assigned locations:', error)
+    }
+  }
+
+  // Fetch all locations for owner
+  const fetchAllLocations = async (token) => {
+    try {
+      const response = await fetch(`${apiUrl}/api/locations`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const locations = data.locations || data
+        setAssignedLocations(
+          locations.map(loc => ({
+            location_id: loc.id,
+            location_name: loc.name,
+            role: 'owner'
+          }))
+        )
+      }
+    } catch (error) {
+      console.error('Error fetching locations:', error)
+    }
+  }
+
+  // Login
+  const login = async (email, password) => {
+    try {
+      const response = await fetch(`${apiUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      })
 
       if (!response.ok) {
-        throw new Error('Failed to fetch user')
+        const error = await response.json()
+        throw new Error(error.detail || 'Login failed')
       }
 
-      const userData = await response.json()
+      const data = await response.json()
 
-      // Only set user if they are an admin (owner, manager, or staff)
-      if (userData.role === 'owner' || userData.role === 'manager' || userData.role === 'staff') {
-        setUser(userData)
+      // Only allow staff roles (owner, manager, staff)
+      if (data.user.role === 'customer') {
+        throw new Error('This account does not have admin access')
+      }
+
+      // Store tokens
+      localStorage.setItem('adminAccessToken', data.accessToken)
+      localStorage.setItem('adminRefreshToken', data.refreshToken)
+
+      setAccessToken(data.accessToken)
+      setRefreshToken(data.refreshToken)
+      setAdmin(data.user)
+      setRole(data.user.role)
+      setIsAuthenticated(true)
+
+      // Fetch assigned locations
+      if (data.user.role !== 'owner') {
+        await fetchAssignedLocations(data.user.id, data.accessToken)
       } else {
-        // If customer, clear tokens
-        localStorage.removeItem('adminAccessToken')
-        localStorage.removeItem('adminRefreshToken')
+        await fetchAllLocations(data.accessToken)
       }
+
+      return { success: true, user: data.user }
     } catch (error) {
-      console.error('Error fetching admin user:', error)
-      // Only clear storage if it's a session/auth error
-      if (error.message.includes('Session expired') || error.message.includes('authentication')) {
-        localStorage.removeItem('adminAccessToken')
-        localStorage.removeItem('adminRefreshToken')
-        setUser(null)
-      }
-    } finally {
-      setLoading(false)
+      console.error('Login error:', error)
+      return { success: false, error: error.message }
     }
   }
 
-  const register = async (userData) => {
-    try {
-      setError(null)
+  // Logout
+  const logout = useCallback(() => {
+    clearAuth()
+  }, [])
 
-      // Note: Backend register endpoint creates CUSTOMER accounts only
-      // For admin accounts, use the backend's admin user creation endpoint
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(userData)
-      })
+  // Clear authentication
+  const clearAuth = () => {
+    localStorage.removeItem('adminAccessToken')
+    localStorage.removeItem('adminRefreshToken')
+    localStorage.removeItem('adminCurrentLocation')
+    setAccessToken(null)
+    setRefreshToken(null)
+    setAdmin(null)
+    setRole(null)
+    setIsAuthenticated(false)
+    setAssignedLocations([])
+    setCurrentLocation(null)
+  }
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Registration failed')
+  // Switch current location
+  const switchLocation = (locationId) => {
+    const location = assignedLocations.find(loc => loc.location_id === locationId)
+    if (location) {
+      const locationData = {
+        id: location.location_id,
+        name: location.location_name
       }
-
-      // Verify the registered user is an admin (owner, manager, or staff)
-      if (data.user && data.user.role !== 'owner' && data.user.role !== 'manager' && data.user.role !== 'staff') {
-        throw new Error('Invalid registration - not an admin account')
-      }
-
-      // Store admin tokens
-      localStorage.setItem('adminAccessToken', data.accessToken)
-      localStorage.setItem('adminRefreshToken', data.refreshToken)
-      
-      // Store user information with location data
-      const userInfo = {
-        ...data.user,
-        assignedLocations: data.assignedLocations || [],
-        currentLocation: data.currentLocation || null
-      }
-      localStorage.setItem('currentUser', JSON.stringify(userInfo))
-      setUser(userInfo)
-
-      return data
-    } catch (error) {
-      setError(error.message)
-      throw error
+      setCurrentLocation(locationData)
+      localStorage.setItem('adminCurrentLocation', JSON.stringify(locationData))
     }
   }
 
-  const login = async (credentials) => {
-    try {
-      setError(null)
-      console.log('🔐 Attempting login with:', credentials.email)
-      console.log('🔐 API URL:', `${API_BASE_URL}/api/auth/login`)
+  // Check if user can access a location
+  const canAccessLocation = useCallback((locationId) => {
+    if (role === 'owner') return true
+    return assignedLocations.some(loc => loc.location_id === locationId)
+  }, [role, assignedLocations])
 
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(credentials)
-      })
-
-      console.log('🔐 Login response status:', response.status)
-      const data = await response.json()
-      console.log('🔐 Login response data:', data)
-
-      if (!response.ok) {
-        console.error('🔐 Login failed:', data)
-        throw new Error(data.detail || data.error || 'Login failed')
-      }
-
-      console.log('🔐 User role:', data.user?.role)
-
-      // Verify the logged in user is an admin (owner, manager, or staff - not customer)
-      if (!data.user || (data.user.role !== 'owner' && data.user.role !== 'manager' && data.user.role !== 'staff')) {
-        console.error('🔐 Access denied. User role:', data.user?.role)
-        throw new Error('Access denied. Admin credentials required.')
-      }
-
-      console.log('🔐 Storing tokens and user data...')
-
-      // Store admin tokens
-      localStorage.setItem('adminAccessToken', data.accessToken)
-      localStorage.setItem('adminRefreshToken', data.refreshToken)
-
-      // Store user information with location data
-      const userInfo = {
-        ...data.user,
-        assignedLocations: data.assignedLocations || [],
-        currentLocation: data.currentLocation || null
-      }
-      localStorage.setItem('currentUser', JSON.stringify(userInfo))
-      setUser(userInfo)
-
-      console.log('🔐 Login successful! User:', userInfo)
-      return data
-    } catch (error) {
-      console.error('🔐 Login error:', error)
-      setError(error.message)
-      throw error
-    }
-  }
-
-  const logout = async () => {
-    try {
-      const refreshToken = localStorage.getItem('adminRefreshToken')
-      if (refreshToken) {
-        await fetch(`${API_BASE_URL}/api/auth/logout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('adminAccessToken')}`
-          },
-          body: JSON.stringify({ refreshToken })
-        })
-      }
-    } catch (error) {
-      console.error('Admin logout error:', error)
-    } finally {
-      // Clear admin storage and state regardless of API call success
-      localStorage.removeItem('adminAccessToken')
-      localStorage.removeItem('adminRefreshToken')
-      localStorage.removeItem('currentUser')
-      setUser(null)
-    }
-  }
-
+  // Refresh access token
   const refreshAccessToken = async () => {
-    try {
-      const refreshToken = localStorage.getItem('adminRefreshToken')
-      if (!refreshToken) {
-        throw new Error('No refresh token available')
-      }
+    const currentRefreshToken = refreshToken || localStorage.getItem('adminRefreshToken')
 
-      const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+    if (!currentRefreshToken) {
+      clearAuth()
+      return null
+    }
+
+    try {
+      const response = await fetch(`${apiUrl}/api/auth/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ refreshToken })
+        body: JSON.stringify({ refreshToken: currentRefreshToken }) // Fixed: changed refresh_token to refreshToken to match schema
       })
+
+      if (!response.ok) {
+        throw new Error('Token refresh failed')
+      }
 
       const data = await response.json()
 
-      if (!response.ok) {
-        throw new Error(data.detail || data.error || 'Token refresh failed')
-      }
+      localStorage.setItem('adminAccessToken', data.accessToken) // Fixed: changed access_token to accessToken
+      setAccessToken(data.accessToken) // Fixed: changed access_token to accessToken
 
-      // Verify refreshed user is still an admin (owner, manager, or staff)
-      if (!data.user || (data.user.role !== 'owner' && data.user.role !== 'manager' && data.user.role !== 'staff')) {
-        throw new Error('Invalid user role after refresh')
-      }
-
-      // Store new tokens
-      localStorage.setItem('adminAccessToken', data.accessToken)
-      localStorage.setItem('adminRefreshToken', data.refreshToken)
-
-      // Store user information with location data
-      const userInfo = {
-        ...data.user,
-        assignedLocations: data.assignedLocations || [],
-        currentLocation: data.currentLocation || null
-      }
-      localStorage.setItem('currentUser', JSON.stringify(userInfo))
-      setUser(userInfo)
-
-      return data.accessToken
+      return data.accessToken // Fixed: changed access_token to accessToken
     } catch (error) {
-      console.error('Admin token refresh error:', error)
-      // If refresh fails, logout
-      logout()
-      throw error
+      console.error('Token refresh error:', error)
+      clearAuth()
+      return null
     }
   }
 
   const value = {
-    user,
-    loading,
-    error,
-    register,
+    admin,
+    accessToken,
+    refreshToken,
+    isAuthenticated,
+    isLoading,
+    role,
+    assignedLocations,
+    currentLocation,
     login,
     logout,
+    switchLocation,
+    canAccessLocation,
     refreshAccessToken
   }
 
@@ -286,4 +270,6 @@ export const AdminAuthProvider = ({ children }) => {
       {children}
     </AdminAuthContext.Provider>
   )
-} 
+}
+
+export default AdminAuthProvider

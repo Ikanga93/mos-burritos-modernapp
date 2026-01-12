@@ -104,10 +104,11 @@ const PickupLocationsModal = ({ onClose }) => {
               </div>
               <div className="modal-actions-group">
                 <a
-                  href="/menu"
+                  href={`tel:${loc.phone.replace(/\D/g, '')}`}
                   className="modal-order-btn"
                 >
-                  Order Online
+                  <Phone size={16} />
+                  Call to Order
                 </a>
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${loc.coordinates.lat},${loc.coordinates.lng}`}
@@ -117,12 +118,6 @@ const PickupLocationsModal = ({ onClose }) => {
                 >
                   <Navigation size={16} />
                   Directions
-                </a>
-                <a
-                  href={`tel:${loc.phone.replace(/\D/g, '')}`}
-                  className="modal-call-btn"
-                >
-                  <Phone size={16} />
                 </a>
               </div>
             </div>
@@ -201,12 +196,11 @@ const DeliveryModal = ({ onClose }) => {
 
 const HomePage = () => {
   const [showDiningModal, setShowDiningModal] = React.useState(false);
-  const [showPickupModal, setShowPickupModal] = React.useState(false);
   const [showDeliveryModal, setShowDeliveryModal] = React.useState(false);
 
   return (
     <>
-      <Hero onOrderOnlineClick={() => setShowPickupModal(true)} />
+      <Hero />
 
       {/* Most Ordered Section */}
       <MostOrdered />
@@ -227,15 +221,9 @@ const HomePage = () => {
               </div>
               <h3>Pick Up</h3>
               <p>Order ahead and skip the line. Your food will be hot and ready when you arrive at our restaurant or food trucks.</p>
-              <button
-                className="ordering-link"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowPickupModal(true);
-                }}
-              >
+              <Link to="/menu" className="ordering-link">
                 Order Now <ArrowRight size={16} />
-              </button>
+              </Link>
             </div>
 
             <div className="ordering-card card-dining">
@@ -450,7 +438,6 @@ const HomePage = () => {
 
       {/* Modals */}
       {showDiningModal && <DiningLocationsModal onClose={() => setShowDiningModal(false)} />}
-      {showPickupModal && <PickupLocationsModal onClose={() => setShowPickupModal(false)} />}
       {showDeliveryModal && <DeliveryModal onClose={() => setShowDeliveryModal(false)} />}
     </>
   )

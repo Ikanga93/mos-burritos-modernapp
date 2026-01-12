@@ -1,195 +1,210 @@
-import React, { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom'
-import { BusinessProvider } from './context/BusinessContext'
-import { CartProvider } from './context/CartContext'
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+
+// Context Providers
+import { ToastProvider } from './contexts/ToastContext'
+import { LocationProvider } from './contexts/LocationContext'
 import { CustomerAuthProvider } from './contexts/CustomerAuthContext'
 import { AdminAuthProvider } from './contexts/AdminAuthContext'
-import Header from './components/Header'
-import Footer from './components/Footer'
-import Cart from './components/Cart'
-import CustomerProtectedRoute from './components/CustomerProtectedRoute'
-import AdminProtectedRoute from './components/AdminProtectedRoute'
+import { CartProvider } from './contexts/CartContext'
+
+// Route Guards
+import ProtectedRoute from './components/shared/ProtectedRoute'
+import AdminProtectedRoute from './components/shared/AdminProtectedRoute'
+
+// Layout
+import CustomerLayout from './components/layout/CustomerLayout'
+import AdminLayout from './components/layout/AdminLayout'
+
+// Existing Pages
 import HomePage from './pages/HomePage'
-import MenuPage from './pages/MenuPage'
-import LocationPage from './pages/LocationPage'
 import AboutPage from './pages/AboutPage'
 import CateringPage from './pages/CateringPage'
-import LoginPage from './pages/LoginPage'
-import RegisterPage from './pages/RegisterPage'
-import AdminLoginPage from './pages/AdminLoginPage'
-import AdminRegisterPage from './pages/AdminRegisterPage'
-import Dashboard from './pages/Dashboard'
-import OrdersPage from './pages/OrdersPage'
-import OrderTracking from './pages/OrderTracking'
-import OrderConfirmation from './pages/OrderConfirmation'
-import OrderSuccessPage from './pages/OrderSuccessPage'
-import Checkout from './pages/Checkout'
+import LocationPage from './pages/LocationPage'
 import NotFound from './pages/NotFound'
 
-// Component to conditionally render customer layout
-const AppContent = () => {
-  const [isCartOpen, setIsCartOpen] = useState(false)
-  const location = useLocation()
+// Customer Pages
+import LoginPage from './pages/customer/LoginPage'
+import RegisterPage from './pages/customer/RegisterPage'
+import MenuPage from './pages/customer/MenuPage'
+import OrderConfirmationPage from './pages/customer/OrderConfirmationPage'
+import CheckoutPage from './pages/customer/CheckoutPage'
+import OrderSuccessPage from './pages/customer/OrderSuccessPage'
+import OrderTrackingPage from './pages/customer/OrderTrackingPage'
+import MyOrdersPage from './pages/customer/MyOrdersPage'
+import ProfilePage from './pages/customer/ProfilePage'
 
-  // Check if current route is an admin page or catering page
-  const isAdminPage = location.pathname.startsWith('/dashboard') ||
-    location.pathname.startsWith('/admin')
+// Admin Pages
+import AdminLoginPage from './pages/admin/AdminLoginPage'
+import AdminRegisterPage from './pages/admin/AdminRegisterPage'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage'
+import AdminOrdersPage from './pages/admin/AdminOrdersPage'
+import AdminMenuPage from './pages/admin/AdminMenuPage'
+import AdminLocationsPage from './pages/admin/AdminLocationsPage'
+import AdminStaffPage from './pages/admin/AdminStaffPage'
+import AdminCustomersPage from './pages/admin/AdminCustomersPage'
 
-  // Check if current route is catering page (no header/footer)
-  const isCateringPage = location.pathname === '/catering'
-  const isAboutPage = location.pathname === '/about'
-  const isLocationPage = location.pathname === '/location'
+// Error Boundary
+import ErrorBoundary from './components/ErrorBoundary'
 
-  // Check if we should open cart on menu page (when redirected from login)
-  useEffect(() => {
-    if (location.pathname === '/menu' && location.state?.openCheckout) {
-      setIsCartOpen(true)
-      // Clear the state to prevent reopening on subsequent navigations
-      window.history.replaceState({}, document.title)
-    }
-  }, [location])
-
-  console.log('App component rendering...')
-
-  const handleCartOpen = () => {
-    setIsCartOpen(true)
-  }
-
-  const handleCartClose = () => {
-    setIsCartOpen(false)
-  }
-
+function App() {
   return (
-    <div className="App">
-      {/* Only show customer header on customer pages (except catering, about, and location) */}
-      {!isAdminPage && !isCateringPage && !isAboutPage && !isLocationPage && (
-        <Header
-          onCartOpen={handleCartOpen}
-        />
-      )}
+    <ErrorBoundary>
+      <Router>
+        <ToastProvider>
+          <LocationProvider>
+            <CustomerAuthProvider>
+              <AdminAuthProvider>
+                <CartProvider>
+                  <Routes>
+                    {/* Admin Auth Routes (no layout) */}
+                    <Route path="/admin/login" element={<AdminLoginPage />} />
+                    <Route path="/admin/register" element={<AdminRegisterPage />} />
 
-      <Routes>
-        <Route
-          path="/"
-          element={<HomePage />}
-        />
-        <Route
-          path="/menu"
-          element={<MenuPage />}
-        />
-        <Route
-          path="/about"
-          element={<AboutPage />}
-        />
-        <Route
-          path="/catering"
-          element={<CateringPage />}
-        />
-        <Route
-          path="/location"
-          element={<LocationPage />}
-        />
-        <Route
-          path="/login"
-          element={<LoginPage />}
-        />
-        <Route
-          path="/register"
-          element={<RegisterPage />}
-        />
-        <Route
-          path="/admin/login"
-          element={<AdminLoginPage />}
-        />
-        <Route
-          path="/admin/register"
-          element={<AdminRegisterPage />}
-        />
-        <Route
-          path="/cart"
-          element={<Cart />}
-        />
-        <Route
-          path="/checkout"
-          element={<Checkout />}
-        />
-        <Route
-          path="/order-confirmation/:orderId"
-          element={<OrderConfirmation />}
-        />
-        <Route
-          path="/order-tracking/:orderId"
-          element={<OrderTracking />}
-        />
-        <Route
-          path="/order-tracking"
-          element={<OrderTracking />}
-        />
-        <Route
-          path="/orders"
-          element={
-            <CustomerProtectedRoute>
-              <OrdersPage />
-            </CustomerProtectedRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <AdminProtectedRoute>
-              <Dashboard />
-            </AdminProtectedRoute>
-          }
-        />
-        <Route
-          path="/order-success"
-          element={<OrderSuccessPage />}
-        />
-        <Route
-          path="*"
-          element={<NotFound />}
-        />
-      </Routes>
+                    {/* Admin Routes (with AdminLayout) */}
+                    <Route
+                      path="/admin/dashboard"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminDashboard />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/analytics"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminAnalyticsPage />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/orders"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminOrdersPage />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/menu"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminMenuPage />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/locations"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminLocationsPage />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/staff"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminStaffPage />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/customers"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminCustomersPage />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
 
-      {/* Only show customer footer on customer pages (except catering, about, and location) */}
-      {!isAdminPage && !isCateringPage && !isAboutPage && !isLocationPage && <Footer />}
+                    {/* Customer Routes (with CustomerLayout) */}
+                    <Route
+                      path="/*"
+                      element={
+                        <CustomerLayout>
+                          <Routes>
+                            {/* Public Routes */}
+                            <Route path="/" element={<HomePage />} />
+                            <Route path="/about" element={<AboutPage />} />
+                            <Route path="/catering" element={<CateringPage />} />
+                            <Route path="/location" element={<LocationPage />} />
 
-      {/* Only show cart on customer pages */}
-      {!isAdminPage && (
-        <Cart
-          isOpen={isCartOpen}
-          onClose={handleCartClose}
-        />
-      )}
-    </div>
+                            {/* Customer Auth Routes */}
+                            <Route path="/login" element={<LoginPage />} />
+                            <Route path="/register" element={<RegisterPage />} />
+
+                            {/* Customer Menu & Ordering Routes */}
+                            <Route path="/menu" element={<MenuPage />} />
+
+                            {/* Order Confirmation (Public - supports guest checkout) */}
+                            <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+
+                            {/* Order Success (Public - supports guest checkout) */}
+                            <Route path="/order-success" element={<OrderSuccessPage />} />
+
+                            {/* Order Tracking (Public) */}
+                            <Route path="/order-tracking/:orderId" element={<OrderTrackingPage />} />
+
+                            {/* Protected Customer Routes */}
+                            <Route
+                                path="/checkout"
+                                element={
+                                    <ProtectedRoute>
+                                        <CheckoutPage />
+                                    </ProtectedRoute>
+                                }
+                            />
+
+                            <Route
+                              path="/my-orders"
+                              element={
+                                <ProtectedRoute>
+                                  <MyOrdersPage />
+                                </ProtectedRoute>
+                              }
+                            />
+
+                            <Route
+                              path="/profile"
+                              element={
+                                <ProtectedRoute>
+                                  <ProfilePage />
+                                </ProtectedRoute>
+                              }
+                            />
+
+                            {/* 404 Not Found */}
+                            <Route path="*" element={<NotFound />} />
+                          </Routes>
+                        </CustomerLayout>
+                      }
+                    />
+                  </Routes>
+                </CartProvider>
+              </AdminAuthProvider>
+            </CustomerAuthProvider>
+          </LocationProvider>
+        </ToastProvider>
+      </Router>
+    </ErrorBoundary>
   )
 }
 
-function App() {
-  try {
-    return (
-      <BusinessProvider>
-        <CartProvider>
-          <CustomerAuthProvider>
-            <AdminAuthProvider>
-              <Router>
-                <AppContent />
-              </Router>
-            </AdminAuthProvider>
-          </CustomerAuthProvider>
-        </CartProvider>
-      </BusinessProvider>
-    )
-  } catch (error) {
-    console.error('Error in App component:', error)
-    return (
-      <div style={{ padding: '20px', backgroundColor: 'white', minHeight: '100vh' }}>
-        <h1 style={{ color: 'red' }}>Error in App Component</h1>
-        <p>Error: {error.message}</p>
-        <pre>{error.stack}</pre>
-      </div>
-    )
-  }
-}
-
-export default App 
+export default App

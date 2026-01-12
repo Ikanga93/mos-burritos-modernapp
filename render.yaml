@@ -3,7 +3,7 @@ services:
   - type: web
     name: mos-burritos-api
     runtime: python
-    region: oregon
+    region: oregon # Choose: oregon, frankfurt, singapore, ohio
     plan: free
     branch: main
     rootDir: backend
@@ -15,9 +15,9 @@ services:
       - key: PYTHON_VERSION
         value: 3.12.0
       - key: DATABASE_URL
-        sync: false
+        sync: false # Set manually in Render dashboard
       - key: JWT_SECRET_KEY
-        generateValue: true
+        generateValue: true # Auto-generates a secure secret
       - key: JWT_ALGORITHM
         value: HS256
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
@@ -25,18 +25,18 @@ services:
       - key: REFRESH_TOKEN_EXPIRE_DAYS
         value: 7
       - key: STRIPE_SECRET_KEY
-        sync: false
+        sync: false # Set manually in Render dashboard
       - key: STRIPE_WEBHOOK_SECRET
-        sync: false
+        sync: false # Set manually in Render dashboard
       - key: FRONTEND_URL
-        sync: false
+        sync: false # Set manually - your Vercel URL
       - key: CORS_ORIGINS
-        sync: false
+        sync: false # Set manually
       - key: SUPABASE_URL
-        sync: false
+        value: "" # Optional - for production auth
       - key: SUPABASE_ANON_KEY
-        sync: false
+        value: "" # Optional - for production auth
       - key: SUPABASE_SERVICE_KEY
-        sync: false
+        value: "" # Optional - for production auth
     healthCheckPath: /health
     autoDeploy: true
