@@ -1,7 +1,27 @@
 import axios from 'axios'
 import { getSupabaseSession, isSupabaseEnabled } from '../supabaseClient'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// In production, use same domain (empty string means relative URLs)
+// In development, use localhost:8000
+const getApiBaseUrl = () => {
+  const viteApiUrl = import.meta.env.VITE_API_URL
+  const isProduction = import.meta.env.VITE_ENVIRONMENT === 'production'
+
+  // If explicitly set, use it (even if empty string)
+  if (viteApiUrl !== undefined) {
+    return viteApiUrl
+  }
+
+  // In production without explicit URL, use same domain (relative)
+  if (isProduction) {
+    return ''
+  }
+
+  // Development default
+  return 'http://localhost:8000'
+}
+
+const API_BASE_URL = getApiBaseUrl()
 const isProduction = import.meta.env.VITE_ENVIRONMENT === 'production'
 
 /**

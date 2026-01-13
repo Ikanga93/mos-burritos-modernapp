@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { User, Lock, Mail, Phone, Building, Loader, CheckCircle } from 'lucide-react'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { useToast } from '../../contexts/ToastContext'
+import { getApiBaseUrl } from '../../utils/apiConfig'
 import './AdminRegisterPage.css'
 
 const AdminRegisterPage = () => {
@@ -23,7 +24,7 @@ const AdminRegisterPage = () => {
     const [ownerExists, setOwnerExists] = useState(false)
     const [checkingOwner, setCheckingOwner] = useState(true)
 
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+    const apiUrl = getApiBaseUrl()
 
     // Check if an owner already exists
     useEffect(() => {

@@ -6,6 +6,7 @@ import {
   handleOAuthCallback as handleSupabaseOAuthCallback,
   signInWithGoogle as supabaseSignInWithGoogle
 } from '../services/supabaseClient'
+import { getApiBaseUrl } from '../utils/apiConfig'
 
 const CustomerAuthContext = createContext(null)
 
@@ -24,7 +25,7 @@ export const CustomerAuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+  const apiUrl = getApiBaseUrl()
   const isProduction = import.meta.env.VITE_ENVIRONMENT === 'production'
 
   // Initialize auth state from localStorage or Supabase

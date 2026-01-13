@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { getApiBaseUrl } from '../utils/apiConfig'
 
 const LocationContext = createContext(null)
 
@@ -19,7 +20,7 @@ export const LocationProvider = ({ children }) => {
   const loadLocations = useCallback(async () => {
     setIsLoading(true)
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      const apiUrl = getApiBaseUrl()
       const response = await fetch(`${apiUrl}/api/locations`)
 
       if (!response.ok) {

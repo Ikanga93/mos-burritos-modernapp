@@ -20,7 +20,17 @@ export const AdminAuthProvider = ({ children }) => {
   const [currentLocation, setCurrentLocation] = useState(null)
   const [role, setRole] = useState(null)
 
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+  // In production, use same domain; in development, use localhost:8000
+  const getApiUrl = () => {
+    const viteApiUrl = import.meta.env.VITE_API_URL
+    const isProduction = import.meta.env.VITE_ENVIRONMENT === 'production'
+
+    if (viteApiUrl !== undefined) return viteApiUrl
+    if (isProduction) return ''
+    return 'http://localhost:8000'
+  }
+
+  const apiUrl = getApiUrl()
 
   // Initialize auth state from localStorage
   useEffect(() => {
