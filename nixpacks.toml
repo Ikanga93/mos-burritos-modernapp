@@ -1,9 +1,14 @@
-# Explicit Python configuration
+# Explicit Python-only configuration (backend deployment)
+providers = ["python"]
+
 [phases.setup]
 nixPkgs = ["python312", "postgresql"]
 
 [phases.install]
 cmds = ["python -m venv --copies /opt/venv", ". /opt/venv/bin/activate && pip install -r requirements.txt"]
+
+[phases.build]
+cmds = ["echo 'Backend build complete - no build step needed for FastAPI'"]
 
 [start]
 cmd = ". /opt/venv/bin/activate && cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
