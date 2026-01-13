@@ -17,17 +17,34 @@ import sys
 import os
 from pathlib import Path
 
+# Set production environment BEFORE any imports
+os.environ["ENVIRONMENT"] = os.getenv("ENVIRONMENT", "production")
+
 # Add backend to path so we can import the FastAPI app
 backend_path = Path(__file__).parent.parent / "backend"
 sys.path.insert(0, str(backend_path))
 
-# Set production environment if not already set
-if not os.getenv("ENVIRONMENT"):
-    os.environ["ENVIRONMENT"] = "production"
+# Import FastAPI app
+try:
+    from app.main import app
+    handler = app
+except Exception as e:
+    # If import fails, create a minimal FastAPI app that shows the error
+    from fastapi import FastAPI
+    from fastapi.responses import JSONResponse
 
-from app.main import app
+    app = FastAPI()
 
-# Vercel serverless handler
-# This is the entry point that Vercel will call
-# The FastAPI app is automatically adapted to ASGI/WSGI interface
-handler = app
+    @app.get("/health")
+    @app.get("/api/health")
+    async def health_error():
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": f"Failed to initialize app: {str(e)}",
+                "error_type": type(e).__name__
+            }
+        )
+
+    handler = app
