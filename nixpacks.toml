@@ -1,13 +1,11 @@
 providers = ["python"]
 
 [phases.setup]
-nixPkgs = ["python312Full", "postgresql"]
+nixPkgs = ["python312Full", "postgresql", "pip"]
 
 [phases.install]
 cmds = [
-  "cd backend && python -m ensurepip --upgrade",
-  "cd backend && python -m pip install --upgrade pip",
-  "cd backend && python -m pip install --no-cache-dir -r requirements.txt"
+  "cd backend && pip install --no-cache-dir -r requirements.txt"
 ]
 
 [phases.build]
