@@ -22,13 +22,13 @@
       "dest": "api/test.py"
     },
     {
+      "src": "/health",
+      "dest": "api/index.py"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "api/index.py",
       "methods": ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
-    },
-    {
-      "src": "/health",
-      "dest": "api/index.py"
     },
     {
       "src": "/assets/(.*)",
@@ -43,7 +43,7 @@
       "dest": "/uploads/$1"
     },
     {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|avif|woff|woff2|ttf|eot))",
+      "src": "/(.+\\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|avif|woff|woff2|ttf|eot))",
       "dest": "/$1"
     },
     {
