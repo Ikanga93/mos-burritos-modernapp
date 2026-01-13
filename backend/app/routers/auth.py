@@ -3,6 +3,7 @@ Mo's Burritos - Authentication Routes
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+import traceback
 
 from ..database import get_db
 from ..models import User, UserRole as ModelUserRole, UserLocation, Location
@@ -24,6 +25,7 @@ from ..services import (
     get_supabase_user_from_token,
 )
 from ..middleware import get_current_user
+from ..config import settings
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -40,34 +42,55 @@ async def customer_login(
     - JWT in development
     - Supabase in production
     """
-    if settings.use_supabase_auth:
-        # Production: Use Supabase
-        return await supabase_login(credentials, db)
-    else:
-        # Development: Use JWT
-        user = authenticate_user(db, credentials.email, credentials.password)
+    try:
+        print(f"[DEBUG] Customer login attempt for email: {credentials.email}")
+        print(f"[DEBUG] Environment: {settings.environment}")
+        print(f"[DEBUG] Use Supabase Auth: {settings.use_supabase_auth}")
 
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password",
-                headers={"WWW-Authenticate": "Bearer"},
+        if settings.use_supabase_auth:
+            # Production: Use Supabase
+            print(f"[DEBUG] Using Supabase authentication")
+            return await supabase_login(credentials, db)
+        else:
+            # Development: Use JWT
+            print(f"[DEBUG] Using JWT authentication")
+            user = authenticate_user(db, credentials.email, credentials.password)
+
+            if not user:
+                print(f"[DEBUG] Authentication failed - user not found or password incorrect")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Incorrect email or password",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+            print(f"[DEBUG] User authenticated successfully: {user.id}, role: {user.role.value}")
+
+            token_data = {
+                "sub": user.id,
+                "email": user.email,
+                "role": user.role.value
+            }
+
+            access_token = create_access_token(token_data)
+            refresh_token = create_refresh_token(token_data)
+
+            print(f"[DEBUG] Tokens created successfully")
+
+            return PhoneLoginResponse(
+                user=user,
+                accessToken=access_token,
+                refreshToken=refresh_token,
+                isNewUser=False
             )
-
-        token_data = {
-            "sub": user.id,
-            "email": user.email,
-            "role": user.role.value
-        }
-
-        access_token = create_access_token(token_data)
-        refresh_token = create_refresh_token(token_data)
-
-        return PhoneLoginResponse(
-            user=user,
-            accessToken=access_token,
-            refreshToken=refresh_token,
-            isNewUser=False
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_detail = f"Login error: {str(e)}\n\nTraceback:\n{traceback.format_exc()}"
+        print(f"[ERROR] {error_detail}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=error_detail
         )
 
 
@@ -81,46 +104,67 @@ async def customer_register(
     - JWT in development
     - Supabase in production
     """
-    # Check if email already exists
-    existing_user = db.query(User).filter(User.email == user_data.email).first()
-    if existing_user:
+    try:
+        print(f"[DEBUG] Customer registration attempt for email: {user_data.email}")
+        print(f"[DEBUG] Environment: {settings.environment}")
+        print(f"[DEBUG] Use Supabase Auth: {settings.use_supabase_auth}")
+
+        # Check if email already exists
+        existing_user = db.query(User).filter(User.email == user_data.email).first()
+        if existing_user:
+            print(f"[DEBUG] Email already registered: {user_data.email}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+
+        if settings.use_supabase_auth:
+            # Production: Use Supabase
+            print(f"[DEBUG] Using Supabase registration")
+            return await supabase_register(user_data, db)
+        else:
+            # Development: Use JWT
+            print(f"[DEBUG] Using JWT registration")
+            new_user = User(
+                email=user_data.email,
+                password_hash=get_password_hash(user_data.password),
+                first_name=user_data.first_name,
+                last_name=user_data.last_name,
+                phone=user_data.phone,
+                role=ModelUserRole.CUSTOMER,
+                is_active=True
+            )
+            db.add(new_user)
+            db.commit()
+            db.refresh(new_user)
+
+            print(f"[DEBUG] User created successfully: {new_user.id}")
+
+            token_data = {
+                "sub": new_user.id,
+                "email": new_user.email,
+                "role": new_user.role.value
+            }
+
+            access_token = create_access_token(token_data)
+            refresh_token = create_refresh_token(token_data)
+
+            print(f"[DEBUG] Tokens created for new user")
+
+            return PhoneLoginResponse(
+                user=new_user,
+                accessToken=access_token,
+                refreshToken=refresh_token,
+                isNewUser=True
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_detail = f"Registration error: {str(e)}\n\nTraceback:\n{traceback.format_exc()}"
+        print(f"[ERROR] {error_detail}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
-
-    if settings.use_supabase_auth:
-        # Production: Use Supabase
-        return await supabase_register(user_data, db)
-    else:
-        # Development: Use JWT
-        new_user = User(
-            email=user_data.email,
-            password_hash=get_password_hash(user_data.password),
-            first_name=user_data.first_name,
-            last_name=user_data.last_name,
-            phone=user_data.phone,
-            role=ModelUserRole.CUSTOMER,
-            is_active=True
-        )
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-
-        token_data = {
-            "sub": new_user.id,
-            "email": new_user.email,
-            "role": new_user.role.value
-        }
-
-        access_token = create_access_token(token_data)
-        refresh_token = create_refresh_token(token_data)
-
-        return PhoneLoginResponse(
-            user=new_user,
-            accessToken=access_token,
-            refreshToken=refresh_token,
-            isNewUser=True
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=error_detail
         )
 
 
@@ -162,56 +206,75 @@ async def customer_refresh(request: RefreshTokenRequest):
 @router.post("/login", response_model=LoginResponse)
 async def login(credentials: UserLogin, db: Session = Depends(get_db)):
     """Login with email and password"""
-    user = authenticate_user(db, credentials.email, credentials.password)
+    try:
+        print(f"[DEBUG] Staff/Admin login attempt for email: {credentials.email}")
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+        user = authenticate_user(db, credentials.email, credentials.password)
 
-    token_data = {
-        "sub": user.id,
-        "email": user.email,
-        "role": user.role.value
-    }
+        if not user:
+            print(f"[DEBUG] Authentication failed for email: {credentials.email}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
 
-    access_token = create_access_token(token_data)
-    refresh_token = create_refresh_token(token_data)
+        print(f"[DEBUG] User authenticated: {user.id}, role: {user.role.value}")
 
-    # Get user's assigned locations
-    user_locations = db.query(UserLocation).filter(
-        UserLocation.user_id == user.id,
-        UserLocation.is_active == True
-    ).all()
-
-    # Format assigned locations
-    assigned_locations = []
-    for ul in user_locations:
-        if ul.location:
-            assigned_locations.append({
-                "location_id": ul.location_id,
-                "location_name": ul.location.name,
-                "role": ul.role.value,
-                "assigned_at": ul.assigned_at
-            })
-
-    # Set current location (first assigned location or None)
-    current_location = None
-    if assigned_locations:
-        current_location = {
-            "id": assigned_locations[0]["location_id"],
-            "name": assigned_locations[0]["location_name"]
+        token_data = {
+            "sub": user.id,
+            "email": user.email,
+            "role": user.role.value
         }
 
-    return LoginResponse(
-        user=user,
-        accessToken=access_token,
-        refreshToken=refresh_token,
-        assignedLocations=assigned_locations,
-        currentLocation=current_location
-    )
+        access_token = create_access_token(token_data)
+        refresh_token = create_refresh_token(token_data)
+
+        # Get user's assigned locations
+        user_locations = db.query(UserLocation).filter(
+            UserLocation.user_id == user.id,
+            UserLocation.is_active == True
+        ).all()
+
+        print(f"[DEBUG] Found {len(user_locations)} assigned locations for user")
+
+        # Format assigned locations
+        assigned_locations = []
+        for ul in user_locations:
+            if ul.location:
+                assigned_locations.append({
+                    "location_id": ul.location_id,
+                    "location_name": ul.location.name,
+                    "role": ul.role.value,
+                    "assigned_at": ul.assigned_at
+                })
+
+        # Set current location (first assigned location or None)
+        current_location = None
+        if assigned_locations:
+            current_location = {
+                "id": assigned_locations[0]["location_id"],
+                "name": assigned_locations[0]["location_name"]
+            }
+
+        print(f"[DEBUG] Login successful, returning tokens and {len(assigned_locations)} locations")
+
+        return LoginResponse(
+            user=user,
+            accessToken=access_token,
+            refreshToken=refresh_token,
+            assignedLocations=assigned_locations,
+            currentLocation=current_location
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_detail = f"Login error: {str(e)}\n\nTraceback:\n{traceback.format_exc()}"
+        print(f"[ERROR] {error_detail}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=error_detail
+        )
 
 
 @router.post("/register", response_model=UserResponse)
