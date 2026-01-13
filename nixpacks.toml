@@ -5,7 +5,7 @@ nixPkgs = ["python312Full", "postgresql"]
 
 [phases.install]
 cmds = [
-  "cd backend && pip install --no-cache-dir -r requirements.txt"
+  "cd backend && python -m pip install --no-cache-dir -r requirements.txt"
 ]
 
 [phases.build]
