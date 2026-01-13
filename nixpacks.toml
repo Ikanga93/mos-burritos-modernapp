@@ -4,7 +4,11 @@ providers = ["python"]
 nixPkgs = ["python312Full", "postgresql"]
 
 [phases.install]
-cmds = ["cd backend && python -m pip install --no-cache-dir -r requirements.txt"]
+cmds = [
+  "cd backend && python -m ensurepip --upgrade",
+  "cd backend && python -m pip install --upgrade pip",
+  "cd backend && python -m pip install --no-cache-dir -r requirements.txt"
+]
 
 [phases.build]
 cmds = ["echo 'Build complete'"]
