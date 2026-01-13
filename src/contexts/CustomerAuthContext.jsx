@@ -34,14 +34,33 @@ export const CustomerAuthProvider = ({ children }) => {
       localStorage.removeItem('authType')
 
       if (isProduction && isSupabaseEnabled()) {
-        // Production: Check Supabase session
-        const session = await getSupabaseSession()
-        if (session) {
-          setAccessToken(session.access_token)
-          setRefreshToken(session.refresh_token)
-          fetchCurrentUser(session.access_token)
+        // Production: Check for OAuth callback in URL first
+        const hashParams = new URLSearchParams(window.location.hash.substring(1))
+        const hasOAuthParams = hashParams.has('access_token') || hashParams.has('error')
+        
+        if (hasOAuthParams) {
+          // Handle OAuth callback explicitly
+          console.log('Detected OAuth callback in URL, processing...')
+          const session = await handleSupabaseOAuthCallback()
+          if (session) {
+            setAccessToken(session.access_token)
+            setRefreshToken(session.refresh_token)
+            await fetchCurrentUser(session.access_token)
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname)
+          } else {
+            setIsLoading(false)
+          }
         } else {
-          setIsLoading(false)
+          // Check existing Supabase session
+          const session = await getSupabaseSession()
+          if (session) {
+            setAccessToken(session.access_token)
+            setRefreshToken(session.refresh_token)
+            fetchCurrentUser(session.access_token)
+          } else {
+            setIsLoading(false)
+          }
         }
       } else {
         // Development: Check localStorage for JWT

@@ -1,6 +1,13 @@
 """
 Mo's Burritos - Database Seeding Script
-Creates initial admin user and sample data for development
+Creates initial admin user and sample data for LOCAL DEVELOPMENT ONLY
+
+⚠️  WARNING: DO NOT RUN THIS IN PRODUCTION!
+⚠️  This script creates test accounts with weak passwords.
+⚠️  Only use for local development and testing.
+
+For production, use the /api/users/register-owner endpoint to create
+the first owner account securely.
 """
 import asyncio
 from sqlalchemy.orm import Session
@@ -106,8 +113,16 @@ def seed_manager_user(db: Session):
 
 def main():
     """Run all seeding operations"""
+    import os
+
+    # Prevent running in production
+    if os.getenv("ENVIRONMENT") == "production":
+        print("\n❌ ERROR: Cannot run seed script in production!")
+        print("   Use /api/users/register-owner endpoint instead.\n")
+        return
+
     print("\n🌱 Starting database seeding...\n")
-    
+
     # Create tables
     create_tables()
     

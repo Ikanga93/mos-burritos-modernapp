@@ -39,13 +39,16 @@ uvicorn app.main:app --reload --port 8000
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
 
-## Default Credentials
+## Initial Setup
 
-On first run, a default owner account is created:
-- Email: `admin@mosburrito.com`
-- Password: `admin123`
+On first deployment, no default accounts are created for security.
 
-⚠️ **Change these credentials in production!**
+To create the first owner account, use the registration endpoint:
+```bash
+POST /api/users/register-owner
+```
+
+This endpoint only works when no owner account exists in the system.
 
 ## API Endpoints
 
