@@ -1,22 +1,17 @@
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from http.server import BaseHTTPRequestHandler
+import json
 
-app = FastAPI()
+class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
 
-@app.get("/health")
-@app.get("/api/health")
-async def health():
-    return JSONResponse(content={
-        "status": "healthy",
-        "message": "Minimal FastAPI works on Vercel!",
-        "service": "Mo's Burritos API - Minimal Test"
-    })
+        response = json.dumps({
+            'status': 'success',
+            'message': 'Basic Python handler works!',
+            'path': self.path
+        })
 
-@app.get("/")
-async def root():
-    return JSONResponse(content={
-        "message": "API Root - Minimal Test",
-        "endpoints": ["/health", "/api/health"]
-    })
-
-handler = app
+        self.wfile.write(response.encode())
+        return
