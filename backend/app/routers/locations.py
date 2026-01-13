@@ -26,12 +26,21 @@ async def get_locations(
     db: Session = Depends(get_db)
 ):
     """Get all locations (public endpoint)"""
-    query = db.query(Location)
-    if active_only:
-        query = query.filter(Location.is_active == True)
-    
-    locations = query.order_by(Location.name).all()
-    return locations
+    try:
+        query = db.query(Location)
+        if active_only:
+            query = query.filter(Location.is_active == True)
+
+        locations = query.order_by(Location.name).all()
+        return locations
+    except Exception as e:
+        # Return the actual error for debugging
+        import traceback
+        error_detail = f"Database error: {str(e)}\n\nTraceback:\n{traceback.format_exc()}"
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=error_detail
+        )
 
 
 @router.get("/{location_id}", response_model=LocationResponse)
