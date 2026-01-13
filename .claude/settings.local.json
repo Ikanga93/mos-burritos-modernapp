@@ -15,7 +15,11 @@
       "Bash(python3:*)",
       "Bash(find:*)",
       "Bash(npx eslint:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(pip show:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
