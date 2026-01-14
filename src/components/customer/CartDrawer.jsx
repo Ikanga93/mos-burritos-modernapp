@@ -9,68 +9,31 @@ import './CartDrawer.css'
 
 const CartDrawer = ({ isOpen, onClose }) => {
   const navigate = useNavigate()
-  const { items, itemCount, subtotal, tax, total, locationId, updateQuantity, removeItem, clearCart, calculateItemPrice } = useCart()
+  const { items, itemCount, subtotal, tax, total, locationId, updateQuantity, removeItem, clearCart, calculateItemPrice, triggerCheckout, isCheckoutLoading } = useCart()
   const { isAuthenticated, customer } = useCustomerAuth()
   const { showToast } = useToast()
   
-  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false)
-
   const handleCheckout = async () => {
     if (!isAuthenticated) {
       showToast('Please login to complete your order', 'info')
       onClose()
-      navigate('/login', { state: { from: { pathname: window.location.pathname } } })
+      navigate('/login', { 
+        state: { 
+          from: { 
+            pathname: window.location.pathname,
+            openCart: true,
+            triggerCheckout: true
+          } 
+        } 
+      })
       return
     }
 
-    if (!locationId) {
-      showToast('Please select a location first', 'error')
-      return
-    }
-
-    setIsCheckoutLoading(true)
-    try {
-      // Prepare customer info from authenticated user
-      const customerInfo = {
-        name: `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.email || 'Customer',
-        email: customer.email,
-        phone: customer.phone || 'Not provided'
-      }
-
-      // Create Stripe Checkout Session
-      const amountInCents = Math.round(total * 100)
-      const checkoutSession = await paymentApi.createCheckoutSession(
-        amountInCents,
-        'usd',
-        customerInfo,
-        items.map(item => ({
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity
-        })),
-        locationId,
-        '' // No notes for now as we are skipping confirmation page
-      )
-
-      // Store session ID and order info for verification on success page
-      sessionStorage.setItem('stripeSessionId', checkoutSession.sessionId)
-      sessionStorage.setItem('orderConfirmation', JSON.stringify({
-        customerInfo,
-        customerId: customer.id,
-        locationId,
-        items,
-        subtotal,
-        tax,
-        total,
-        isGuest: false
-      }))
-
-      // Redirect to Stripe
-      window.location.href = checkoutSession.url
-    } catch (error) {
-      console.error('Checkout error:', error)
-      showToast(error.response?.data?.detail || 'Failed to initiate checkout. Please try again.', 'error')
-      setIsCheckoutLoading(false)
+    const result = await triggerCheckout(customer);
+    if (result.success) {
+      onClose();
+    } else {
+      showToast(result.error, 'error');
     }
   }
 

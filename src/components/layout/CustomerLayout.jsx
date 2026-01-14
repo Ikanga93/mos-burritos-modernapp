@@ -1,14 +1,39 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import Navbar from '../customer/Navbar'
 import Footer from '../customer/Footer'
 import CartDrawer from '../customer/CartDrawer'
 import { useCart } from '../../contexts/CartContext'
+import { useCustomerAuth } from '../../contexts/CustomerAuthContext'
 import './CustomerLayout.css'
 
 const CustomerLayout = ({ children, className = '' }) => {
   const location = useLocation()
-  const { isCartOpen, setIsCartOpen } = useCart()
+  const { isCartOpen, setIsCartOpen, triggerCheckout } = useCart()
+  const { customer, isAuthenticated } = useCustomerAuth()
+
+  // Handle auto-opening cart or triggering checkout after login redirect
+  useEffect(() => {
+    const handleReturnAction = async () => {
+      if (location.state?.triggerCheckout && isAuthenticated && customer) {
+        // Trigger Stripe redirect immediately
+        const result = await triggerCheckout(customer)
+        if (!result.success) {
+          // If checkout fails, at least open the cart drawer so user can see why
+          setIsCartOpen(true)
+        }
+        // Clear state to avoid reopening on every navigation
+        window.history.replaceState({}, document.title)
+      } else if (location.state?.openCart) {
+        setIsCartOpen(true)
+        // Clear state to avoid reopening on every navigation
+        window.history.replaceState({}, document.title)
+      }
+    }
+
+    handleReturnAction()
+  }, [location.state, isAuthenticated, customer, setIsCartOpen, triggerCheckout])
+
   // Pages WITHOUT navbar - only back buttons and page controls
   const pagesWithoutNavbar = ['/menu', '/location', '/about', '/catering']
   const showNavbar = !pagesWithoutNavbar.includes(location.pathname)

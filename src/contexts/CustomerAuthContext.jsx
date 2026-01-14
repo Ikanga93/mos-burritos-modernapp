@@ -224,7 +224,7 @@ export const CustomerAuthProvider = ({ children }) => {
   const refreshAccessToken = refreshAccessTokenInternal
 
   // Sign in with Google OAuth
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (returnTo = null) => {
     if (!isSupabaseEnabled()) {
       return {
         success: false,
@@ -233,6 +233,9 @@ export const CustomerAuthProvider = ({ children }) => {
     }
 
     try {
+      if (returnTo) {
+        sessionStorage.setItem('authReturnTo', JSON.stringify(returnTo))
+      }
       await supabaseSignInWithGoogle()
       // Redirects to Google - execution stops here
       return { success: true }

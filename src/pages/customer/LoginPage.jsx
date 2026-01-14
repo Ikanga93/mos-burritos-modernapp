@@ -67,8 +67,18 @@ const LoginPage = () => {
         await new Promise(resolve => setTimeout(resolve, 150))
 
         // Redirect to intended page or menu
-        const from = location.state?.from?.pathname
-        navigate(from || '/menu', { replace: true })
+        const from = location.state?.from
+        if (from) {
+          navigate(from.pathname || '/menu', { 
+            replace: true, 
+            state: { 
+              openCart: from.openCart,
+              triggerCheckout: from.triggerCheckout 
+            } 
+          })
+        } else {
+          navigate('/menu', { replace: true })
+        }
       } else {
         setErrors({ general: result.error || 'Login failed. Please try again.' })
         showToast(result.error || 'Login failed', 'error')
@@ -84,7 +94,8 @@ const LoginPage = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
     try {
-      const result = await signInWithGoogle()
+      const returnTo = location.state?.from || { pathname: '/menu' }
+      const result = await signInWithGoogle(returnTo)
 
       if (!result.success) {
         showToast(result.error || 'Google sign-in failed', 'error')

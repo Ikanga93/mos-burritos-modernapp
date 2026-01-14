@@ -19,9 +19,26 @@ const AuthCallbackPage = () => {
         if (result.success) {
           showToast('Successfully signed in with Google!', 'success')
 
+          // Check for stored return path
+          let returnTo = { pathname: '/menu' }
+          const storedReturnTo = sessionStorage.getItem('authReturnTo')
+          if (storedReturnTo) {
+            try {
+              returnTo = JSON.parse(storedReturnTo)
+              sessionStorage.removeItem('authReturnTo')
+            } catch (e) {
+              console.error('Error parsing stored return path:', e)
+            }
+          }
+
           // Redirect to intended page or menu
-          const from = location.state?.from?.pathname
-          navigate(from || '/menu', { replace: true })
+          navigate(returnTo.pathname || '/menu', { 
+            replace: true, 
+            state: { 
+              openCart: returnTo.openCart,
+              triggerCheckout: returnTo.triggerCheckout
+            } 
+          })
         } else {
           showToast(result.error || 'Authentication failed', 'error')
           navigate('/login', { replace: true })

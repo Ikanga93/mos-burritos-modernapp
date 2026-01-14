@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { useLocation } from './LocationContext'
+import { paymentApi } from '../services/api/paymentApi'
 
 const CartContext = createContext(null)
 
@@ -14,33 +15,34 @@ export const useCart = () => {
 const TAX_RATE = 0.0825 // 8.25% tax rate
 
 export const CartProvider = ({ children }) => {
-  const [items, setItems] = useState([])
-  const [locationId, setLocationId] = useState(null)
+  // Initialize state directly from localStorage to avoid race conditions
+  const [items, setItems] = useState(() => {
+    try {
+      const storedItems = localStorage.getItem('cart_items')
+      return storedItems ? JSON.parse(storedItems) : []
+    } catch (error) {
+      console.error('Error loading cart from localStorage:', error)
+      return []
+    }
+  })
+
+  const [locationId, setLocationId] = useState(() => {
+    try {
+      return localStorage.getItem('cart_location_id')
+    } catch (error) {
+      return null
+    }
+  })
+
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false)
   
   // Get location context for fallback
   const locationContext = useLocation()
 
-  // Initialize cart from localStorage on mount
-  useEffect(() => {
-    try {
-      const storedItems = localStorage.getItem('cart_items')
-      const storedLocationId = localStorage.getItem('cart_location_id')
-
-      if (storedItems) {
-        setItems(JSON.parse(storedItems))
-      }
-
-      if (storedLocationId) {
-        setLocationId(storedLocationId)
-      }
-    } catch (error) {
-      console.error('Error loading cart from localStorage:', error)
-    }
-  }, [])
-
   // Persist cart to localStorage whenever it changes
   useEffect(() => {
+    console.log('[Cart] Persisting to localStorage - Items:', items.length, 'Location:', locationId);
     localStorage.setItem('cart_items', JSON.stringify(items))
     if (locationId) {
       localStorage.setItem('cart_location_id', locationId)
@@ -226,6 +228,70 @@ export const CartProvider = ({ children }) => {
     localStorage.removeItem('cart_location_id')
   }, [])
 
+  // Handle Checkout logic (Stripe redirect)
+  const triggerCheckout = useCallback(async (user) => {
+    if (!user) {
+      console.error('[Cart] Cannot checkout without user information');
+      return { success: false, error: 'User not authenticated' };
+    }
+
+    if (!locationId) {
+      console.error('[Cart] Cannot checkout without location ID');
+      return { success: false, error: 'No location selected' };
+    }
+
+    if (items.length === 0) {
+      console.error('[Cart] Cannot checkout with empty cart');
+      return { success: false, error: 'Cart is empty' };
+    }
+
+    setIsCheckoutLoading(true);
+    try {
+      const customerInfo = {
+        name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Customer',
+        email: user.email,
+        phone: user.phone || 'Not provided'
+      };
+
+      const amountInCents = Math.round(total * 100);
+      const checkoutSession = await paymentApi.createCheckoutSession(
+        amountInCents,
+        'usd',
+        customerInfo,
+        items.map(item => ({
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        })),
+        locationId,
+        ''
+      );
+
+      sessionStorage.setItem('stripeSessionId', checkoutSession.sessionId);
+      sessionStorage.setItem('orderConfirmation', JSON.stringify({
+        customerInfo,
+        customerId: user.id,
+        locationId,
+        items,
+        subtotal,
+        tax,
+        total,
+        isGuest: false
+      }));
+
+      // Direct redirect to Stripe
+      window.location.href = checkoutSession.url;
+      return { success: true };
+    } catch (error) {
+      console.error('[Cart] Checkout redirect error:', error);
+      setIsCheckoutLoading(false);
+      return { 
+        success: false, 
+        error: error.response?.data?.detail || 'Failed to initiate checkout. Please try again.' 
+      };
+    }
+  }, [items, locationId, total, subtotal, tax]);
+
   // Get item by menu_item_id (returns first match)
   const getItem = useCallback((menuItemId) => {
     return items.find(item => item.menu_item_id === menuItemId)
@@ -252,7 +318,9 @@ export const CartProvider = ({ children }) => {
     calculateItemPrice,
     validateLocation,
     isCartOpen,
-    setIsCartOpen
+    setIsCartOpen,
+    isCheckoutLoading,
+    triggerCheckout
   }
 
   return (
