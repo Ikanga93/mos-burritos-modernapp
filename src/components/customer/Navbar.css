@@ -118,7 +118,8 @@
 }
 
 /* Cart Icon */
-.navbar-cart {
+.navbar-cart,
+.navbar-cart-btn {
   position: relative;
   display: flex;
   align-items: center;
@@ -134,21 +135,26 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   min-width: 48px;
   min-height: 48px;
+  cursor: pointer;
+  font-family: inherit;
 }
 
-.navbar-cart:hover {
+.navbar-cart:hover,
+.navbar-cart-btn:hover {
   background: rgba(255, 255, 255, 0.3);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
-.navbar-scrolled .navbar-cart {
+.navbar-scrolled .navbar-cart,
+.navbar-scrolled .navbar-cart-btn {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.2);
   box-shadow: none;
 }
 
-.navbar-scrolled .navbar-cart:hover {
+.navbar-scrolled .navbar-cart:hover,
+.navbar-scrolled .navbar-cart-btn:hover {
   background: rgba(255, 255, 255, 0.2);
   box-shadow: none;
   transform: translateY(0);

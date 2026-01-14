@@ -9,7 +9,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const { isAuthenticated, customer, logout } = useCustomerAuth()
-  const { itemCount } = useCart()
+  const { itemCount, setIsCartOpen } = useCart()
   const navigate = useNavigate()
 
   // Scroll detection for transparent/solid navbar transition
@@ -67,12 +67,19 @@ const Navbar = () => {
         <div className="navbar-actions">
           {/* Cart Icon - only show when authenticated */}
           {isAuthenticated && (
-            <Link to="/cart" className="navbar-cart" onClick={closeMenu}>
+            <button 
+              className="navbar-cart-btn" 
+              onClick={() => {
+                closeMenu();
+                setIsCartOpen(true);
+              }}
+              aria-label={`Cart with ${itemCount} items`}
+            >
               <ShoppingCart size={24} />
               {itemCount > 0 && (
                 <span className="cart-badge">{itemCount}</span>
               )}
-            </Link>
+            </button>
           )}
 
           {/* Mobile Menu Toggle */}
@@ -96,9 +103,19 @@ const Navbar = () => {
                 <UtensilsCrossed size={24} />
                 <span className="icon-label">Menu</span>
               </Link>
-              <Link to="/my-orders" className="icon-menu-item" onClick={closeMenu}>
+              <button 
+                className="icon-menu-item" 
+                onClick={() => {
+                  closeMenu();
+                  setIsCartOpen(true);
+                }}
+              >
                 <ShoppingCart size={24} />
-                <span className="icon-label">Orders</span>
+                <span className="icon-label">Cart</span>
+              </button>
+              <Link to="/my-orders" className="icon-menu-item" onClick={closeMenu}>
+                <Truck size={24} />
+                <span className="icon-label">My Orders</span>
               </Link>
               <Link to="/profile" className="icon-menu-item" onClick={closeMenu}>
                 <User size={24} />

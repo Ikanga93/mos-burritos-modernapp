@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { useLocation } from './LocationContext'
 
 const CartContext = createContext(null)
 
@@ -15,6 +16,10 @@ const TAX_RATE = 0.0825 // 8.25% tax rate
 export const CartProvider = ({ children }) => {
   const [items, setItems] = useState([])
   const [locationId, setLocationId] = useState(null)
+  const [isCartOpen, setIsCartOpen] = useState(false)
+  
+  // Get location context for fallback
+  const locationContext = useLocation()
 
   // Initialize cart from localStorage on mount
   useEffect(() => {
@@ -121,7 +126,14 @@ export const CartProvider = ({ children }) => {
 
   // Add item to cart
   const addItem = useCallback((item, quantity = 1) => {
-    const validation = validateLocation(item.location_id)
+    // Use item's location_id, or fallback to current selected location
+    const itemLocationId = item.location_id || (locationContext?.selectedLocation?.id)
+    
+    if (!itemLocationId) {
+      return { success: false, error: 'No location selected. Please choose a location first.' }
+    }
+
+    const validation = validateLocation(itemLocationId)
 
     if (!validation.valid) {
       return { success: false, error: validation.message }
@@ -130,7 +142,7 @@ export const CartProvider = ({ children }) => {
     setItems((prevItems) => {
       // For items with options, check if exact same item+options exists
       const existingItemIndex = prevItems.findIndex(i =>
-        i.menu_item_id === item.menu_item_id && optionsMatch(i.options, item.options)
+        i.menu_item_id === (item.menu_item_id || item.id) && optionsMatch(i.options, item.options)
       )
 
       if (existingItemIndex !== -1) {
@@ -143,12 +155,12 @@ export const CartProvider = ({ children }) => {
       } else {
         // Add new item (or same item with different options)
         return [...prevItems, {
-          cart_id: `${item.menu_item_id}-${Date.now()}`, // Unique ID for cart entries
+          cart_id: `${item.menu_item_id || item.id}-${Date.now()}`, // Unique ID for cart entries
           menu_item_id: item.menu_item_id || item.id,
           name: item.name,
           price: item.price,
           quantity,
-          location_id: item.location_id,
+          location_id: itemLocationId,
           emoji: item.emoji,
           image_url: item.image_url,
           options: item.options || null
@@ -158,11 +170,11 @@ export const CartProvider = ({ children }) => {
 
     // Set location if not already set
     if (!locationId) {
-      setLocationId(item.location_id)
+      setLocationId(itemLocationId)
     }
 
     return { success: true }
-  }, [locationId, validateLocation])
+  }, [locationId, validateLocation, locationContext?.selectedLocation])
 
   // Remove item from cart (by cart_id or menu_item_id)
   const removeItem = useCallback((itemId) => {
@@ -228,7 +240,9 @@ export const CartProvider = ({ children }) => {
     getItem,
     getCartItemsByMenuId,
     calculateItemPrice,
-    validateLocation
+    validateLocation,
+    isCartOpen,
+    setIsCartOpen
   }
 
   return (

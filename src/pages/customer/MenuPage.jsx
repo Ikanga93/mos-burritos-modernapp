@@ -3,7 +3,6 @@ import { ShoppingCart } from 'lucide-react'
 
 import LocationSelector from '../../components/customer/LocationSelector'
 import MenuItemCard from '../../components/customer/MenuItemCard'
-import CartDrawer from '../../components/customer/CartDrawer'
 import LoadingSpinner from '../../components/shared/LoadingSpinner'
 import { useLocation } from '../../contexts/LocationContext'
 import { useCart } from '../../contexts/CartContext'
@@ -15,10 +14,9 @@ const MenuPage = () => {
   const [menuData, setMenuData] = useState({ categories: [], items: [] })
   const [isLoading, setIsLoading] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState(null)
-  const [isCartOpen, setIsCartOpen] = useState(false)
 
   const { selectedLocation } = useLocation()
-  const { itemCount } = useCart()
+  const { itemCount, setIsCartOpen } = useCart()
   const { showToast } = useToast()
 
   // Load menu when location changes
@@ -127,9 +125,6 @@ const MenuPage = () => {
           )}
         </>
       )}
-
-      {/* Cart Drawer */}
-      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
       {/* View Cart Button (Desktop) */}
       {itemCount > 0 && (
