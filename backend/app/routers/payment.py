@@ -243,7 +243,7 @@ async def create_checkout_session(
             line_items=line_items,
             mode='payment',
             success_url=f"{base_url}/order-success?session_id={{CHECKOUT_SESSION_ID}}",
-            cancel_url=f"{base_url}/order-confirmation",
+            cancel_url=f"{base_url}/menu",
             customer_email=request.customerInfo.get('email'),
             metadata={
                 'customer_name': request.customerInfo.get('name', ''),

@@ -23,11 +23,7 @@ const LoginPage = () => {
     // Only redirect on initial load, not after login completes
     if (isAuthenticated && !isLoading) {
       const from = location.state?.from?.pathname
-      if (from === '/checkout' || from === '/order-confirmation') {
-        navigate('/order-confirmation', { replace: true })
-      } else {
-        navigate(from || '/menu', { replace: true })
-      }
+      navigate(from || '/menu', { replace: true })
     }
   }, []) // Empty dependency array - only run on mount
 
@@ -70,13 +66,9 @@ const LoginPage = () => {
         // The login function already waits 100ms, but we add a bit more for safety
         await new Promise(resolve => setTimeout(resolve, 150))
 
-        // Redirect to order confirmation if coming from checkout, otherwise intended page or menu
+        // Redirect to intended page or menu
         const from = location.state?.from?.pathname
-        if (from === '/checkout' || from === '/order-confirmation') {
-          navigate('/order-confirmation', { replace: true })
-        } else {
-          navigate(from || '/menu', { replace: true })
-        }
+        navigate(from || '/menu', { replace: true })
       } else {
         setErrors({ general: result.error || 'Login failed. Please try again.' })
         showToast(result.error || 'Login failed', 'error')

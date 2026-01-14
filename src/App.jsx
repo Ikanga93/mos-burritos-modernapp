@@ -28,8 +28,6 @@ import LoginPage from './pages/customer/LoginPage'
 import RegisterPage from './pages/customer/RegisterPage'
 import AuthCallbackPage from './pages/customer/AuthCallbackPage'
 import MenuPage from './pages/customer/MenuPage'
-import OrderConfirmationPage from './pages/customer/OrderConfirmationPage'
-import CheckoutPage from './pages/customer/CheckoutPage'
 import OrderSuccessPage from './pages/customer/OrderSuccessPage'
 import OrderTrackingPage from './pages/customer/OrderTrackingPage'
 import MyOrdersPage from './pages/customer/MyOrdersPage'
@@ -254,9 +252,6 @@ function App() {
                             {/* Customer Menu & Ordering Routes */}
                             <Route path="/menu" element={<MenuPage />} />
 
-                            {/* Order Confirmation (Public - supports guest checkout) */}
-                            <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
-
                             {/* Order Success (Public - supports guest checkout) */}
                             <Route path="/order-success" element={<OrderSuccessPage />} />
 
@@ -264,15 +259,6 @@ function App() {
                             <Route path="/order-tracking/:orderId" element={<OrderTrackingPage />} />
 
                             {/* Protected Customer Routes */}
-                            <Route
-                                path="/checkout"
-                                element={
-                                    <ProtectedRoute>
-                                        <CheckoutPage />
-                                    </ProtectedRoute>
-                                }
-                            />
-
                             <Route
                               path="/my-orders"
                               element={

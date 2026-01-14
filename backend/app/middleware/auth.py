@@ -75,8 +75,10 @@ async def get_current_user(
             user = db.query(User).filter(User.id == token_data.user_id).first()
     
     if not user:
-        print(f"[AUTH MIDDLEWARE] Authentication failed - no user found")
+        print(f"[AUTH MIDDLEWARE] Authentication failed - no user found for token data")
         raise credentials_exception
+    
+    print(f"[AUTH MIDDLEWARE] Authentication successful for user ID: {user.id}, Email: {user.email}, Role: {user.role.value}")
     
     if not user.is_active:
         print(f"[AUTH MIDDLEWARE] User account is disabled: {user.email}")

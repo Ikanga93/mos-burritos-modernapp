@@ -21,11 +21,7 @@ const AuthCallbackPage = () => {
 
           // Redirect to intended page or menu
           const from = location.state?.from?.pathname
-          if (from === '/checkout' || from === '/order-confirmation') {
-            navigate('/order-confirmation', { replace: true })
-          } else {
-            navigate(from || '/menu', { replace: true })
-          }
+          navigate(from || '/menu', { replace: true })
         } else {
           showToast(result.error || 'Authentication failed', 'error')
           navigate('/login', { replace: true })

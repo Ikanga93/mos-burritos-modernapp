@@ -184,8 +184,8 @@ const OrderSuccessPage = () => {
                 <div className="success-container error">
                     <h2>Error Processing Order</h2>
                     <p>{error}</p>
-                    <button className="retry-btn" onClick={() => navigate('/order-confirmation')}>
-                        Go Back to Order Confirmation
+                    <button className="retry-btn" onClick={() => navigate('/menu')}>
+                        Go Back to Menu
                     </button>
                 </div>
             </div>

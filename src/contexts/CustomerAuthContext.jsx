@@ -50,6 +50,7 @@ export const CustomerAuthProvider = ({ children }) => {
 
   // Fetch current user info
   const fetchCurrentUser = async (token) => {
+    console.log('[CustomerAuth] Fetching current user with token prefix:', token?.substring(0, 10));
     try {
       const response = await fetch(`${apiUrl}/api/auth/me`, {
         headers: {
@@ -59,6 +60,7 @@ export const CustomerAuthProvider = ({ children }) => {
 
       if (response.ok) {
         const data = await response.json()
+        console.log('[CustomerAuth] Current user fetched successfully:', data.email, 'Role:', data.role);
         setCustomer(data)
         setIsAuthenticated(true)
       } else if (response.status === 401) {
@@ -115,6 +117,7 @@ export const CustomerAuthProvider = ({ children }) => {
       }
 
       const data = await response.json()
+      console.log('[CustomerAuth] Login successful for email:', data.user?.email);
 
       setAccessToken(data.accessToken)
       setRefreshToken(data.refreshToken)
