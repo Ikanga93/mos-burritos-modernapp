@@ -14,13 +14,12 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 })
 
-// Custom icon for all Mo's Burritos locations using HTML DivIcon with logo
 const mosBurritosIcon = new L.DivIcon({
     className: 'custom-div-icon',
     html: `
         <div class="map-pin-marker">
             <div class="pin-circle">
-                <img src="/images/logo/burritos-logo.png" alt="Mo's Burritos" />
+                <img src="/images/logo/bobos-logo.jpg" alt="Bobo's Barbecue" />
             </div>
             <div class="pin-point"></div>
         </div>

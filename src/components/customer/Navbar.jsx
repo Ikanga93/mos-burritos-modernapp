@@ -38,8 +38,8 @@ const Navbar = () => {
       <div className="navbar-container">
         {/* Logo */}
         <Link to="/" className="navbar-logo" onClick={closeMenu}>
-          <img src="/images/logo/burritos-logo.png" alt="Mo's Burritos" />
-          <span className="navbar-logo-text">Mo's Burritos</span>
+          <img src="/images/logo/bobos-logo.jpg" alt="Bobo's Barbecue" />
+          <span className="navbar-logo-text">Bobo's Barbecue</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -67,8 +67,8 @@ const Navbar = () => {
         <div className="navbar-actions">
           {/* Cart Icon - only show when authenticated */}
           {isAuthenticated && (
-            <button 
-              className="navbar-cart-btn" 
+            <button
+              className="navbar-cart-btn"
               onClick={() => {
                 closeMenu();
                 setIsCartOpen(true);
@@ -103,8 +103,8 @@ const Navbar = () => {
                 <UtensilsCrossed size={24} />
                 <span className="icon-label">Menu</span>
               </Link>
-              <button 
-                className="icon-menu-item" 
+              <button
+                className="icon-menu-item"
                 onClick={() => {
                   closeMenu();
                   setIsCartOpen(true);

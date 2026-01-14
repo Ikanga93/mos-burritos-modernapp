@@ -60,10 +60,9 @@ async def get_location(location_id: str, db: Session = Depends(get_db)):
 @router.post("", response_model=LocationResponse)
 async def create_location(
     location_data: LocationCreate,
-    current_user: User = Depends(require_owner),
     db: Session = Depends(get_db)
 ):
-    """Create a new location (owner only)"""
+    """Create a new location (public)"""
     new_location = Location(**location_data.model_dump())
     
     db.add(new_location)
@@ -77,10 +76,9 @@ async def create_location(
 async def update_location(
     location_id: str,
     location_data: LocationUpdate,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Update a location (manager or above for assigned location, owner for any)"""
+    """Update a location (public)"""
     location = db.query(Location).filter(Location.id == location_id).first()
     
     if not location:
@@ -88,14 +86,6 @@ async def update_location(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Location not found"
         )
-    
-    # Check permissions
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
     
     # Update fields
     update_data = location_data.model_dump(exclude_unset=True)
@@ -111,10 +101,9 @@ async def update_location(
 @router.delete("/{location_id}")
 async def delete_location(
     location_id: str,
-    current_user: User = Depends(require_owner),
     db: Session = Depends(get_db)
 ):
-    """Delete a location (owner only) - soft delete by setting inactive"""
+    """Delete a location (public) - soft delete by setting inactive"""
     location = db.query(Location).filter(Location.id == location_id).first()
     
     if not location:
