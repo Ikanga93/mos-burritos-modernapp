@@ -65,7 +65,9 @@ const AdminDashboard = () => {
 
             const todayOrders = allOrders.filter(o => new Date(o.created_at).toDateString() === today)
             const pendingOrders = allOrders.filter(o => ['pending', 'confirmed', 'preparing'].includes(o.status))
-            const todayRevenue = todayOrders.filter(o => o.status === 'completed').reduce((sum, o) => sum + o.total, 0)
+            const todayRevenue = todayOrders
+                .filter(o => ['pending', 'confirmed', 'preparing', 'ready', 'completed'].includes(o.status) && o.status !== 'cancelled')
+                .reduce((sum, o) => sum + o.total, 0)
 
             setStats({
                 todayOrders: todayOrders.length,
