@@ -1,13 +1,16 @@
-/* Minimal Location Selector */
-.location-selector-minimal {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+/* Custom Location Selector */
+.location-selector-custom {
+  position: relative;
   margin-bottom: 1.5rem;
+  z-index: 50;
+  width: 100%;
+  max-width: 500px;
 }
 
-.location-selector-minimal.loading,
-.location-selector-minimal.empty {
+.location-selector.loading,
+.location-selector.empty {
+  display: flex;
+  align-items: center;
   justify-content: center;
   padding: 1rem;
   background: white;
@@ -27,97 +30,171 @@
   margin-right: 0.5rem;
 }
 
-.location-bar {
-  flex: 1;
+/* Trigger Button */
+.location-trigger {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
   background: white;
   padding: 0.75rem 1rem;
   border-radius: 12px;
   border: 2px solid #e0e0e0;
-  transition: all 0.3s;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
 }
 
-.location-bar:hover {
+.location-trigger:hover,
+.location-trigger.open {
   border-color: #FF6B35;
-  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.1);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.1);
+  transform: translateY(-1px);
 }
 
-.location-icon {
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+.location-trigger.disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  border-color: #eee;
+  background: #f9f9f9;
+}
+
+.trigger-icon {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 36px;
+  height: 36px;
   background: linear-gradient(135deg, #FF6B35 0%, #e55a2b 100%);
   border-radius: 8px;
   color: white;
+  flex-shrink: 0;
 }
 
-.location-dropdown {
+.trigger-info {
   flex: 1;
-  border: none;
-  background: transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+.trigger-label {
+  font-size: 0.75rem;
+  color: #888;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.trigger-value {
   font-size: 1rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.trigger-arrow {
+  color: #888;
+  transition: transform 0.3s;
+}
+
+.location-trigger.open .trigger-arrow {
+  transform: rotate(180deg);
+  color: #FF6B35;
+}
+
+/* Dropdown Menu */
+.location-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border: 1px solid #eee;
+  overflow: hidden;
+  animation: slideDown 0.2s ease-out;
+  padding: 0.5rem;
+  z-index: 100;
+}
+
+.location-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.location-option:hover {
+  background: #fff5f2;
+}
+
+.location-option.selected {
+  background: #fff0eb;
+}
+
+.option-icon {
+  color: #666;
+  display: flex;
+  align-items: center;
+}
+
+.location-option.selected .option-icon {
+  color: #FF6B35;
+}
+
+.option-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.option-name {
   font-weight: 600;
   color: #333;
-  cursor: pointer;
-  outline: none;
-  padding: 0.25rem 0;
+  font-size: 0.95rem;
 }
 
-.location-dropdown:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.option-address {
+  font-size: 0.8rem;
+  color: #888;
 }
 
-.location-dropdown option {
-  padding: 0.75rem;
-  font-size: 1rem;
+.option-check {
+  color: #FF6B35;
 }
 
-.location-details {
-  flex-shrink: 0;
+.location-locked-msg {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.location-type {
-  font-size: 1.25rem;
-}
-
-.location-cart-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: #FF6B35;
-  color: white;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-/* Mobile Responsive */
-@media (max-width: 640px) {
-  .location-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .location-selector {
-    padding: 1rem;
-  }
-
-  .location-selector-header h3 {
-    font-size: 1.1rem;
-  }
+  font-size: 0.8rem;
+  color: #d63384;
+  margin-top: 0.5rem;
+  padding-left: 0.5rem;
+  font-weight: 500;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

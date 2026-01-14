@@ -669,3 +669,28 @@
     color: #555;
     font-weight: 500;
 }
+.image-upload-area {
+  position: relative;
+  width: 100%;
+  min-height: 200px;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #f8f8f8;
+  overflow: hidden;
+}
+
+.image-upload-area:hover,
+.image-upload-area.dragging {
+  border-color: #FF6B35;
+  background: rgba(255, 107, 53, 0.05);
+}
+
+.image-upload-area.dragging {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}

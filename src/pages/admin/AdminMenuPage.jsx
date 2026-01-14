@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Plus, Edit2, Trash2, X, Check, DollarSign, ToggleLeft, ToggleRight, Upload, Image as ImageIcon, Minus } from 'lucide-react'
 import { useToast } from '../../contexts/ToastContext'
 import { menuApi } from '../../services/api/menuApi'
@@ -28,9 +28,12 @@ const AdminMenuPage = () => {
     })
 
     // Image upload state
+    // Image upload state
     const [imageFile, setImageFile] = useState(null)
     const [imagePreview, setImagePreview] = useState(null)
     const [isUploadingImage, setIsUploadingImage] = useState(false)
+    const [isDragging, setIsDragging] = useState(false)
+    const fileInputRef = useRef(null)
 
     // Options state
     const [optionGroups, setOptionGroups] = useState([])
@@ -196,23 +199,51 @@ const AdminMenuPage = () => {
         setOptionGroups([])
     }
 
+    const handleDragOver = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDragging(true)
+    }
+
+    const handleDragLeave = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDragging(false)
+    }
+
+    const handleDrop = (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDragging(false)
+
+        const files = e.dataTransfer.files
+        if (files && files.length > 0) {
+            const file = files[0]
+            validateAndSetImage(file)
+        }
+    }
+
+    const validateAndSetImage = (file) => {
+        if (!file.type.startsWith('image/')) {
+            showToast('Please select an image file', 'error')
+            return
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Image must be less than 5MB', 'error')
+            return
+        }
+        setImageFile(file)
+        const reader = new FileReader()
+        reader.onloadend = () => {
+            setImagePreview(reader.result)
+        }
+        reader.readAsDataURL(file)
+    }
+
     const handleImageSelect = (e) => {
         const file = e.target.files[0]
         if (file) {
-            if (!file.type.startsWith('image/')) {
-                showToast('Please select an image file', 'error')
-                return
-            }
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('Image must be less than 5MB', 'error')
-                return
-            }
-            setImageFile(file)
-            const reader = new FileReader()
-            reader.onloadend = () => {
-                setImagePreview(reader.result)
-            }
-            reader.readAsDataURL(file)
+            validateAndSetImage(file)
         }
     }
 
@@ -234,15 +265,24 @@ const AdminMenuPage = () => {
         }
 
         try {
-            const itemData = { ...formData, price: parseFloat(formData.price), location_id: selectedLocation }
+            const baseData = {
+                ...formData,
+                price: parseFloat(formData.price),
+                is_available: formData.is_available // Ensure explicit boolean
+            }
+
             let itemId
 
             if (editingItem) {
-                await menuApi.updateMenuItem(editingItem.id, itemData)
+                // For update, exclude location_id as it shouldn't change
+                const { location_id, ...updateData } = baseData
+                await menuApi.updateMenuItem(editingItem.id, updateData)
                 itemId = editingItem.id
                 showToast('Item updated successfully', 'success')
             } else {
-                const result = await menuApi.createMenuItem(itemData)
+                // For create, include location_id
+                const createData = { ...baseData, location_id: selectedLocation }
+                const result = await menuApi.createMenuItem(createData)
                 itemId = result.id
                 showToast('Item created successfully', 'success')
             }
@@ -511,33 +551,54 @@ const AdminMenuPage = () => {
                             {/* Image Upload */}
                             <div className="form-section">
                                 <h3>Image</h3>
-                                <div className="image-upload-area">
+                                <div
+                                    className={`image-upload-area ${isDragging ? 'dragging' : ''}`}
+                                    onDragOver={handleDragOver}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={handleDrop}
+                                    style={{ position: 'relative' }}
+                                >
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleImageSelect}
+                                        accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
+                                        id="menu-item-image"
+                                        style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            opacity: 0,
+                                            cursor: 'pointer',
+                                            zIndex: 10
+                                        }}
+                                    />
                                     {imagePreview ? (
                                         <div className="image-preview">
                                             <img src={imagePreview} alt="Preview" />
                                             <button
                                                 type="button"
                                                 className="remove-image-btn"
-                                                onClick={() => { setImageFile(null); setImagePreview(null); }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    e.preventDefault()
+                                                    setImageFile(null)
+                                                    setImagePreview(null)
+                                                    if (fileInputRef.current) fileInputRef.current.value = ''
+                                                }}
+                                                style={{ position: 'relative', zIndex: 20 }}
                                             >
                                                 <X size={16} /> Remove
                                             </button>
                                         </div>
                                     ) : (
-                                        <label htmlFor="menu-item-image" className="image-upload-label">
-                                            <input
-                                                id="menu-item-image"
-                                                type="file"
-                                                accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
-                                                onChange={handleImageSelect}
-                                                style={{ display: 'none' }}
-                                            />
-                                            <div className="upload-placeholder">
-                                                <ImageIcon size={48} />
-                                                <p>Click to upload image</p>
-                                                <span>PNG, JPG, WebP, AVIF (max 5MB)</span>
-                                            </div>
-                                        </label>
+                                        <div className="upload-placeholder">
+                                            <ImageIcon size={48} />
+                                            <p>Click or drag image here</p>
+                                            <span>PNG, JPG, WebP, AVIF (max 5MB)</span>
+                                        </div>
                                     )}
                                 </div>
                             </div>

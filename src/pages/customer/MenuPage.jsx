@@ -35,7 +35,7 @@ const MenuPage = () => {
 
       // Extract categories and flatten items from nested structure
       const categories = data.categories || []
-      const allItems = categories.flatMap(category => 
+      const allItems = categories.flatMap(category =>
         (category.items || []).map(item => ({
           ...item,
           category_id: category.id
@@ -68,9 +68,12 @@ const MenuPage = () => {
   return (
     <div className="menu-page">
       {/* Back Button */}
-      <button className="back-btn" onClick={() => navigate('/')} aria-label="Back to Home">
-        <ArrowLeft size={20} />
-      </button>
+      <div className="menu-page-header">
+        <button className="back-btn-pill" onClick={() => navigate('/')} aria-label="Back to Home">
+          <ArrowLeft size={18} />
+          <span>Back to Home</span>
+        </button>
+      </div>
 
       {/* Location Selector */}
       <LocationSelector />

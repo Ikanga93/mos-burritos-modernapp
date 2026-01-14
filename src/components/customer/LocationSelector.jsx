@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react'
-import { MapPin, Truck, Home, AlertCircle } from 'lucide-react'
+import React, { useEffect, useState, useRef } from 'react'
+import { MapPin, Truck, Home, AlertCircle, ChevronDown, Check } from 'lucide-react'
 import { useLocation } from '../../contexts/LocationContext'
 import { useCart } from '../../contexts/CartContext'
 import { useToast } from '../../contexts/ToastContext'
@@ -9,6 +9,8 @@ const LocationSelector = ({ onLocationChange }) => {
   const { locations, selectedLocation, setLocation, isLoading } = useLocation()
   const { locationId: cartLocationId, itemCount, validateLocation } = useCart()
   const { showToast } = useToast()
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef(null)
 
   useEffect(() => {
     // Auto-select first location if none selected
@@ -20,6 +22,17 @@ const LocationSelector = ({ onLocationChange }) => {
       setLocation(cartLocationId)
     }
   }, [locations, selectedLocation, cartLocationId, setLocation])
+
+  // Click outside to close
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleLocationSelect = (location) => {
     // Check if changing location with items in cart
@@ -36,6 +49,7 @@ const LocationSelector = ({ onLocationChange }) => {
     }
 
     setLocation(location.id)
+    setIsOpen(false)
 
     if (onLocationChange) {
       onLocationChange(location)
@@ -74,45 +88,61 @@ const LocationSelector = ({ onLocationChange }) => {
     }
   }
 
-  return (
-    <div className="location-selector-minimal">
-      <div className="location-bar">
-        <div className="location-icon">
-          <MapPin size={18} />
-        </div>
-        
-        <select
-          className="location-dropdown"
-          value={selectedLocation?.id || ''}
-          onChange={(e) => {
-            const location = locations.find(l => l.id === e.target.value)
-            if (location) handleLocationSelect(location)
-          }}
-          disabled={itemCount > 0 && cartLocationId}
-        >
-          {!selectedLocation && <option value="">Select a location...</option>}
-          {locations.map((location) => (
-            <option key={location.id} value={location.id}>
-              {getLocationIcon(location.type) ? '🏪 ' : ''}
-              {location.name}
-              {location.address ? ` • ${location.address.split(',')[0]}` : ''}
-            </option>
-          ))}
-        </select>
+  const isDisabled = itemCount > 0 && cartLocationId;
 
-        {selectedLocation && (
-          <div className="location-details">
-            <span className="location-type">
-              {selectedLocation.type === 'restaurant' ? '🏪' : '🚚'}
-            </span>
-          </div>
-        )}
+  return (
+    <div className="location-selector-custom" ref={dropdownRef}>
+      <div
+        className={`location-trigger ${isOpen ? 'open' : ''} ${isDisabled ? 'disabled' : ''}`}
+        onClick={() => !isDisabled && setIsOpen(!isOpen)}
+      >
+        <div className="trigger-icon">
+          <MapPin size={20} />
+        </div>
+
+        <div className="trigger-info">
+          <span className="trigger-label">Ordering from</span>
+          <span className="trigger-value">
+            {selectedLocation ? selectedLocation.name : 'Select a location'}
+          </span>
+        </div>
+
+        <div className="trigger-arrow">
+          <ChevronDown size={20} />
+        </div>
       </div>
 
-      {itemCount > 0 && cartLocationId && (
-        <div className="location-cart-badge">
+      {isOpen && (
+        <div className="location-dropdown-menu">
+          {locations.map((location) => (
+            <div
+              key={location.id}
+              className={`location-option ${selectedLocation?.id === location.id ? 'selected' : ''}`}
+              onClick={() => handleLocationSelect(location)}
+            >
+              <div className="option-icon">
+                {getLocationIcon(location.type)}
+              </div>
+              <div className="option-info">
+                <span className="option-name">{location.name}</span>
+                {location.address && (
+                  <span className="option-address">{location.address.split(',')[0]}</span>
+                )}
+              </div>
+              {selectedLocation?.id === location.id && (
+                <div className="option-check">
+                  <Check size={16} />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {isDisabled && (
+        <div className="location-locked-msg">
           <AlertCircle size={14} />
-          {itemCount} item{itemCount !== 1 ? 's' : ''} in cart
+          <span>Location locked while cart has items</span>
         </div>
       )}
     </div>
