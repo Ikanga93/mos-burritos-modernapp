@@ -211,6 +211,14 @@ async def login(credentials: UserLogin, db: Session = Depends(get_db)):
 
         user = authenticate_user(db, credentials.email, credentials.password)
 
+        # Check if user is an OAuth/Google Sign In user
+        if user == "OAUTH_USER":
+            print(f"[DEBUG] OAuth user tried to login with password: {credentials.email}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This account uses Google Sign In. Please use the 'Sign in with Google' button instead.",
+            )
+
         if not user:
             print(f"[DEBUG] Authentication failed for email: {credentials.email}")
             raise HTTPException(
@@ -277,12 +285,15 @@ async def login(credentials: UserLogin, db: Session = Depends(get_db)):
         )
 
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/register", response_model=LoginResponse)
 async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     """Register a new customer account"""
+    print(f"[REGISTER] New registration attempt for: {user_data.email}")
+    
     # Check if email exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
+        print(f"[REGISTER] Email already exists: {user_data.email}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
@@ -302,7 +313,27 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     
-    return new_user
+    print(f"[REGISTER] User created successfully: {new_user.id}")
+    
+    # Generate tokens for immediate login
+    token_data = {
+        "sub": new_user.id,
+        "email": new_user.email,
+        "role": new_user.role.value
+    }
+    
+    access_token = create_access_token(token_data)
+    refresh_token = create_refresh_token(token_data)
+    
+    print(f"[REGISTER] Registration complete - returning tokens")
+    
+    return LoginResponse(
+        user=new_user,
+        accessToken=access_token,
+        refreshToken=refresh_token,
+        assignedLocations=[],
+        currentLocation=None
+    )
 
 
 @router.get("/me", response_model=UserResponse)

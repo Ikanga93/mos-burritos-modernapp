@@ -14,7 +14,14 @@ from ..schemas import TokenData
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against a hash"""
-    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    if not hashed_password:
+        print("[AUTH] Cannot verify password - hash is None")
+        return False
+    try:
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except Exception as e:
+        print(f"[AUTH] Password verification error: {str(e)}")
+        return False
 
 
 def get_password_hash(password: str) -> str:
@@ -50,10 +57,13 @@ def decode_token(token: str) -> Optional[TokenData]:
         role: str = payload.get("role")
         
         if user_id is None or email is None:
+            print(f"[AUTH] Token missing required fields - user_id: {user_id}, email: {email}")
             return None
         
+        print(f"[AUTH] Token decoded successfully for user: {email}")
         return TokenData(user_id=user_id, email=email, role=UserRole(role))
-    except JWTError:
+    except JWTError as e:
+        print(f"[AUTH] JWT decode error: {str(e)}")
         return None
 
 
@@ -61,11 +71,25 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
     """Authenticate a user by email and password"""
     user = db.query(User).filter(User.email == email).first()
     if not user:
+        print(f"[AUTH] User not found: {email}")
         return None
+    
+    # Check if user has a password hash
+    # Users without password hash are OAuth/Google Sign In users
+    if not user.password_hash:
+        print(f"[AUTH] User {email} is a Google Sign In user - cannot authenticate with password")
+        # Return special marker to differentiate from wrong password
+        return "OAUTH_USER"
+    
     if not verify_password(password, user.password_hash):
+        print(f"[AUTH] Password verification failed for user: {email}")
         return None
+    
     if not user.is_active:
+        print(f"[AUTH] User {email} is not active")
         return None
+    
+    print(f"[AUTH] User {email} authenticated successfully")
     return user
 
 

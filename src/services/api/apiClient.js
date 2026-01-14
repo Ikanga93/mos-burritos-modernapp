@@ -73,6 +73,7 @@ export const createCustomerClient = () => {
           const refreshToken = localStorage.getItem('customerRefreshToken')
 
           if (!refreshToken) {
+            console.error('[Customer Auth] No refresh token available')
             // No refresh token, logout
             localStorage.removeItem('customerAccessToken')
             localStorage.removeItem('customerRefreshToken')
@@ -80,20 +81,28 @@ export const createCustomerClient = () => {
             return Promise.reject(error)
           }
 
+          console.log('[Customer Auth] Attempting to refresh token...')
+
           // Try to refresh the token
-          const response = await axios.post(`${API_BASE_URL}/api/auth/refresh`, {
+          const response = await axios.post(`${API_BASE_URL}/api/auth/customer/refresh`, {
             refreshToken: refreshToken
           })
 
-          const { accessToken } = response.data
+          const { accessToken, refreshToken: newRefreshToken } = response.data
 
-          // Store new access token
+          // Store new tokens
           localStorage.setItem('customerAccessToken', accessToken)
+          if (newRefreshToken) {
+            localStorage.setItem('customerRefreshToken', newRefreshToken)
+          }
+
+          console.log('[Customer Auth] Token refreshed successfully')
 
           // Retry original request with new token
           originalRequest.headers.Authorization = `Bearer ${accessToken}`
           return client(originalRequest)
         } catch (refreshError) {
+          console.error('[Customer Auth] Token refresh failed:', refreshError)
           // Refresh failed, logout
           localStorage.removeItem('customerAccessToken')
           localStorage.removeItem('customerRefreshToken')
@@ -138,6 +147,9 @@ export const createAdminClient = () => {
       
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
+        console.log(`[Admin API] Making request to ${config.url} with token: ${token.substring(0, 20)}...`)
+      } else {
+        console.warn(`[Admin API] No token available for request to ${config.url}`)
       }
       return config
     },
@@ -158,30 +170,41 @@ export const createAdminClient = () => {
           const refreshToken = localStorage.getItem('adminRefreshToken')
 
           if (!refreshToken) {
+            console.error('[Admin Auth] No refresh token available')
             // No refresh token, logout
             localStorage.removeItem('adminAccessToken')
             localStorage.removeItem('adminRefreshToken')
+            localStorage.removeItem('adminCurrentLocation')
             window.location.href = '/admin/login'
             return Promise.reject(error)
           }
+
+          console.log('[Admin Auth] Attempting to refresh token...')
 
           // Try to refresh the token
           const response = await axios.post(`${API_BASE_URL}/api/auth/refresh`, {
             refreshToken: refreshToken
           })
 
-          const { accessToken } = response.data
+          const { accessToken, refreshToken: newRefreshToken } = response.data
 
-          // Store new access token
+          // Store new tokens
           localStorage.setItem('adminAccessToken', accessToken)
+          if (newRefreshToken) {
+            localStorage.setItem('adminRefreshToken', newRefreshToken)
+          }
+
+          console.log('[Admin Auth] Token refreshed successfully')
 
           // Retry original request with new token
           originalRequest.headers.Authorization = `Bearer ${accessToken}`
           return client(originalRequest)
         } catch (refreshError) {
+          console.error('[Admin Auth] Token refresh failed:', refreshError)
           // Refresh failed, logout
           localStorage.removeItem('adminAccessToken')
           localStorage.removeItem('adminRefreshToken')
+          localStorage.removeItem('adminCurrentLocation')
           window.location.href = '/admin/login'
           return Promise.reject(refreshError)
         }

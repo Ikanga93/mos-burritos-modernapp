@@ -163,6 +163,10 @@ export const AdminAuthProvider = ({ children }) => {
       }
 
       // Store tokens
+      console.log('[Admin Auth] Storing tokens after login')
+      console.log('[Admin Auth] Access Token:', data.accessToken ? `${data.accessToken.substring(0, 30)}...` : 'MISSING')
+      console.log('[Admin Auth] Refresh Token:', data.refreshToken ? `${data.refreshToken.substring(0, 30)}...` : 'MISSING')
+      
       localStorage.setItem('adminAccessToken', data.accessToken)
       localStorage.setItem('adminRefreshToken', data.refreshToken)
 
@@ -171,6 +175,8 @@ export const AdminAuthProvider = ({ children }) => {
       setAdmin(data.user)
       setRole(data.user.role)
       setIsAuthenticated(true)
+      
+      console.log('[Admin Auth] Login successful - User:', data.user.email, 'Role:', data.user.role)
 
       // Fetch assigned locations
       if (data.user.role !== 'owner') {

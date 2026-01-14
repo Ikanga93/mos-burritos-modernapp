@@ -165,14 +165,14 @@ export const CustomerAuthProvider = ({ children }) => {
       
       // Ensure customer data is fully set before resolving
       // This prevents race conditions where redirect happens before customer is available
-      const userData = data.user
-      setCustomer(userData)
+      const loggedInUser = data.user
+      setCustomer(loggedInUser)
       setIsAuthenticated(true)
 
       // Wait a bit for state to propagate (React batches updates)
       await new Promise(resolve => setTimeout(resolve, 100))
 
-      return { success: true, user: userData }
+      return { success: true, user: loggedInUser }
     } catch (error) {
       console.error('Login error:', error)
       return { success: false, error: error.message }
@@ -213,14 +213,14 @@ export const CustomerAuthProvider = ({ children }) => {
       
       // Ensure customer data is fully set before resolving
       // This prevents race conditions where redirect happens before customer is available
-      const userData = data.user
-      setCustomer(userData)
+      const registeredUser = data.user
+      setCustomer(registeredUser)
       setIsAuthenticated(true)
 
       // Wait a bit for state to propagate (React batches updates)
       await new Promise(resolve => setTimeout(resolve, 100))
 
-      return { success: true, user: userData }
+      return { success: true, user: registeredUser }
     } catch (error) {
       console.error('Registration error:', error)
       return { success: false, error: error.message }

@@ -38,6 +38,9 @@ async def get_current_user(
     token = credentials.credentials
     user = None
     
+    print(f"[AUTH MIDDLEWARE] Authenticating request - Token: {token[:30]}...")
+    print(f"[AUTH MIDDLEWARE] Environment: {'Production (Supabase)' if (settings.is_production and settings.use_supabase_auth) else 'Development (JWT)'}")
+    
     if settings.is_production and settings.use_supabase_auth:
         # Production: Use Supabase Auth
         supabase_user = await get_supabase_user_from_token(token)
@@ -67,19 +70,30 @@ async def get_current_user(
                 db.commit()
     else:
         # Development: Use local JWT tokens
+        print(f"[AUTH MIDDLEWARE] Decoding JWT token...")
         token_data = decode_token(token)
         if token_data:
+            print(f"[AUTH MIDDLEWARE] Token decoded - looking up user ID: {token_data.user_id}")
             user = db.query(User).filter(User.id == token_data.user_id).first()
+            if user:
+                print(f"[AUTH MIDDLEWARE] User found: {user.email}, Role: {user.role.value}")
+            else:
+                print(f"[AUTH MIDDLEWARE] User not found in database")
+        else:
+            print(f"[AUTH MIDDLEWARE] Token decode failed")
     
     if not user:
+        print(f"[AUTH MIDDLEWARE] Authentication failed - no user found")
         raise credentials_exception
     
     if not user.is_active:
+        print(f"[AUTH MIDDLEWARE] User account is disabled: {user.email}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is disabled"
         )
     
+    print(f"[AUTH MIDDLEWARE] Authentication successful for: {user.email}")
     return user
 
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { MapPin, Plus, Edit2, Trash2, Phone, X, Check } from 'lucide-react'
+import { MapPin, Plus, Edit2, Trash2, Phone, X, Check, Store, Truck, Building2, MapPinned } from 'lucide-react'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import { locationApi } from '../../services/api/locationApi'
@@ -18,7 +18,7 @@ const AdminLocationsPage = () => {
         name: '',
         address: '',
         phone: '',
-        location_type: 'restaurant',
+        type: 'restaurant',
         is_active: true
     })
 
@@ -45,7 +45,7 @@ const AdminLocationsPage = () => {
 
     const openAddModal = () => {
         setEditingLocation(null)
-        setFormData({ name: '', address: '', phone: '', location_type: 'restaurant', is_active: true })
+        setFormData({ name: '', address: '', phone: '', type: 'restaurant', is_active: true })
         setShowModal(true)
     }
 
@@ -55,7 +55,7 @@ const AdminLocationsPage = () => {
             name: location.name || '',
             address: location.address || '',
             phone: location.phone || '',
-            location_type: location.location_type || 'restaurant',
+            type: location.type || 'restaurant',
             is_active: location.is_active !== false
         })
         setShowModal(true)
@@ -84,7 +84,17 @@ const AdminLocationsPage = () => {
             closeModal()
             loadLocations()
         } catch (error) {
-            showToast(error.message || 'Failed to save location', 'error')
+            console.error('Location save error:', error)
+            const errorMessage = error.response?.data?.detail || error.message || 'Failed to save location'
+            
+            // Check if it's an authentication error
+            if (error.response?.status === 401) {
+                showToast('Session expired. Please try again or log in again.', 'error')
+            } else if (error.response?.status === 403) {
+                showToast('You do not have permission to perform this action', 'error')
+            } else {
+                showToast(errorMessage, 'error')
+            }
         }
     }
 
@@ -107,13 +117,39 @@ const AdminLocationsPage = () => {
         )
     }
 
+    const getLocationIcon = (type) => {
+        switch (type) {
+            case 'food_truck':
+                return <Truck size={24} />
+            case 'kiosk':
+                return <Building2 size={24} />
+            default:
+                return <Store size={24} />
+        }
+    }
+
+    const formatLocationType = (type) => {
+        switch (type) {
+            case 'food_truck':
+                return 'Food Truck'
+            case 'kiosk':
+                return 'Kiosk'
+            default:
+                return 'Restaurant'
+        }
+    }
+
     return (
         <div className="admin-locations-page">
             <header className="page-header">
-                <h1>Locations</h1>
+                <div className="header-title">
+                    <MapPinned size={32} strokeWidth={2} />
+                    <h1>Locations</h1>
+                </div>
                 {isOwner && (
                     <button className="add-btn" onClick={openAddModal}>
-                        <Plus size={18} /> Add Location
+                        <Plus size={20} strokeWidth={2} />
+                        <span>Add Location</span>
                     </button>
                 )}
             </header>
@@ -121,32 +157,50 @@ const AdminLocationsPage = () => {
             <div className="locations-grid">
                 {locations.length === 0 ? (
                     <div className="empty-state">
-                        <MapPin size={48} />
-                        <p>No locations yet</p>
-                        {isOwner && <button className="add-btn" onClick={openAddModal}>Add Your First Location</button>}
+                        <MapPin size={64} strokeWidth={1.5} />
+                        <h3>No locations yet</h3>
+                        <p>Start by adding your first location</p>
+                        {isOwner && (
+                            <button className="add-btn-large" onClick={openAddModal}>
+                                <Plus size={20} />
+                                <span>Add Your First Location</span>
+                            </button>
+                        )}
                     </div>
                 ) : (
                     locations.map(location => (
                         <div key={location.id} className={`location-card ${!location.is_active ? 'inactive' : ''}`}>
-                            <div className="location-header">
-                                <div className="location-type">{location.location_type || 'Restaurant'}</div>
-                                {!location.is_active && <span className="inactive-badge">Inactive</span>}
+                            <div className="location-icon">
+                                {getLocationIcon(location.type)}
                             </div>
-                            <h3>{location.name}</h3>
-                            <p className="address">{location.address}</p>
-                            {location.phone && (
-                                <div className="location-detail">
-                                    <Phone size={14} />
-                                    <span>{location.phone}</span>
+                            <div className="location-content">
+                                <div className="location-header">
+                                    <div className="location-type-badge">
+                                        {formatLocationType(location.type)}
+                                    </div>
+                                    {!location.is_active && (
+                                        <span className="inactive-badge">Inactive</span>
+                                    )}
                                 </div>
-                            )}
+                                <h3>{location.name}</h3>
+                                <div className="location-detail">
+                                    <MapPin size={16} strokeWidth={2} />
+                                    <span>{location.address}</span>
+                                </div>
+                                {location.phone && (
+                                    <div className="location-detail">
+                                        <Phone size={16} strokeWidth={2} />
+                                        <span>{location.phone}</span>
+                                    </div>
+                                )}
+                            </div>
                             {isOwner && (
                                 <div className="location-actions">
-                                    <button className="edit-btn" onClick={() => openEditModal(location)}>
-                                        <Edit2 size={16} /> Edit
+                                    <button className="icon-btn edit-btn" onClick={() => openEditModal(location)} title="Edit">
+                                        <Edit2 size={18} strokeWidth={2} />
                                     </button>
-                                    <button className="delete-btn" onClick={() => handleDelete(location.id)}>
-                                        <Trash2 size={16} />
+                                    <button className="icon-btn delete-btn" onClick={() => handleDelete(location.id)} title="Delete">
+                                        <Trash2 size={18} strokeWidth={2} />
                                     </button>
                                 </div>
                             )}
@@ -177,10 +231,9 @@ const AdminLocationsPage = () => {
                             </div>
                             <div className="form-group">
                                 <label>Type</label>
-                                <select value={formData.location_type} onChange={e => setFormData({ ...formData, location_type: e.target.value })}>
+                                <select value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })}>
                                     <option value="restaurant">Restaurant</option>
                                     <option value="food_truck">Food Truck</option>
-                                    <option value="kiosk">Kiosk</option>
                                 </select>
                             </div>
                             <div className="form-group checkbox-group">

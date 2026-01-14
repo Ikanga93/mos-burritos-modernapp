@@ -288,23 +288,75 @@
     flex: 1;
     margin-left: 132px;
     min-height: 100vh;
+    padding-top: 100px; /* Account for fixed navbar height */
 }
 
 
 /* Responsive */
 @media (max-width: 768px) {
     .admin-sidebar {
-        display: none;
+        position: fixed;
+        left: 0;
+        top: 80px;
+        width: 80px;
+        height: calc(100vh - 80px);
+        background: white;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        padding: 1rem 0.5rem;
+        z-index: 100;
+    }
+
+    .nav-item {
+        padding: 10px 4px;
+    }
+
+    .nav-item span {
+        font-size: 0.65rem;
     }
 
     .admin-main {
-        margin-left: 0;
+        margin-left: 90px;
+        padding-top: 100px;
     }
 }
 
 /* Very small screens */
 @media (max-width: 480px) {
+    .admin-sidebar {
+        width: 70px;
+        padding: 0.75rem 0.25rem;
+        left: 0;
+    }
+
+    .nav-item {
+        padding: 8px 2px;
+        gap: 4px;
+    }
+
+    .nav-item svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .nav-item span {
+        font-size: 0.6rem;
+    }
+
     .admin-main {
-        margin-left: 0;
+        margin-left: 80px;
+        padding-top: 100px;
+    }
+
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+
+    .navbar-logo {
+        width: 40px;
+        height: 40px;
+    }
+
+    .dashboard-navbar {
+        padding: 0.75rem 1rem;
     }
 }
