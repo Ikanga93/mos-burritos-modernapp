@@ -4,7 +4,6 @@ import {
     ShoppingBag, Clock, CheckCircle, ChefHat,
     DollarSign, RefreshCw, Package, TrendingUp, X, XCircle
 } from 'lucide-react'
-import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import { orderApi } from '../../services/api/orderApi'
 import { locationApi } from '../../services/api/locationApi'
@@ -21,7 +20,6 @@ const STATUS_CONFIG = {
 }
 
 const AdminDashboard = () => {
-    const { admin, logout, isAuthenticated, isLoading: authLoading, role, assignedLocations, currentLocation } = useAdminAuth()
     const { showToast } = useToast()
     const navigate = useNavigate()
 
@@ -38,29 +36,18 @@ const AdminDashboard = () => {
     const [cancelReason, setCancelReason] = useState('')
     const [isCancelling, setIsCancelling] = useState(false)
 
-    const isOwner = role === 'owner'
-
     // Load locations
     useEffect(() => {
-        if (!authLoading && isAuthenticated) {
-            const loadLocations = async () => {
-                try {
-                    const data = await locationApi.getAllLocations()
-                    setLocations(Array.isArray(data) ? data : data.locations || [])
-                } catch (error) {
-                    console.error('Error loading locations:', error)
-                }
+        const loadLocations = async () => {
+            try {
+                const data = await locationApi.getAllLocations()
+                setLocations(Array.isArray(data) ? data : data.locations || [])
+            } catch (error) {
+                console.error('Error loading locations:', error)
             }
-            loadLocations()
         }
-    }, [authLoading, isAuthenticated])
-
-    // Sync selectedLocation with currentLocation from context for non-owners
-    useEffect(() => {
-        if (!isOwner && currentLocation) {
-            setSelectedLocation(currentLocation.id)
-        }
-    }, [isOwner, currentLocation])
+        loadLocations()
+    }, [])
 
     // Load orders and stats
     const loadDashboardData = async (showRefresh = false) => {
@@ -96,18 +83,14 @@ const AdminDashboard = () => {
     }
 
     useEffect(() => {
-        if (!authLoading && isAuthenticated) {
-            loadDashboardData()
-        }
-    }, [authLoading, isAuthenticated, selectedLocation])
+        loadDashboardData()
+    }, [selectedLocation])
 
     // Auto refresh every 15 seconds for better real-time updates
     useEffect(() => {
-        if (!authLoading && isAuthenticated) {
-            const interval = setInterval(() => loadDashboardData(true), 15000)
-            return () => clearInterval(interval)
-        }
-    }, [authLoading, isAuthenticated, selectedLocation])
+        const interval = setInterval(() => loadDashboardData(true), 15000)
+        return () => clearInterval(interval)
+    }, [selectedLocation])
 
     const handleRefresh = () => {
         loadDashboardData(true)
@@ -159,8 +142,8 @@ const AdminDashboard = () => {
         return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
     }
 
-    // Show loading while auth is being verified or data is loading
-    if (authLoading || isLoading) {
+    // Show loading while data is loading
+    if (isLoading) {
         return (
             <div className="dashboard-content">
                 <LoadingSpinner size="large" message="Loading dashboard..." />

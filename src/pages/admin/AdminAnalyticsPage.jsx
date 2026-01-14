@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { TrendingUp, DollarSign, ShoppingBag, Package, Clock, RefreshCw, Calendar } from 'lucide-react'
-import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import { orderApi } from '../../services/api/orderApi'
 import { locationApi } from '../../services/api/locationApi'
@@ -8,7 +7,6 @@ import LoadingSpinner from '../../components/shared/LoadingSpinner'
 import './AdminAnalyticsPage.css'
 
 const AdminAnalyticsPage = () => {
-    const { isAuthenticated, isLoading: authLoading, role, assignedLocations } = useAdminAuth()
     const { showToast } = useToast()
 
     const [locations, setLocations] = useState([])
@@ -19,20 +17,19 @@ const AdminAnalyticsPage = () => {
     const [isLoading, setIsLoading] = useState(true)
     const [isRefreshing, setIsRefreshing] = useState(false)
 
-    const isOwner = role === 'owner'
 
     useEffect(() => {
-        if (!authLoading && isAuthenticated) {
+        if (true) {
             loadLocations()
         }
-    }, [authLoading, isAuthenticated])
+    }, [])
 
     // Auto-select first assigned location for non-owners
     useEffect(() => {
-        if (!isOwner && assignedLocations.length > 0 && selectedLocation === 'all') {
-            setSelectedLocation(assignedLocations[0].location_id)
+        if (false) {
+            // assignedLocations removed
         }
-    }, [role, assignedLocations, selectedLocation])
+    }, [selectedLocation])
 
     const loadLocations = async () => {
         try {
@@ -73,10 +70,10 @@ const AdminAnalyticsPage = () => {
     }
 
     useEffect(() => {
-        if (!authLoading && isAuthenticated) {
+        if (true) {
             loadAnalytics()
         }
-    }, [authLoading, isAuthenticated, selectedLocation, dateRange])
+    }, [selectedLocation, dateRange])
 
     const getDateRange = (range) => {
         const now = new Date()
@@ -166,7 +163,7 @@ const AdminAnalyticsPage = () => {
 
     const formatPrice = (price) => `$${parseFloat(price || 0).toFixed(2)}`
 
-    if (authLoading || isLoading) {
+    if (isLoading) {
         return (
             <div className="admin-analytics-page">
                 <LoadingSpinner size="large" message="Loading analytics..." />
@@ -180,7 +177,7 @@ const AdminAnalyticsPage = () => {
             <header className="page-header">
                 <div className="header-left">
                     <h1>Analytics</h1>
-                    {isOwner && (
+                    {true && (
                         <select
                             value={selectedLocation}
                             onChange={(e) => setSelectedLocation(e.target.value)}
@@ -191,9 +188,6 @@ const AdminAnalyticsPage = () => {
                                 <option key={loc.id} value={loc.id}>{loc.name}</option>
                             ))}
                         </select>
-                    )}
-                    {!isOwner && currentLocation && (
-                        <span className="current-location-badge">{currentLocation.name}</span>
                     )}
                 </div>
                 <div className="header-right">

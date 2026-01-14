@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { User, Mail, Phone, Shield, Save, Camera, LogOut } from 'lucide-react'
-import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import './AdminProfilePage.css'
 
 const AdminProfilePage = () => {
-    const { admin, role, logout } = useAdminAuth()
     const { showToast } = useToast()
     const navigate = useNavigate()
     
@@ -57,11 +55,7 @@ const AdminProfilePage = () => {
         }
     }
     
-    const handleLogout = () => {
-        logout()
-        navigate('/admin/login')
-        showToast('Logged out successfully', 'info')
-    }
+    // Logout removed - no authentication required
     
     return (
         <div className="profile-page">
@@ -184,13 +178,7 @@ const AdminProfilePage = () => {
                     </button>
                 </form>
                 
-                <div className="profile-danger-zone">
-                    <h3>Danger Zone</h3>
-                    <button className="logout-btn" onClick={handleLogout}>
-                        <LogOut size={18} />
-                        Logout from Account
-                    </button>
-                </div>
+                {/* Logout removed - no authentication required */}
             </div>
         </div>
     )

@@ -47,3 +47,7 @@ coverage/
 # Vercel
 .vercel 
 .vercel
+
+backend/.env.backup
+
+.env.backup

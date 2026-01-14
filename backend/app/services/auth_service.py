@@ -1,5 +1,6 @@
 """
 Mo's Burritos - Authentication Service
+NOW USING SUPABASE AUTH EXCLUSIVELY - JWT functions deprecated
 """
 from datetime import datetime, timedelta
 from typing import Optional
@@ -12,10 +13,18 @@ from ..models import User, UserRole, UserLocation
 from ..schemas import TokenData
 
 
+# ============================================================================
+# DEPRECATED FUNCTIONS - Using Supabase Auth only
+# Kept for backward compatibility, will be removed in future versions
+# ============================================================================
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against a hash"""
+    """
+    DEPRECATED: Use Supabase Auth instead
+    Verify a password against a hash
+    """
+    print("[WARNING] verify_password is deprecated - use Supabase Auth")
     if not hashed_password:
-        print("[AUTH] Cannot verify password - hash is None")
         return False
     try:
         return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
@@ -25,12 +34,20 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def get_password_hash(password: str) -> str:
-    """Hash a password"""
+    """
+    DEPRECATED: Use Supabase Auth instead
+    Hash a password
+    """
+    print("[WARNING] get_password_hash is deprecated - use Supabase Auth")
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """Create a JWT access token"""
+    """
+    DEPRECATED: Use Supabase tokens instead
+    Create a JWT access token
+    """
+    print("[WARNING] create_access_token is deprecated - use Supabase tokens")
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -41,7 +58,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 
 def create_refresh_token(data: dict) -> str:
-    """Create a JWT refresh token"""
+    """
+    DEPRECATED: Use Supabase tokens instead
+    Create a JWT refresh token
+    """
+    print("[WARNING] create_refresh_token is deprecated - use Supabase tokens")
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(days=settings.refresh_token_expire_days)
     to_encode.update({"exp": expire, "type": "refresh"})
@@ -49,7 +70,11 @@ def create_refresh_token(data: dict) -> str:
 
 
 def decode_token(token: str) -> Optional[TokenData]:
-    """Decode and validate a JWT token"""
+    """
+    DEPRECATED: Use Supabase token validation instead
+    Decode and validate a JWT token
+    """
+    print("[WARNING] decode_token is deprecated - use Supabase token validation")
     try:
         payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
         user_id: str = payload.get("sub")
@@ -57,10 +82,8 @@ def decode_token(token: str) -> Optional[TokenData]:
         role: str = payload.get("role")
         
         if user_id is None or email is None:
-            print(f"[AUTH] Token missing required fields - user_id: {user_id}, email: {email}")
             return None
         
-        print(f"[AUTH] Token decoded successfully for user: {email}")
         return TokenData(user_id=user_id, email=email, role=UserRole(role))
     except JWTError as e:
         print(f"[AUTH] JWT decode error: {str(e)}")
@@ -68,29 +91,12 @@ def decode_token(token: str) -> Optional[TokenData]:
 
 
 def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
-    """Authenticate a user by email and password"""
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        print(f"[AUTH] User not found: {email}")
-        return None
-    
-    # Check if user has a password hash
-    # Users without password hash are OAuth/Google Sign In users
-    if not user.password_hash:
-        print(f"[AUTH] User {email} is a Google Sign In user - cannot authenticate with password")
-        # Return special marker to differentiate from wrong password
-        return "OAUTH_USER"
-    
-    if not verify_password(password, user.password_hash):
-        print(f"[AUTH] Password verification failed for user: {email}")
-        return None
-    
-    if not user.is_active:
-        print(f"[AUTH] User {email} is not active")
-        return None
-    
-    print(f"[AUTH] User {email} authenticated successfully")
-    return user
+    """
+    DEPRECATED: Use Supabase Auth sign_in_with_email instead
+    Authenticate a user by email and password
+    """
+    print("[WARNING] authenticate_user is deprecated - use Supabase Auth")
+    return None
 
 
 def get_user_locations(db: Session, user_id: str) -> list:

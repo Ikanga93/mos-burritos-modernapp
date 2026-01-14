@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from 'lucide-react'
+import { Facebook, Instagram, Twitter, Mail, Phone, MapPin, Heart } from 'lucide-react'
 import './Footer.css'
 
 const Footer = () => {
@@ -17,10 +17,10 @@ const Footer = () => {
             Fresh ingredients, bold flavors, and a passion for great food.
           </p>
           <div className="footer-social">
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+            <a href="https://www.facebook.com/milton.anaya.3766/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
               <Facebook size={20} />
             </a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <a href="https://www.instagram.com/reel/DM0w3q4Onmk/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
               <Instagram size={20} />
             </a>
             <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter">
@@ -73,7 +73,12 @@ const Footer = () => {
       {/* Bottom Bar */}
       <div className="footer-bottom">
         <div className="footer-container">
-          <p>&copy; {currentYear} Mo's Burritos. All rights reserved.</p>
+          <p>
+            &copy; {currentYear} Mo's Burritos. All rights reserved. Made with <Heart size={14} fill="#e74c3c" color="#e74c3c" style={{ display: 'inline', verticalAlign: 'middle' }} /> by{' '}
+            <a href="https://gekuke.com" target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'none', fontWeight: 'bold' }}>
+              Gilchrist Ekuke
+            </a>
+          </p>
           <div className="footer-bottom-links">
             <Link to="/privacy">Privacy Policy</Link>
             <Link to="/terms">Terms of Service</Link>

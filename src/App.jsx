@@ -5,12 +5,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { ToastProvider } from './contexts/ToastContext'
 import { LocationProvider } from './contexts/LocationContext'
 import { CustomerAuthProvider } from './contexts/CustomerAuthContext'
-import { AdminAuthProvider } from './contexts/AdminAuthContext'
 import { CartProvider } from './contexts/CartContext'
 
 // Route Guards
 import ProtectedRoute from './components/shared/ProtectedRoute'
-import AdminProtectedRoute from './components/shared/AdminProtectedRoute'
 
 // Layout
 import CustomerLayout from './components/layout/CustomerLayout'
@@ -34,8 +32,6 @@ import MyOrdersPage from './pages/customer/MyOrdersPage'
 import ProfilePage from './pages/customer/ProfilePage'
 
 // Admin Pages
-import AdminLoginPage from './pages/admin/AdminLoginPage'
-import AdminRegisterPage from './pages/admin/AdminRegisterPage'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminAnalyticsPage from './pages/admin/AdminAnalyticsPage'
 import AdminOrdersPage from './pages/admin/AdminOrdersPage'
@@ -63,172 +59,167 @@ function App() {
         <ToastProvider>
           <LocationProvider>
             <CustomerAuthProvider>
-              <AdminAuthProvider>
-                <CartProvider>
+              <CartProvider>
                   <Routes>
-                    {/* Admin Auth Routes (no layout) */}
-                    <Route path="/admin/login" element={<AdminLoginPage />} />
-                    <Route path="/admin/register" element={<AdminRegisterPage />} />
-
-                    {/* Admin Routes (with AdminLayout) */}
+                  {/* Admin Routes (with AdminLayout - No Auth Required) */}
                     <Route
                       path="/admin/dashboard"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminDashboard />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
                     <Route
                       path="/admin/analytics"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminAnalyticsPage />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
                     <Route
                       path="/admin/orders"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminOrdersPage />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
                     <Route
                       path="/admin/menu"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminMenuPage />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
                     <Route
                       path="/admin/locations"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminLocationsPage />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
                     <Route
                       path="/admin/staff"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminStaffPage />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
                     <Route
                       path="/admin/customers"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminCustomersPage />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
                     <Route
                       path="/admin/profile"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminProfilePage />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
                     <Route
                       path="/admin/kitchen"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminKitchenPage />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
                     <Route
                       path="/admin/delivery"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminDeliveryPage />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
                     <Route
                       path="/admin/reservations"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminReservationsPage />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
                     <Route
                       path="/admin/payments"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminPaymentsPage />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
                     <Route
                       path="/admin/settings"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminSettingsPage />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
                     <Route
                       path="/admin/marketing"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminMarketingPage />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
                     <Route
                       path="/admin/catering"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminCateringPage />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
                     <Route
                       path="/admin/loyalty"
                       element={
-                        <AdminProtectedRoute>
+                        
                           <AdminLayout>
                             <AdminLoyaltyPage />
                           </AdminLayout>
-                        </AdminProtectedRoute>
+                        
                       }
                     />
 
@@ -285,10 +276,9 @@ function App() {
                     />
                   </Routes>
                 </CartProvider>
-              </AdminAuthProvider>
-            </CustomerAuthProvider>
-          </LocationProvider>
-        </ToastProvider>
+              </CustomerAuthProvider>
+            </LocationProvider>
+          </ToastProvider>
       </Router>
     </ErrorBoundary>
   )

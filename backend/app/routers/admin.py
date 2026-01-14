@@ -12,17 +12,15 @@ from pathlib import Path
 from ..database import get_db
 from ..models import User, Order, UserRole as ModelUserRole, OrderStatus as ModelOrderStatus
 from ..schemas import UserRole
-from ..middleware import get_current_user, require_owner
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
 @router.get("/customers")
 async def admin_get_customers(
-    current_user: User = Depends(require_owner),
     db: Session = Depends(get_db)
 ):
-    """Get all customers (both registered users and guest orders) - owner only"""
+    """Get all customers (both registered users and guest orders)"""
     # Get registered customers
     registered_customers = db.query(User).filter(
         User.role == ModelUserRole.CUSTOMER
@@ -112,10 +110,9 @@ async def admin_get_customers(
 @router.delete("/customers/{customer_id}")
 async def admin_delete_customer(
     customer_id: str,
-    current_user: User = Depends(require_owner),
     db: Session = Depends(get_db)
 ):
-    """Delete a customer and all their orders (owner only)"""
+    """Delete a customer and all their orders"""
     # Find customer
     customer = db.query(User).filter(
         User.id == customer_id,
@@ -140,17 +137,9 @@ async def admin_delete_customer(
 
 @router.post("/upload-menu-image")
 async def upload_menu_image(
-    file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user)
+    file: UploadFile = File(...)
 ):
-    """Upload a menu item image (manager or above)"""
-    # Verify user has admin privileges
-    admin_roles = ['owner', 'manager', 'staff']
-    if current_user.role.value not in admin_roles:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only staff can upload menu images"
-        )
+    """Upload a menu item image"""
 
     # Validate file type
     allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif']

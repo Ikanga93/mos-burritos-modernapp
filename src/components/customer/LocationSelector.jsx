@@ -75,63 +75,44 @@ const LocationSelector = ({ onLocationChange }) => {
   }
 
   return (
-    <div className="location-selector">
-      <div className="location-selector-header">
-        <MapPin size={20} />
-        <h3>Select Location</h3>
-      </div>
+    <div className="location-selector-minimal">
+      <div className="location-bar">
+        <div className="location-icon">
+          <MapPin size={18} />
+        </div>
+        
+        <select
+          className="location-dropdown"
+          value={selectedLocation?.id || ''}
+          onChange={(e) => {
+            const location = locations.find(l => l.id === e.target.value)
+            if (location) handleLocationSelect(location)
+          }}
+          disabled={itemCount > 0 && cartLocationId}
+        >
+          {!selectedLocation && <option value="">Select a location...</option>}
+          {locations.map((location) => (
+            <option key={location.id} value={location.id}>
+              {getLocationIcon(location.type) ? '🏪 ' : ''}
+              {location.name}
+              {location.address ? ` • ${location.address.split(',')[0]}` : ''}
+            </option>
+          ))}
+        </select>
 
-      <div className="location-grid">
-        {locations.map((location) => {
-          const isSelected = selectedLocation?.id === location.id
-          const isCartLocation = cartLocationId === location.id
-          const hasCartConflict = itemCount > 0 && cartLocationId && cartLocationId !== location.id
-
-          return (
-            <button
-              key={location.id}
-              className={`location-card ${isSelected ? 'selected' : ''} ${hasCartConflict ? 'disabled' : ''}`}
-              onClick={() => handleLocationSelect(location)}
-              disabled={hasCartConflict}
-            >
-              <div className="location-card-icon">
-                {getLocationIcon(location.type)}
-              </div>
-
-              <div className="location-card-content">
-                <h4>{location.name}</h4>
-                <p className="location-address">
-                  <MapPin size={14} />
-                  {location.address}
-                </p>
-                {location.type && (
-                  <span className="location-type-badge">
-                    {location.type === 'restaurant' ? 'Restaurant' : 'Food Truck'}
-                  </span>
-                )}
-              </div>
-
-              {isCartLocation && itemCount > 0 && (
-                <div className="cart-indicator">
-                  {itemCount} {itemCount === 1 ? 'item' : 'items'} in cart
-                </div>
-              )}
-
-              {isSelected && (
-                <div className="selected-indicator">
-                  ✓
-                </div>
-              )}
-            </button>
-          )
-        })}
+        {selectedLocation && (
+          <div className="location-details">
+            <span className="location-type">
+              {selectedLocation.type === 'restaurant' ? '🏪' : '🚚'}
+            </span>
+          </div>
+        )}
       </div>
 
       {itemCount > 0 && cartLocationId && (
-        <div className="location-cart-notice">
-          <AlertCircle size={16} />
-          You have {itemCount} item{itemCount !== 1 ? 's' : ''} from{' '}
-          {locations.find(l => l.id === cartLocationId)?.name}. Clear your cart to order from another location.
+        <div className="location-cart-badge">
+          <AlertCircle size={14} />
+          {itemCount} item{itemCount !== 1 ? 's' : ''} in cart
         </div>
       )}
     </div>

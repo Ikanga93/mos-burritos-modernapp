@@ -131,6 +131,9 @@ async def sign_up_with_email(email: str, password: str, user_metadata: Optional[
     supabase = get_supabase_client()
 
     try:
+        print(f"[SUPABASE] Attempting signup for: {email}")
+        print(f"[SUPABASE] Metadata: {user_metadata}")
+        
         response = supabase.auth.sign_up({
             "email": email,
             "password": password,
@@ -139,7 +142,17 @@ async def sign_up_with_email(email: str, password: str, user_metadata: Optional[
             }
         })
 
+        print(f"[SUPABASE] Response received")
+        print(f"[SUPABASE] Has session: {response.session is not None}")
+        print(f"[SUPABASE] Has user: {response.user is not None}")
+        
+        if response.user:
+            print(f"[SUPABASE] User ID: {response.user.id}")
+            print(f"[SUPABASE] User email: {response.user.email}")
+            print(f"[SUPABASE] Email confirmed: {getattr(response.user, 'email_confirmed_at', 'N/A')}")
+
         if response.session:
+            print(f"[SUPABASE] Session created successfully")
             return {
                 "success": True,
                 "session": {
@@ -153,10 +166,21 @@ async def sign_up_with_email(email: str, password: str, user_metadata: Optional[
                     "created_at": str(response.user.created_at) if response.user.created_at else None,
                 }
             }
+        elif response.user:
+            # User was created but no session (email confirmation required)
+            print(f"[SUPABASE] User created but no session - email confirmation likely required")
+            return {
+                "success": False, 
+                "error": "Email confirmation required. User created in Supabase but needs to confirm email.",
+                "user_id": response.user.id
+            }
         else:
-            return {"success": False, "error": "Failed to create account"}
+            print(f"[SUPABASE] No session and no user returned")
+            return {"success": False, "error": "Failed to create account - no user returned"}
 
     except Exception as e:
+        print(f"[SUPABASE] Exception during signup: {str(e)}")
+        print(f"[SUPABASE] Exception type: {type(e).__name__}")
         return {"success": False, "error": str(e)}
 
 

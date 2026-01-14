@@ -127,37 +127,10 @@ export const createAdminClient = () => {
   )
 
   // Response interceptor - handle 401 errors (token expired)
+  // No authentication required for admin routes
   client.interceptors.response.use(
     (response) => response,
-    async (error) => {
-      const originalRequest = error.config
-
-      // If 401 and we haven't already tried to refresh
-      if (error.response?.status === 401 && !originalRequest._retry) {
-        originalRequest._retry = true
-
-        try {
-          if (isSupabaseEnabled()) {
-            console.log('[Admin Auth] Session might be expired, attempting refresh via Supabase...')
-            const session = await getSupabaseSession()
-            if (session?.access_token) {
-              originalRequest.headers.Authorization = `Bearer ${session.access_token}`
-              return client(originalRequest)
-            }
-          }
-          
-          // If no session after refresh or Supabase not enabled
-          window.location.href = '/admin/login'
-          return Promise.reject(error)
-        } catch (refreshError) {
-          console.error('[Admin Auth] Session refresh failed:', refreshError)
-          window.location.href = '/admin/login'
-          return Promise.reject(refreshError)
-        }
-      }
-
-      return Promise.reject(error)
-    }
+    (error) => Promise.reject(error)
   )
 
   return client

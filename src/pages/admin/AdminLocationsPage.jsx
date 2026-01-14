@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { MapPin, Plus, Edit2, Trash2, Phone, X, Check, Store, Truck, Building2, MapPinned } from 'lucide-react'
-import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import { locationApi } from '../../services/api/locationApi'
 import LoadingSpinner from '../../components/shared/LoadingSpinner'
 import './AdminLocationsPage.css'
 
 const AdminLocationsPage = () => {
-    const { isAuthenticated, isLoading: authLoading, role } = useAdminAuth()
     const { showToast } = useToast()
 
     const [locations, setLocations] = useState([])
@@ -22,7 +20,6 @@ const AdminLocationsPage = () => {
         is_active: true
     })
 
-    const isOwner = role === 'owner'
 
     const loadLocations = async () => {
         setIsLoading(true)
@@ -38,10 +35,10 @@ const AdminLocationsPage = () => {
     }
 
     useEffect(() => {
-        if (!authLoading && isAuthenticated) {
+        if (true) {
             loadLocations()
         }
-    }, [authLoading, isAuthenticated])
+    }, [])
 
     const openAddModal = () => {
         setEditingLocation(null)
@@ -109,7 +106,7 @@ const AdminLocationsPage = () => {
         }
     }
 
-    if (authLoading || isLoading) {
+    if (isLoading) {
         return (
             <div className="admin-locations-page">
                 <LoadingSpinner size="large" message="Loading locations..." />
@@ -146,7 +143,7 @@ const AdminLocationsPage = () => {
                     <MapPinned size={32} strokeWidth={2} />
                     <h1>Locations</h1>
                 </div>
-                {isOwner && (
+                {true && (
                     <button className="add-btn" onClick={openAddModal}>
                         <Plus size={20} strokeWidth={2} />
                         <span>Add Location</span>
@@ -160,7 +157,7 @@ const AdminLocationsPage = () => {
                         <MapPin size={64} strokeWidth={1.5} />
                         <h3>No locations yet</h3>
                         <p>Start by adding your first location</p>
-                        {isOwner && (
+                        {true && (
                             <button className="add-btn-large" onClick={openAddModal}>
                                 <Plus size={20} />
                                 <span>Add Your First Location</span>
@@ -194,7 +191,7 @@ const AdminLocationsPage = () => {
                                     </div>
                                 )}
                             </div>
-                            {isOwner && (
+                            {true && (
                                 <div className="location-actions">
                                     <button className="icon-btn edit-btn" onClick={() => openEditModal(location)} title="Edit">
                                         <Edit2 size={18} strokeWidth={2} />

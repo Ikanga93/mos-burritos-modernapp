@@ -10,11 +10,12 @@ class Settings(BaseSettings):
     # Environment
     environment: str = "development"
 
-    # Database
+    # Database - PostgreSQL only (Supabase)
     database_url: str = ""
 
-    # JWT Settings
-    jwt_secret_key: str = "dev-secret-key-change-in-production"
+    # JWT Settings (DEPRECATED - kept for backward compatibility only)
+    # Now using Supabase Auth tokens exclusively
+    jwt_secret_key: str = "deprecated-use-supabase-auth"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
@@ -44,19 +45,26 @@ class Settings(BaseSettings):
 
     @property
     def use_supabase_auth(self) -> bool:
-        """Use Supabase auth if credentials are provided, regardless of environment"""
-        return bool(self.supabase_url and self.supabase_anon_key)
+        """Always use Supabase auth - must be configured"""
+        if not (self.supabase_url and self.supabase_anon_key):
+            raise ValueError("Supabase credentials must be set. Set SUPABASE_URL and SUPABASE_ANON_KEY in .env")
+        return True
     
     @property
     def db_url(self) -> str:
-        """Returns database URL - SQLite for dev, PostgreSQL for production"""
-        if self.database_url:
-            return self.database_url
-        if self.is_development:
-            # SQLite for development
-            db_path = os.path.join(os.path.dirname(__file__), "..", "mos_burritos.db")
-            return f"sqlite:///{db_path}"
-        raise ValueError("DATABASE_URL must be set in production")
+        """Returns PostgreSQL database URL (Supabase) - required for all environments"""
+        if not self.database_url:
+            raise ValueError(
+                "DATABASE_URL must be set in .env for all environments.\n"
+                "Get your connection string from: Supabase Dashboard -> Settings -> Database -> Connection string"
+            )
+        
+        # # SQLite fallback (DISABLED - using PostgreSQL only)
+        # if self.is_development:
+        #     db_path = os.path.join(os.path.dirname(__file__), "..", "mos_burritos.db")
+        #     return f"sqlite:///{db_path}"
+        
+        return self.database_url
     
     @property
     def cors_origins_list(self) -> List[str]:

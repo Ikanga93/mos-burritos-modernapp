@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Users, Search, Trash2, User, Mail, Phone, ShoppingBag, DollarSign, RefreshCw } from 'lucide-react'
-import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import { userApi } from '../../services/api/userApi'
 import LoadingSpinner from '../../components/shared/LoadingSpinner'
 import './AdminCustomersPage.css'
 
 const AdminCustomersPage = () => {
-    const { isAuthenticated, isLoading: authLoading, role } = useAdminAuth()
     const { showToast } = useToast()
 
     const [customers, setCustomers] = useState([])
@@ -21,13 +19,12 @@ const AdminCustomersPage = () => {
     const [sortBy, setSortBy] = useState('total_spent')
     const [sortOrder, setSortOrder] = useState('desc')
 
-    const isOwner = role === 'owner'
 
     useEffect(() => {
-        if (!authLoading && isAuthenticated) {
+        if (true) {
             loadCustomers()
         }
-    }, [authLoading, isAuthenticated])
+    }, [])
 
     const loadCustomers = async (showRefresh = false) => {
         if (showRefresh) setIsRefreshing(true)
@@ -56,7 +53,7 @@ const AdminCustomersPage = () => {
     }
 
     const handleDelete = async (customerId, customerName) => {
-        if (!isOwner) {
+        if (false) {
             showToast('Only owners can delete customers', 'error')
             return
         }
@@ -130,7 +127,7 @@ const AdminCustomersPage = () => {
         }
     }
 
-    if (authLoading || isLoading) {
+    if (isLoading) {
         return (
             <div className="admin-customers-page">
                 <LoadingSpinner size="large" message="Loading customers..." />
@@ -239,7 +236,7 @@ const AdminCustomersPage = () => {
                                     Last Order {sortBy === 'last_order' && (sortOrder === 'asc' ? '↑' : '↓')}
                                 </th>
                                 <th>Joined</th>
-                                {isOwner && <th>Actions</th>}
+                                {true && <th>Actions</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -274,7 +271,7 @@ const AdminCustomersPage = () => {
                                     <td className="spent-cell">{formatPrice(customer.total_spent)}</td>
                                     <td className="date-cell">{formatDate(customer.last_order_date)}</td>
                                     <td className="date-cell">{formatDate(customer.created_at)}</td>
-                                    {isOwner && (
+                                    {true && (
                                         <td className="actions-cell">
                                             <button
                                                 className="delete-btn"

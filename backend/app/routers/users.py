@@ -17,68 +17,14 @@ from ..schemas import (
     UserRole,
     LocationRole
 )
-from ..middleware import get_current_user, require_owner, require_manager_or_above
-from ..services import get_password_hash
-
 router = APIRouter(prefix="/users", tags=["Users"])
 
 
-# ==================== Owner Registration (First-Time Setup) ====================
-
-@router.get("/check-owner-exists")
-async def check_owner_exists(db: Session = Depends(get_db)):
-    """Check if an owner account already exists in the system"""
-    owner = db.query(User).filter(User.role == ModelUserRole.OWNER).first()
-    return {"exists": owner is not None}
-
-
-@router.post("/register-owner", response_model=UserResponse)
-async def register_owner(
-    user_data: UserCreate,
-    db: Session = Depends(get_db)
-):
-    """
-    Register the first owner account (one-time setup).
-    This endpoint only works if no owner exists yet.
-    """
-    # Check if owner already exists
-    existing_owner = db.query(User).filter(User.role == ModelUserRole.OWNER).first()
-    if existing_owner:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="An owner account already exists. Please contact the system administrator."
-        )
-    
-    # Check if email is already taken
-    existing_email = db.query(User).filter(User.email == user_data.email).first()
-    if existing_email:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
-    
-    # Create owner account
-    new_owner = User(
-        email=user_data.email,
-        password_hash=get_password_hash(user_data.password),
-        first_name=user_data.first_name,
-        last_name=user_data.last_name,
-        phone=user_data.phone,
-        role=ModelUserRole.OWNER,
-        is_active=True
-    )
-    
-    db.add(new_owner)
-    db.commit()
-    db.refresh(new_owner)
-    
-    return new_owner
-
+# ==================== User Management (No Auth Required) ====================
 
 @router.get("", response_model=List[UserResponse])
 async def get_users(
     role_filter: UserRole = None,
-    current_user: User = Depends(require_owner),
     db: Session = Depends(get_db)
 ):
     """Get all users (owner only)"""
@@ -94,17 +40,9 @@ async def get_users(
 @router.get("/{user_id}", response_model=UserWithLocations)
 async def get_user(
     user_id: str,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get a specific user by ID"""
-    # Users can view themselves, owner can view anyone
-    if current_user.id != user_id and current_user.role.value != UserRole.OWNER.value:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only view your own profile"
-        )
-    
     user = db.query(User).filter(User.id == user_id).first()
     
     if not user:
@@ -146,17 +84,9 @@ async def get_user(
 @router.get("/{user_id}/locations", response_model=List[LocationAssignment])
 async def get_user_locations(
     user_id: str,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get a user's assigned locations"""
-    # Users can view their own locations, owner can view anyone's
-    if current_user.id != user_id and current_user.role.value != UserRole.OWNER.value:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only view your own locations"
-        )
-
     # Get location assignments
     assignments = db.query(UserLocation).filter(
         UserLocation.user_id == user_id,
@@ -180,7 +110,6 @@ async def get_user_locations(
 @router.post("", response_model=UserResponse)
 async def create_user(
     user_data: UserCreate,
-    current_user: User = Depends(require_owner),
     db: Session = Depends(get_db)
 ):
     """Create a new user (owner only)"""
@@ -220,17 +149,9 @@ async def create_user(
 async def update_user(
     user_id: str,
     user_data: UserUpdate,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Update a user"""
-    # Users can update themselves, owner can update anyone
-    if current_user.id != user_id and current_user.role.value != UserRole.OWNER.value:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You can only update your own profile"
-        )
-    
     user = db.query(User).filter(User.id == user_id).first()
     
     if not user:
@@ -257,7 +178,6 @@ async def update_user(
 @router.post("/assign-location")
 async def assign_user_to_location(
     assignment_data: AssignUserToLocation,
-    current_user: User = Depends(require_owner),
     db: Session = Depends(get_db)
 ):
     """Assign a user to a location (owner only)"""
@@ -295,7 +215,7 @@ async def assign_user_to_location(
         user_id=assignment_data.user_id,
         location_id=assignment_data.location_id,
         role=ModelLocationRole(assignment_data.role.value),
-        assigned_by=current_user.id
+        assigned_by=None
     )
     
     db.add(new_assignment)
@@ -308,7 +228,6 @@ async def assign_user_to_location(
 async def unassign_user_from_location(
     user_id: str,
     location_id: str,
-    current_user: User = Depends(require_owner),
     db: Session = Depends(get_db)
 ):
     """Remove a user from a location (owner only)"""
@@ -334,17 +253,15 @@ async def unassign_user_from_location(
 @router.get("/admin/users", response_model=List[UserResponse])
 async def admin_get_users(
     role_filter: UserRole = None,
-    current_user: User = Depends(require_owner),
     db: Session = Depends(get_db)
 ):
-    """Get all users (admin alias - owner only)"""
+    """Get all users (admin alias)"""
     # This is an alias for the main GET /users endpoint
-    return await get_users(role_filter, current_user, db)
+    return await get_users(role_filter, db)
 
 
 @router.get("/admin/customers")
 async def admin_get_customers(
-    current_user: User = Depends(require_owner),
     db: Session = Depends(get_db)
 ):
     """Get all customers (both registered users and guest orders) - owner only"""
@@ -421,7 +338,6 @@ async def admin_get_customers(
 @router.delete("/admin/customers/{customer_id}")
 async def admin_delete_customer(
     customer_id: str,
-    current_user: User = Depends(require_owner),
     db: Session = Depends(get_db)
 ):
     """Delete a customer and all their orders (owner only)"""

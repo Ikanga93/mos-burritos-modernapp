@@ -1,36 +1,17 @@
 import React, { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
-    LayoutDashboard, ShoppingBag, Package, MapPin, Users, UserCircle, BarChart3, LogOut, Menu, X, Building2, Settings,
+    LayoutDashboard, ShoppingBag, Package, MapPin, Users, UserCircle, BarChart3, Menu, X, Building2, Settings,
     ChefHat, Truck, CalendarCheck, CreditCard, Megaphone, UtensilsCrossed, Award
 } from 'lucide-react'
-import { useAdminAuth } from '../../contexts/AdminAuthContext'
-import { useToast } from '../../contexts/ToastContext'
 import './AdminLayout.css'
 
 const AdminLayout = ({ children }) => {
     const location = useLocation()
-    const navigate = useNavigate()
-    const { admin, logout, isAuthenticated, isLoading, role, assignedLocations, currentLocation, switchLocation } = useAdminAuth()
-    const { showToast } = useToast()
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-    const handleLogout = () => {
-        logout()
-        navigate('/admin/login')
-        showToast('Logged out successfully', 'info')
-        setIsMenuOpen(false)
-    }
-
-    const handleLocationSwitch = (e) => {
-        const newLocationId = e.target.value
-        switchLocation(newLocationId)
-        showToast('Location switched', 'success')
-    }
-
     const isActive = (path) => location.pathname === path
-    const isOwner = role === 'owner'
 
     const toggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen)
@@ -46,11 +27,6 @@ const AdminLayout = ({ children }) => {
 
     const closeMenu = () => {
         setIsMenuOpen(false)
-    }
-
-    // Don't show layout if not authenticated or loading
-    if (isLoading || !isAuthenticated) {
-        return children
     }
 
     return (
@@ -73,16 +49,16 @@ const AdminLayout = ({ children }) => {
             {isMenuOpen && (
                 <div className="menu-overlay" onClick={toggleMenu}>
                     <div className="menu-panel" onClick={(e) => e.stopPropagation()}>
-                        {/* User Profile Section */}
-                        <Link to="/admin/profile" className="menu-profile" onClick={closeMenu}>
+                        {/* Admin Panel Header */}
+                        <div className="menu-profile">
                             <div className="profile-avatar">
                                 <img src="/images/logo/burritos-logo.png" alt="Profile" className="profile-logo" />
                             </div>
                             <div className="profile-info">
-                                <h3>{admin?.first_name} {admin?.last_name}</h3>
-                                <span className="profile-role">{role}</span>
+                                <h3>Admin Panel</h3>
+                                <span className="profile-role">Manager</span>
                             </div>
-                        </Link>
+                        </div>
                         
                         {/* Menu Navigation */}
                         <nav className="menu-nav">

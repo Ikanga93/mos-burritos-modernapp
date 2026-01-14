@@ -1,6 +1,5 @@
 import React from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { useAdminAuth } from '../../contexts/AdminAuthContext'
 
 /**
  * Admin Route Component for Admin Authentication
@@ -8,7 +7,6 @@ import { useAdminAuth } from '../../contexts/AdminAuthContext'
  * Can optionally check for specific roles or location access
  */
 const AdminRoute = ({ children, requiredRole = null, requiredLocation = null }) => {
-  const { isAuthenticated, isLoading, role, canAccessLocation } = useAdminAuth()
   const location = useLocation()
 
   // Show loading state while checking authentication

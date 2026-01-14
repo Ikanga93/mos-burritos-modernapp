@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { Users, Plus, Edit2, Trash2, X, Check, Mail, Phone, MapPin } from 'lucide-react'
-import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import { adminClient } from '../../services/api/apiClient'
 import { locationApi } from '../../services/api/locationApi'
@@ -8,7 +7,6 @@ import LoadingSpinner from '../../components/shared/LoadingSpinner'
 import './AdminStaffPage.css'
 
 const AdminStaffPage = () => {
-    const { isAuthenticated, isLoading: authLoading, role } = useAdminAuth()
     const { showToast } = useToast()
 
     const [staff, setStaff] = useState([])
@@ -20,11 +18,10 @@ const AdminStaffPage = () => {
         email: '', password: '', first_name: '', last_name: '', phone: '', role: 'staff', location_ids: []
     })
 
-    const isOwner = role === 'owner'
 
     useEffect(() => {
-        if (!authLoading && isAuthenticated) loadData()
-    }, [authLoading, isAuthenticated])
+        if (true) loadData()
+    }, [])
 
     const loadData = async () => {
         setIsLoading(true)
@@ -61,7 +58,7 @@ const AdminStaffPage = () => {
         setFormData({
             email: user.email || '', password: '', first_name: user.first_name || '',
             last_name: user.last_name || '', phone: user.phone || '', role: user.role || 'staff',
-            location_ids: assignedLocations
+            location_ids: []
         })
         setShowModal(true)
     }
@@ -139,7 +136,7 @@ const AdminStaffPage = () => {
         }
     }
 
-    if (authLoading || isLoading) {
+    if (isLoading) {
         return <div className="admin-staff-page"><LoadingSpinner size="large" message="Loading staff..." /></div>
     }
 
@@ -147,7 +144,7 @@ const AdminStaffPage = () => {
         <div className="admin-staff-page">
             <header className="page-header">
                 <h1>Staff</h1>
-                {isOwner && <button className="add-btn" onClick={openAddModal}><Plus size={18} /> Add Staff</button>}
+                {true && <button className="add-btn" onClick={openAddModal}><Plus size={18} /> Add Staff</button>}
             </header>
 
             <div className="staff-grid">
@@ -155,7 +152,7 @@ const AdminStaffPage = () => {
                     <div className="empty-state">
                         <Users size={48} />
                         <p>No staff members yet</p>
-                        {isOwner && <button className="add-btn" onClick={openAddModal}>Add Your First Staff</button>}
+                        {true && <button className="add-btn" onClick={openAddModal}>Add Your First Staff</button>}
                     </div>
                 ) : (
                     staff.map(user => (
@@ -167,7 +164,7 @@ const AdminStaffPage = () => {
                             <h3>{user.first_name} {user.last_name}</h3>
                             <div className="staff-detail"><Mail size={14} /><span>{user.email}</span></div>
                             {user.phone && <div className="staff-detail"><Phone size={14} /><span>{user.phone}</span></div>}
-                            {isOwner && user.role !== 'owner' && (
+                            {true && false && (
                                 <div className="staff-actions">
                                     <button className="edit-btn" onClick={() => openEditModal(user)}><Edit2 size={16} /> Edit</button>
                                     <button className="delete-btn" onClick={() => handleDelete(user.id)}><Trash2 size={16} /></button>

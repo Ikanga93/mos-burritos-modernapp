@@ -3,7 +3,6 @@ import {
     Clock, CheckCircle, ChefHat, Package, RefreshCw,
     Search, X, XCircle
 } from 'lucide-react'
-import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import { orderApi } from '../../services/api/orderApi'
 import { locationApi } from '../../services/api/locationApi'
@@ -20,7 +19,6 @@ const STATUS_CONFIG = {
 }
 
 const AdminOrdersPage = () => {
-    const { isAuthenticated, isLoading: authLoading, role, assignedLocations, currentLocation } = useAdminAuth()
     const { showToast } = useToast()
 
     const [orders, setOrders] = useState([])
@@ -39,21 +37,15 @@ const AdminOrdersPage = () => {
     const [cancelReason, setCancelReason] = useState('')
     const [isCancelling, setIsCancelling] = useState(false)
 
-    const isOwner = role === 'owner'
 
     // Load locations
     useEffect(() => {
-        if (!authLoading && isAuthenticated) {
+        if (true) {
             loadLocations()
         }
-    }, [authLoading, isAuthenticated])
+    }, [])
 
-    // Sync selectedLocation with currentLocation from context for non-owners
-    useEffect(() => {
-        if (!isOwner && currentLocation) {
-            setSelectedLocation(currentLocation.id)
-        }
-    }, [isOwner, currentLocation])
+    // Location selection removed - all locations accessible
 
     const loadLocations = async () => {
         try {
@@ -86,10 +78,10 @@ const AdminOrdersPage = () => {
     }
 
     useEffect(() => {
-        if (!authLoading && isAuthenticated) {
+        if (true) {
             loadOrders()
         }
-    }, [authLoading, isAuthenticated, selectedLocation, selectedStatus])
+    }, [selectedLocation, selectedStatus])
 
     const handleRefresh = () => {
         loadOrders(true)
@@ -153,7 +145,7 @@ const AdminOrdersPage = () => {
         )
     })
 
-    if (authLoading || isLoading) {
+    if (isLoading) {
         return (
             <div className="admin-orders-page">
                 <LoadingSpinner size="large" message="Loading orders..." />
@@ -167,9 +159,6 @@ const AdminOrdersPage = () => {
             <header className="page-header">
                 <div className="header-left">
                     <h1>Orders</h1>
-                    {!isOwner && currentLocation && (
-                        <span className="current-location-badge">{currentLocation.name}</span>
-                    )}
                 </div>
                 <button className="refresh-btn" onClick={handleRefresh} disabled={isRefreshing}>
                     <RefreshCw size={18} className={isRefreshing ? 'spin' : ''} />
@@ -189,14 +178,12 @@ const AdminOrdersPage = () => {
                     />
                 </div>
 
-                {isOwner && (
-                    <select value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)}>
-                        <option value="all">All Locations</option>
-                        {locations.map(loc => (
-                            <option key={loc.id} value={loc.id}>{loc.name}</option>
-                        ))}
-                    </select>
-                )}
+                <select value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)}>
+                    <option value="all">All Locations</option>
+                    {locations.map(loc => (
+                        <option key={loc.id} value={loc.id}>{loc.name}</option>
+                    ))}
+                </select>
 
                 <select value={selectedStatus} onChange={(e) => setSelectedStatus(e.target.value)}>
                     <option value="all">All Status</option>

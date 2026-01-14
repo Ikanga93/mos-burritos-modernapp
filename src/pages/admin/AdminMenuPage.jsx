@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, X, Check, DollarSign, ToggleLeft, ToggleRight, Upload, Image as ImageIcon, Minus } from 'lucide-react'
-import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import { menuApi } from '../../services/api/menuApi'
 import { locationApi } from '../../services/api/locationApi'
@@ -8,7 +7,6 @@ import LoadingSpinner from '../../components/shared/LoadingSpinner'
 import './AdminMenuPage.css'
 
 const AdminMenuPage = () => {
-    const { isAuthenticated, isLoading: authLoading, role, assignedLocations, currentLocation } = useAdminAuth()
     const { showToast } = useToast()
 
     const [locations, setLocations] = useState([])
@@ -37,20 +35,19 @@ const AdminMenuPage = () => {
     // Options state
     const [optionGroups, setOptionGroups] = useState([])
 
-    const isManager = ['owner', 'manager'].includes(role)
-    const isOwner = role === 'owner'
+    // Everyone has full access - no authentication required
+    const isManager = true
 
     useEffect(() => {
-        if (!authLoading && isAuthenticated) loadLocations()
-    }, [authLoading, isAuthenticated])
+        if (true) loadLocations()
+    }, [])
 
     useEffect(() => {
-        if (!isOwner && currentLocation) {
-            setSelectedLocation(currentLocation.id)
-        } else if (isOwner && locations.length > 0 && !selectedLocation) {
+        // Auto-select first location if none selected
+        if (locations.length > 0 && !selectedLocation) {
             setSelectedLocation(locations[0].id)
         }
-    }, [isOwner, currentLocation, locations, selectedLocation])
+    }, [locations, selectedLocation])
 
     const loadLocations = async () => {
         try {
@@ -379,7 +376,7 @@ const AdminMenuPage = () => {
         items: menuItems.filter(item => item.category_id === cat.id)
     }))
 
-    if (authLoading || (isLoading && !menuItems.length)) {
+    if ((isLoading && !menuItems.length)) {
         return <div className="admin-menu-page"><LoadingSpinner size="large" message="Loading menu..." /></div>
     }
 
@@ -388,17 +385,14 @@ const AdminMenuPage = () => {
             <header className="page-header">
                 <div className="header-left">
                     <h1>Menu</h1>
-                    {isOwner && (
+                    {true && (
                         <select value={selectedLocation} onChange={e => setSelectedLocation(e.target.value)} className="location-select">
                             {locations.map(loc => <option key={loc.id} value={loc.id}>{loc.name}</option>)}
                         </select>
                     )}
-                    {!isOwner && currentLocation && (
-                        <span className="current-location-badge">{currentLocation.name}</span>
-                    )}
                 </div>
                 <div className="header-right">
-                    {isManager && (
+                    {true && (
                         <>
                             <button className="add-btn secondary" onClick={openAddCategoryModal}>
                                 <Plus size={18} /> Add Category
@@ -415,7 +409,7 @@ const AdminMenuPage = () => {
                 <div className="empty-state">
                     <DollarSign size={48} />
                     <p>No menu items yet</p>
-                    {isManager && <button className="add-btn" onClick={openAddModal}>Add Your First Item</button>}
+                    {true && <button className="add-btn" onClick={openAddModal}>Add Your First Item</button>}
                 </div>
             ) : (
                 <div className="menu-sections">
@@ -434,7 +428,7 @@ const AdminMenuPage = () => {
                                                     <span className="item-price">{'$' + parseFloat(item.price).toFixed(2)}</span>
                                                 </div>
                                                 {item.description && <p className="item-desc">{item.description}</p>}
-                                                {isManager && (
+                                                {true && (
                                                     <div className="item-actions">
                                                         <button className={'toggle-btn ' + (item.is_available ? 'on' : 'off')} onClick={() => toggleAvailability(item)}>
                                                             {item.is_available ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}

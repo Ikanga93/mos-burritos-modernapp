@@ -24,8 +24,8 @@ async def get_current_user(
     db: Session = Depends(get_db)
 ) -> User:
     """
-    Get the current authenticated user from token.
-    Standardized on Supabase Auth, with JWT fallback for legacy dev support.
+    Get the current authenticated user from Supabase token.
+    Uses Supabase Auth exclusively - no JWT fallback.
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -34,60 +34,57 @@ async def get_current_user(
     )
     
     token = credentials.credentials
-    user = None
     
-    print(f"[AUTH MIDDLEWARE] Authenticating request - Token: {token[:30]}...")
+    print(f"[AUTH] Validating Supabase token...")
     
-    # Priority 1: Supabase Auth (Recommended for all environments)
-    if settings.use_supabase_auth:
-        print(f"[AUTH MIDDLEWARE] Validating via Supabase...")
-        supabase_user = await get_supabase_user_from_token(token)
-        if supabase_user:
-            # Find user by supabase_id or email/phone
-            user = db.query(User).filter(
-                (User.supabase_id == supabase_user["id"]) |
-                (User.email == supabase_user.get("email")) |
-                (User.phone == supabase_user.get("phone"))
-            ).first()
-            
-            # Auto-sync user from Supabase on first login
-            if not user and (supabase_user.get("email") or supabase_user.get("phone")):
-                user = User(
-                    supabase_id=supabase_user["id"],
-                    email=supabase_user.get("email"),
-                    phone=supabase_user.get("phone"),
-                    role=ModelUserRole.CUSTOMER,
-                    is_active=True
-                )
-                db.add(user)
-                db.commit()
-                db.refresh(user)
-            elif user and not user.supabase_id:
-                # Link existing user to Supabase account
-                user.supabase_id = supabase_user["id"]
-                db.commit()
+    # Validate token with Supabase
+    supabase_user = await get_supabase_user_from_token(token)
     
-    # Priority 2: Legacy JWT (Only if Supabase not enabled or validation failed)
-    if not user:
-        print(f"[AUTH MIDDLEWARE] Falling back to local JWT validation...")
-        token_data = decode_token(token)
-        if token_data:
-            user = db.query(User).filter(User.id == token_data.user_id).first()
-    
-    if not user:
-        print(f"[AUTH MIDDLEWARE] Authentication failed - no user found for token data")
+    if not supabase_user:
+        print(f"[AUTH] Supabase token validation failed")
         raise credentials_exception
     
-    print(f"[AUTH MIDDLEWARE] Authentication successful for user ID: {user.id}, Email: {user.email}, Role: {user.role.value}")
+    print(f"[AUTH] Supabase token valid for user: {supabase_user.get('email')}")
+    
+    # Find user by supabase_id or email/phone
+    user = db.query(User).filter(
+        (User.supabase_id == supabase_user["id"]) |
+        (User.email == supabase_user.get("email")) |
+        (User.phone == supabase_user.get("phone"))
+    ).first()
+    
+    # Auto-sync user from Supabase on first login
+    if not user and (supabase_user.get("email") or supabase_user.get("phone")):
+        print(f"[AUTH] Auto-creating user from Supabase: {supabase_user.get('email')}")
+        user = User(
+            supabase_id=supabase_user["id"],
+            email=supabase_user.get("email"),
+            phone=supabase_user.get("phone"),
+            role=ModelUserRole.CUSTOMER,
+            is_active=True
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        print(f"[AUTH] User created successfully: {user.id}")
+    elif user and not user.supabase_id:
+        # Link existing user to Supabase account
+        print(f"[AUTH] Linking existing user to Supabase ID: {user.email}")
+        user.supabase_id = supabase_user["id"]
+        db.commit()
+    
+    if not user:
+        print(f"[AUTH] User not found after Supabase validation")
+        raise credentials_exception
     
     if not user.is_active:
-        print(f"[AUTH MIDDLEWARE] User account is disabled: {user.email}")
+        print(f"[AUTH] User account is disabled: {user.email}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is disabled"
         )
     
-    print(f"[AUTH MIDDLEWARE] Authentication successful for: {user.email or user.phone}")
+    print(f"[AUTH] Authentication successful - User: {user.email}, Role: {user.role.value}")
     return user
 
 

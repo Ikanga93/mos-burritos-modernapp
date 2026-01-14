@@ -38,51 +38,11 @@ async def customer_login(
     db: Session = Depends(get_db)
 ):
     """
-    Customer login - automatically uses:
-    - JWT in development
-    - Supabase in production
+    Customer login using Supabase Auth
     """
     try:
-        print(f"[DEBUG] Customer login attempt for email: {credentials.email}")
-        print(f"[DEBUG] Environment: {settings.environment}")
-        print(f"[DEBUG] Use Supabase Auth: {settings.use_supabase_auth}")
-
-        if settings.use_supabase_auth:
-            # Production: Use Supabase
-            print(f"[DEBUG] Using Supabase authentication")
-            return await supabase_login(credentials, db)
-        else:
-            # Development: Use JWT
-            print(f"[DEBUG] Using JWT authentication")
-            user = authenticate_user(db, credentials.email, credentials.password)
-
-            if not user:
-                print(f"[DEBUG] Authentication failed - user not found or password incorrect")
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Incorrect email or password",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-
-            print(f"[DEBUG] User authenticated successfully: {user.id}, role: {user.role.value}")
-
-            token_data = {
-                "sub": user.id,
-                "email": user.email,
-                "role": user.role.value
-            }
-
-            access_token = create_access_token(token_data)
-            refresh_token = create_refresh_token(token_data)
-
-            print(f"[DEBUG] Tokens created successfully")
-
-            return PhoneLoginResponse(
-                user=user,
-                accessToken=access_token,
-                refreshToken=refresh_token,
-                isNewUser=False
-            )
+        print(f"[AUTH] Customer login attempt for email: {credentials.email}")
+        return await supabase_login(credentials, db)
     except HTTPException:
         raise
     except Exception as e:
@@ -100,63 +60,21 @@ async def customer_register(
     db: Session = Depends(get_db)
 ):
     """
-    Customer registration - automatically uses:
-    - JWT in development
-    - Supabase in production
+    Customer registration using Supabase Auth
     """
     try:
-        print(f"[DEBUG] Customer registration attempt for email: {user_data.email}")
-        print(f"[DEBUG] Environment: {settings.environment}")
-        print(f"[DEBUG] Use Supabase Auth: {settings.use_supabase_auth}")
-
+        print(f"[AUTH] Customer registration attempt for email: {user_data.email}")
+        
         # Check if email already exists
         existing_user = db.query(User).filter(User.email == user_data.email).first()
         if existing_user:
-            print(f"[DEBUG] Email already registered: {user_data.email}")
+            print(f"[AUTH] Email already registered: {user_data.email}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
             )
-
-        if settings.use_supabase_auth:
-            # Production: Use Supabase
-            print(f"[DEBUG] Using Supabase registration")
-            return await supabase_register(user_data, db)
-        else:
-            # Development: Use JWT
-            print(f"[DEBUG] Using JWT registration")
-            new_user = User(
-                email=user_data.email,
-                password_hash=get_password_hash(user_data.password),
-                first_name=user_data.first_name,
-                last_name=user_data.last_name,
-                phone=user_data.phone,
-                role=ModelUserRole.CUSTOMER,
-                is_active=True
-            )
-            db.add(new_user)
-            db.commit()
-            db.refresh(new_user)
-
-            print(f"[DEBUG] User created successfully: {new_user.id}")
-
-            token_data = {
-                "sub": new_user.id,
-                "email": new_user.email,
-                "role": new_user.role.value
-            }
-
-            access_token = create_access_token(token_data)
-            refresh_token = create_refresh_token(token_data)
-
-            print(f"[DEBUG] Tokens created for new user")
-
-            return PhoneLoginResponse(
-                user=new_user,
-                accessToken=access_token,
-                refreshToken=refresh_token,
-                isNewUser=True
-            )
+        
+        return await supabase_register(user_data, db)
     except HTTPException:
         raise
     except Exception as e:
@@ -171,108 +89,56 @@ async def customer_register(
 @router.post("/customer/refresh")
 async def customer_refresh(request: RefreshTokenRequest):
     """
-    Customer token refresh - automatically uses:
-    - JWT in development
-    - Supabase in production
+    Customer token refresh using Supabase
     """
-    if settings.use_supabase_auth:
-        # Production: Use Supabase
-        return await supabase_refresh(request)
-    else:
-        # Development: Use JWT
-        token_data = decode_token(request.refreshToken)
-
-        if not token_data:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid refresh token"
-            )
-
-        new_token_data = {
-            "sub": token_data.user_id,
-            "email": token_data.email,
-            "role": token_data.role
-        }
-
-        new_access_token = create_access_token(new_token_data)
-        new_refresh_token = create_refresh_token(new_token_data)
-
-        return {
-            "access_token": new_access_token,
-            "refresh_token": new_refresh_token
-        }
+    return await supabase_refresh(request)
 
 
 @router.post("/login", response_model=LoginResponse)
 async def login(credentials: UserLogin, db: Session = Depends(get_db)):
-    """Login with email and password"""
+    """Admin/Staff login using Supabase Auth"""
     try:
-        print(f"[DEBUG] Staff/Admin login attempt for email: {credentials.email}")
-
-        if settings.use_supabase_auth:
-            print(f"[DEBUG] Using Supabase authentication for admin login")
-            result = await sign_in_with_email(credentials.email, credentials.password)
-            if not result["success"]:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail=result.get("error", "Incorrect email or password")
-                )
-            
-            supabase_user = result["user"]
-            session = result["session"]
-            
-            # Find or create user in our database
-            user = db.query(User).filter(
-                (User.supabase_id == supabase_user["id"]) |
-                (User.email == supabase_user["email"])
-            ).first()
-            
-            if not user:
-                # Owners/Staff should already exist in DB, but create if missing
-                user = User(
-                    supabase_id=supabase_user["id"],
-                    email=supabase_user["email"],
-                    role=ModelUserRole.STAFF, # Default to staff if not found
-                    is_active=True
-                )
-                db.add(user)
-                db.commit()
-                db.refresh(user)
-            elif not user.supabase_id:
-                user.supabase_id = supabase_user["id"]
-                db.commit()
-                
-            access_token = session["access_token"]
-            refresh_token = session["refresh_token"]
-        else:
-            print(f"[DEBUG] Using local JWT authentication for admin login")
-            user = authenticate_user(db, credentials.email, credentials.password)
-
-            # Check if user is an OAuth/Google Sign In user
-            if user == "OAUTH_USER":
-                print(f"[DEBUG] OAuth user tried to login with password: {credentials.email}")
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="This account uses Google Sign In. Please use the 'Sign in with Google' button instead.",
-                )
-
-            if not user:
-                print(f"[DEBUG] Authentication failed for email: {credentials.email}")
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Incorrect email or password",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-            
-            token_data = {
-                "sub": user.id,
-                "email": user.email,
-                "role": user.role.value
-            }
-            access_token = create_access_token(token_data)
-            refresh_token = create_refresh_token(token_data)
-
-        print(f"[DEBUG] User authenticated: {user.id}, role: {user.role.value}")
+        print(f"[AUTH] Staff/Admin login attempt for email: {credentials.email}")
+        
+        # Authenticate with Supabase
+        result = await sign_in_with_email(credentials.email, credentials.password)
+        if not result["success"]:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=result.get("error", "Incorrect email or password")
+            )
+        
+        supabase_user = result["user"]
+        session = result["session"]
+        
+        # Find or create user in our database
+        user = db.query(User).filter(
+            (User.supabase_id == supabase_user["id"]) |
+            (User.email == supabase_user["email"])
+        ).first()
+        
+        if not user:
+            # Auto-create user (will be CUSTOMER by default, can be promoted later)
+            user = User(
+                supabase_id=supabase_user["id"],
+                email=supabase_user["email"],
+                role=ModelUserRole.CUSTOMER,
+                is_active=True
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            print(f"[AUTH] Auto-created user: {user.email}")
+        elif not user.supabase_id:
+            # Link existing user to Supabase
+            user.supabase_id = supabase_user["id"]
+            db.commit()
+            print(f"[AUTH] Linked user to Supabase: {user.email}")
+        
+        access_token = session["access_token"]
+        refresh_token = session["refresh_token"]
+        
+        print(f"[AUTH] User authenticated: {user.id}, role: {user.role.value}")
 
         # Get user's assigned locations
         user_locations = db.query(UserLocation).filter(
@@ -323,79 +189,52 @@ async def login(credentials: UserLogin, db: Session = Depends(get_db)):
 
 @router.post("/register", response_model=LoginResponse)
 async def register(user_data: UserRegister, db: Session = Depends(get_db)):
-    """Register a new customer account"""
-    print(f"[REGISTER] New registration attempt for: {user_data.email}")
+    """Register a new account using Supabase Auth"""
+    print(f"[AUTH] New registration attempt for: {user_data.email}")
     
     # Check if email exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
-        print(f"[REGISTER] Email already exists: {user_data.email}")
+        print(f"[AUTH] Email already exists: {user_data.email}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered"
         )
     
-    if settings.use_supabase_auth:
-        print(f"[REGISTER] Using Supabase registration")
-        metadata = {
-            "first_name": user_data.first_name,
-            "last_name": user_data.last_name,
-            "phone": user_data.phone
-        }
-        result = await sign_up_with_email(user_data.email, user_data.password, metadata)
-        if not result["success"]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=result.get("error", "Failed to create account")
-            )
-        
-        supabase_user = result["user"]
-        session = result["session"]
-        
-        # Create user in our database
-        new_user = User(
-            supabase_id=supabase_user["id"],
-            email=user_data.email,
-            first_name=user_data.first_name,
-            last_name=user_data.last_name,
-            phone=user_data.phone,
-            role=ModelUserRole.CUSTOMER,
-            is_active=True
+    # Register with Supabase
+    metadata = {
+        "first_name": user_data.first_name,
+        "last_name": user_data.last_name,
+        "phone": user_data.phone
+    }
+    result = await sign_up_with_email(user_data.email, user_data.password, metadata)
+    if not result["success"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result.get("error", "Failed to create account")
         )
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-        
-        access_token = session["access_token"]
-        refresh_token = session["refresh_token"]
-    else:
-        # Create new user locally
-        new_user = User(
-            email=user_data.email,
-            password_hash=get_password_hash(user_data.password),
-            first_name=user_data.first_name,
-            last_name=user_data.last_name,
-            phone=user_data.phone,
-            role=ModelUserRole.CUSTOMER
-        )
-        
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-        
-        print(f"[REGISTER] User created successfully: {new_user.id}")
-        
-        # Generate tokens for immediate login
-        token_data = {
-            "sub": new_user.id,
-            "email": new_user.email,
-            "role": new_user.role.value
-        }
-        
-        access_token = create_access_token(token_data)
-        refresh_token = create_refresh_token(token_data)
     
-    print(f"[REGISTER] Registration complete - returning tokens")
+    supabase_user = result["user"]
+    session = result["session"]
+    
+    # Create user in our database
+    new_user = User(
+        supabase_id=supabase_user["id"],
+        email=user_data.email,
+        first_name=user_data.first_name,
+        last_name=user_data.last_name,
+        phone=user_data.phone,
+        role=ModelUserRole.CUSTOMER,
+        is_active=True
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    
+    access_token = session["access_token"]
+    refresh_token = session["refresh_token"]
+    
+    print(f"[AUTH] Registration complete for: {new_user.email}")
     
     return LoginResponse(
         user=new_user,
