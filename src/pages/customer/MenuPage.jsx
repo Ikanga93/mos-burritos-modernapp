@@ -67,16 +67,16 @@ const MenuPage = () => {
 
   return (
     <div className="menu-page">
-      {/* Back Button */}
-      <div className="menu-page-header">
+      <div className="menu-header-container">
+        {/* Back Button */}
         <button className="back-btn-pill" onClick={() => navigate('/')} aria-label="Back to Home">
           <ArrowLeft size={18} />
           <span>Back to Home</span>
         </button>
-      </div>
 
-      {/* Location Selector */}
-      <LocationSelector />
+        {/* Location Selector */}
+        <LocationSelector />
+      </div>
 
       {/* Floating Cart Button (Mobile) */}
       {itemCount > 0 && (

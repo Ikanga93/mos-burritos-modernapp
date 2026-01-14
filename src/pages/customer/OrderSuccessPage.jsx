@@ -14,21 +14,31 @@ const OrderSuccessPage = () => {
     const { items, subtotal, tax, total, locationId, clearCart } = useCart()
     const { isAuthenticated, customer } = useCustomerAuth()
     const { showToast } = useToast()
-    
+
     const [isProcessing, setIsProcessing] = useState(true)
     const [orderId, setOrderId] = useState(null)
     const [error, setError] = useState(null)
 
     const sessionId = searchParams.get('session_id')
 
+    const processedRef = React.useRef(false)
+
     useEffect(() => {
         const processOrder = async () => {
+            if (processedRef.current) {
+                console.log('Order already processed or processing, skipping...')
+                return
+            }
+
+            // Mark as processed immediately to prevent double-fire
+            processedRef.current = true
+
             console.log('=== ORDER SUCCESS PAGE - Starting processOrder ===')
             console.log('Session ID:', sessionId)
             console.log('Cart items:', items)
             console.log('Is authenticated:', isAuthenticated)
             console.log('Customer:', customer)
-            
+
             if (!sessionId) {
                 console.error('No session ID found in URL')
                 setError('No session ID found')
@@ -40,7 +50,7 @@ const OrderSuccessPage = () => {
                 // Try to get order confirmation data from sessionStorage
                 let confirmationData = sessionStorage.getItem('orderConfirmation')
                 let orderInfo = null
-                
+
                 console.log('SessionStorage data:', confirmationData ? 'Found' : 'Missing')
 
                 if (confirmationData) {
@@ -50,7 +60,7 @@ const OrderSuccessPage = () => {
                 } else {
                     // Fallback 1: Try to use cart context (if cart hasn't been cleared)
                     console.log('SessionStorage missing, attempting fallback with cart and Stripe data...')
-                    
+
                     if (items && items.length > 0) {
                         // We have cart items, use them with whatever customer info we have
                         console.log('Using cart data with authenticated user info')
@@ -58,7 +68,7 @@ const OrderSuccessPage = () => {
                             customerInfo: {
                                 name: isAuthenticated && customer ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim() : 'Guest Customer',
                                 email: isAuthenticated && customer ? customer.email : '',
-                                phone: isAuthenticated && customer ? customer.phone : '',
+                                phone: (isAuthenticated && customer && customer.phone) ? customer.phone : '0000000000',
                                 notes: ''
                             },
                             customerId: isAuthenticated && customer ? customer.id : null,
@@ -150,10 +160,16 @@ const OrderSuccessPage = () => {
                 }, 2000)
             } catch (error) {
                 console.error('Error processing order:', error)
-                const errorMessage = error.response?.data?.detail || error.message || 'Failed to process order'
+                if (error.response?.data) {
+                    console.error('Backend Error Details:', error.response.data)
+                }
+                const errorMessage = error.response?.data?.detail
+                    ? (typeof error.response.data.detail === 'object' ? JSON.stringify(error.response.data.detail) : error.response.data.detail)
+                    : (error.message || 'Failed to process order')
+
                 setError(errorMessage)
                 setIsProcessing(false)
-                
+
                 // Show user-friendly error message
                 if (errorMessage.includes('order information')) {
                     showToast('Please check your email for order confirmation', 'info')

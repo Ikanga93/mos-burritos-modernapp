@@ -6,8 +6,19 @@
 }
 
 /* Header Section */
-.menu-page-header {
-  margin-bottom: 1.5rem;
+.menu-header-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+  .menu-header-container {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
 }
 
 /* Back Button Pill */
