@@ -28,53 +28,20 @@ export const CustomerAuthProvider = ({ children }) => {
   const apiUrl = getApiBaseUrl()
   const isProduction = import.meta.env.VITE_ENVIRONMENT === 'production'
 
-  // Initialize auth state from localStorage or Supabase
+  // Initialize auth state from Supabase
   useEffect(() => {
     const initAuth = async () => {
-      // Clean up any old auth type tracking from previous hybrid system
-      localStorage.removeItem('authType')
-
-      if (isProduction && isSupabaseEnabled()) {
-        // Production: Check for OAuth callback in URL first
-        const hashParams = new URLSearchParams(window.location.hash.substring(1))
-        const hasOAuthParams = hashParams.has('access_token') || hashParams.has('error')
-        
-        if (hasOAuthParams) {
-          // Handle OAuth callback explicitly
-          console.log('Detected OAuth callback in URL, processing...')
-          const session = await handleSupabaseOAuthCallback()
-          if (session) {
-            setAccessToken(session.access_token)
-            setRefreshToken(session.refresh_token)
-            await fetchCurrentUser(session.access_token)
-            // Clean up URL
-            window.history.replaceState({}, document.title, window.location.pathname)
-          } else {
-            setIsLoading(false)
-          }
-        } else {
-          // Check existing Supabase session
-          const session = await getSupabaseSession()
-          if (session) {
-            setAccessToken(session.access_token)
-            setRefreshToken(session.refresh_token)
-            fetchCurrentUser(session.access_token)
-          } else {
-            setIsLoading(false)
-          }
-        }
-      } else {
-        // Development: Check localStorage for JWT
-        const storedAccessToken = localStorage.getItem('customerAccessToken')
-        const storedRefreshToken = localStorage.getItem('customerRefreshToken')
-
-        if (storedAccessToken && storedRefreshToken) {
-          setAccessToken(storedAccessToken)
-          setRefreshToken(storedRefreshToken)
-          fetchCurrentUser(storedAccessToken)
+      if (isSupabaseEnabled()) {
+        const session = await getSupabaseSession()
+        if (session) {
+          setAccessToken(session.access_token)
+          setRefreshToken(session.refresh_token)
+          fetchCurrentUser(session.access_token)
         } else {
           setIsLoading(false)
         }
+      } else {
+        setIsLoading(false)
       }
     }
 
@@ -131,15 +98,10 @@ export const CustomerAuthProvider = ({ children }) => {
     }
   }
 
-  // Login (environment-aware)
+  // Login using Supabase Auth
   const login = async (email, password) => {
     try {
-      // Use different endpoints based on environment
-      const endpoint = isProduction && isSupabaseEnabled()
-        ? `${apiUrl}/api/auth/supabase/login`
-        : `${apiUrl}/api/auth/login`
-
-      const response = await fetch(endpoint, {
+      const response = await fetch(`${apiUrl}/api/auth/supabase/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -154,22 +116,14 @@ export const CustomerAuthProvider = ({ children }) => {
 
       const data = await response.json()
 
-      // Store tokens (localStorage for dev, Supabase handles storage for prod)
-      if (!isProduction) {
-        localStorage.setItem('customerAccessToken', data.accessToken)
-        localStorage.setItem('customerRefreshToken', data.refreshToken)
-      }
-
       setAccessToken(data.accessToken)
       setRefreshToken(data.refreshToken)
       
-      // Ensure customer data is fully set before resolving
-      // This prevents race conditions where redirect happens before customer is available
       const loggedInUser = data.user
       setCustomer(loggedInUser)
       setIsAuthenticated(true)
 
-      // Wait a bit for state to propagate (React batches updates)
+      // Wait a bit for state to propagate
       await new Promise(resolve => setTimeout(resolve, 100))
 
       return { success: true, user: loggedInUser }
@@ -179,15 +133,10 @@ export const CustomerAuthProvider = ({ children }) => {
     }
   }
 
-  // Register (environment-aware)
+  // Register using Supabase Auth
   const register = async (userData) => {
     try {
-      // Use different endpoints based on environment
-      const endpoint = isProduction && isSupabaseEnabled()
-        ? `${apiUrl}/api/auth/supabase/register`
-        : `${apiUrl}/api/auth/register`
-
-      const response = await fetch(endpoint, {
+      const response = await fetch(`${apiUrl}/api/auth/supabase/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -202,22 +151,14 @@ export const CustomerAuthProvider = ({ children }) => {
 
       const data = await response.json()
 
-      // Store tokens (localStorage for dev, Supabase handles storage for prod)
-      if (!isProduction) {
-        localStorage.setItem('customerAccessToken', data.accessToken)
-        localStorage.setItem('customerRefreshToken', data.refreshToken)
-      }
-
       setAccessToken(data.accessToken)
       setRefreshToken(data.refreshToken)
       
-      // Ensure customer data is fully set before resolving
-      // This prevents race conditions where redirect happens before customer is available
       const registeredUser = data.user
       setCustomer(registeredUser)
       setIsAuthenticated(true)
 
-      // Wait a bit for state to propagate (React batches updates)
+      // Wait a bit for state to propagate
       await new Promise(resolve => setTimeout(resolve, 100))
 
       return { success: true, user: registeredUser }
@@ -227,9 +168,9 @@ export const CustomerAuthProvider = ({ children }) => {
     }
   }
 
-  // Logout (environment-aware)
+  // Logout using Supabase Auth
   const logout = useCallback(async () => {
-    if (isProduction && isSupabaseEnabled()) {
+    if (isSupabaseEnabled()) {
       await signOutSupabase()
     }
     clearAuth()
@@ -237,35 +178,23 @@ export const CustomerAuthProvider = ({ children }) => {
 
   // Clear authentication
   const clearAuth = () => {
-    localStorage.removeItem('customerAccessToken')
-    localStorage.removeItem('customerRefreshToken')
     setAccessToken(null)
     setRefreshToken(null)
     setCustomer(null)
     setIsAuthenticated(false)
   }
 
-  // Refresh access token (environment-aware)
+  // Refresh access token using Supabase Auth
   const refreshAccessTokenInternal = async () => {
-    const currentRefreshToken = refreshToken || localStorage.getItem('customerRefreshToken')
-
-    if (!currentRefreshToken) {
-      clearAuth()
-      return null
-    }
+    if (!isSupabaseEnabled()) return null
 
     try {
-      // Use different endpoints based on environment
-      const endpoint = isProduction && isSupabaseEnabled()
-        ? `${apiUrl}/api/auth/supabase/refresh`
-        : `${apiUrl}/api/auth/refresh`
-
-      const response = await fetch(endpoint, {
+      const response = await fetch(`${apiUrl}/api/auth/supabase/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ refreshToken: currentRefreshToken })
+        body: JSON.stringify({ refreshToken: refreshToken })
       })
 
       if (!response.ok) {
@@ -274,14 +203,8 @@ export const CustomerAuthProvider = ({ children }) => {
 
       const data = await response.json()
 
-      // Store new tokens (different field names for JWT vs Supabase)
       const newAccessToken = data.accessToken || data.access_token
       const newRefreshToken = data.refreshToken || data.refresh_token
-
-      if (!isProduction) {
-        localStorage.setItem('customerAccessToken', newAccessToken)
-        localStorage.setItem('customerRefreshToken', newRefreshToken)
-      }
 
       setAccessToken(newAccessToken)
       setRefreshToken(newRefreshToken)
@@ -299,10 +222,10 @@ export const CustomerAuthProvider = ({ children }) => {
 
   // Sign in with Google OAuth
   const signInWithGoogle = async () => {
-    if (!isProduction || !isSupabaseEnabled()) {
+    if (!isSupabaseEnabled()) {
       return {
         success: false,
-        error: 'Google sign-in is only available in production mode'
+        error: 'Supabase is not configured'
       }
     }
 

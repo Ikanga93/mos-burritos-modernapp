@@ -35,20 +35,16 @@ export const createCustomerClient = () => {
     }
   })
 
-  // Request interceptor - add access token (environment-aware)
+  // Request interceptor - add access token
   client.interceptors.request.use(
     async (config) => {
       let token = null
       
-      if (isProduction && isSupabaseEnabled()) {
-        // Production: Use Supabase session token
+      if (isSupabaseEnabled()) {
         const session = await getSupabaseSession()
         if (session?.access_token) {
           token = session.access_token
         }
-      } else {
-        // Development: Use JWT from localStorage
-        token = localStorage.getItem('customerAccessToken')
       }
       
       if (token) {
@@ -70,42 +66,20 @@ export const createCustomerClient = () => {
         originalRequest._retry = true
 
         try {
-          const refreshToken = localStorage.getItem('customerRefreshToken')
-
-          if (!refreshToken) {
-            console.error('[Customer Auth] No refresh token available')
-            // No refresh token, logout
-            localStorage.removeItem('customerAccessToken')
-            localStorage.removeItem('customerRefreshToken')
-            window.location.href = '/login'
-            return Promise.reject(error)
+          if (isSupabaseEnabled()) {
+            console.log('[Customer Auth] Session might be expired, attempting refresh via Supabase...')
+            const session = await getSupabaseSession()
+            if (session?.access_token) {
+              originalRequest.headers.Authorization = `Bearer ${session.access_token}`
+              return client(originalRequest)
+            }
           }
-
-          console.log('[Customer Auth] Attempting to refresh token...')
-
-          // Try to refresh the token
-          const response = await axios.post(`${API_BASE_URL}/api/auth/customer/refresh`, {
-            refreshToken: refreshToken
-          })
-
-          const { accessToken, refreshToken: newRefreshToken } = response.data
-
-          // Store new tokens
-          localStorage.setItem('customerAccessToken', accessToken)
-          if (newRefreshToken) {
-            localStorage.setItem('customerRefreshToken', newRefreshToken)
-          }
-
-          console.log('[Customer Auth] Token refreshed successfully')
-
-          // Retry original request with new token
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`
-          return client(originalRequest)
+          
+          // If no session after refresh or Supabase not enabled
+          window.location.href = '/login'
+          return Promise.reject(error)
         } catch (refreshError) {
-          console.error('[Customer Auth] Token refresh failed:', refreshError)
-          // Refresh failed, logout
-          localStorage.removeItem('customerAccessToken')
-          localStorage.removeItem('customerRefreshToken')
+          console.error('[Customer Auth] Session refresh failed:', refreshError)
           window.location.href = '/login'
           return Promise.reject(refreshError)
         }
@@ -129,20 +103,16 @@ export const createAdminClient = () => {
     }
   })
 
-  // Request interceptor - add access token (environment-aware)
+  // Request interceptor - add access token
   client.interceptors.request.use(
     async (config) => {
       let token = null
       
-      if (isProduction && isSupabaseEnabled()) {
-        // Production: Use Supabase session token
+      if (isSupabaseEnabled()) {
         const session = await getSupabaseSession()
         if (session?.access_token) {
           token = session.access_token
         }
-      } else {
-        // Development: Use JWT from localStorage
-        token = localStorage.getItem('adminAccessToken')
       }
       
       if (token) {
@@ -167,44 +137,20 @@ export const createAdminClient = () => {
         originalRequest._retry = true
 
         try {
-          const refreshToken = localStorage.getItem('adminRefreshToken')
-
-          if (!refreshToken) {
-            console.error('[Admin Auth] No refresh token available')
-            // No refresh token, logout
-            localStorage.removeItem('adminAccessToken')
-            localStorage.removeItem('adminRefreshToken')
-            localStorage.removeItem('adminCurrentLocation')
-            window.location.href = '/admin/login'
-            return Promise.reject(error)
+          if (isSupabaseEnabled()) {
+            console.log('[Admin Auth] Session might be expired, attempting refresh via Supabase...')
+            const session = await getSupabaseSession()
+            if (session?.access_token) {
+              originalRequest.headers.Authorization = `Bearer ${session.access_token}`
+              return client(originalRequest)
+            }
           }
-
-          console.log('[Admin Auth] Attempting to refresh token...')
-
-          // Try to refresh the token
-          const response = await axios.post(`${API_BASE_URL}/api/auth/refresh`, {
-            refreshToken: refreshToken
-          })
-
-          const { accessToken, refreshToken: newRefreshToken } = response.data
-
-          // Store new tokens
-          localStorage.setItem('adminAccessToken', accessToken)
-          if (newRefreshToken) {
-            localStorage.setItem('adminRefreshToken', newRefreshToken)
-          }
-
-          console.log('[Admin Auth] Token refreshed successfully')
-
-          // Retry original request with new token
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`
-          return client(originalRequest)
+          
+          // If no session after refresh or Supabase not enabled
+          window.location.href = '/admin/login'
+          return Promise.reject(error)
         } catch (refreshError) {
-          console.error('[Admin Auth] Token refresh failed:', refreshError)
-          // Refresh failed, logout
-          localStorage.removeItem('adminAccessToken')
-          localStorage.removeItem('adminRefreshToken')
-          localStorage.removeItem('adminCurrentLocation')
+          console.error('[Admin Auth] Session refresh failed:', refreshError)
           window.location.href = '/admin/login'
           return Promise.reject(refreshError)
         }

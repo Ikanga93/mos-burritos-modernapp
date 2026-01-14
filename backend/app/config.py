@@ -44,8 +44,8 @@ class Settings(BaseSettings):
 
     @property
     def use_supabase_auth(self) -> bool:
-        """Use Supabase auth in production, JWT in development"""
-        return self.is_production
+        """Use Supabase auth if credentials are provided, regardless of environment"""
+        return bool(self.supabase_url and self.supabase_anon_key)
     
     @property
     def db_url(self) -> str:

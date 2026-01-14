@@ -25,9 +25,7 @@ async def get_current_user(
 ) -> User:
     """
     Get the current authenticated user from token.
-    Uses environment-aware authentication:
-    - Development: JWT tokens only
-    - Production: Supabase Auth tokens
+    Standardized on Supabase Auth, with JWT fallback for legacy dev support.
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -39,10 +37,10 @@ async def get_current_user(
     user = None
     
     print(f"[AUTH MIDDLEWARE] Authenticating request - Token: {token[:30]}...")
-    print(f"[AUTH MIDDLEWARE] Environment: {'Production (Supabase)' if (settings.is_production and settings.use_supabase_auth) else 'Development (JWT)'}")
     
-    if settings.is_production and settings.use_supabase_auth:
-        # Production: Use Supabase Auth
+    # Priority 1: Supabase Auth (Recommended for all environments)
+    if settings.use_supabase_auth:
+        print(f"[AUTH MIDDLEWARE] Validating via Supabase...")
         supabase_user = await get_supabase_user_from_token(token)
         if supabase_user:
             # Find user by supabase_id or email/phone
@@ -68,19 +66,13 @@ async def get_current_user(
                 # Link existing user to Supabase account
                 user.supabase_id = supabase_user["id"]
                 db.commit()
-    else:
-        # Development: Use local JWT tokens
-        print(f"[AUTH MIDDLEWARE] Decoding JWT token...")
+    
+    # Priority 2: Legacy JWT (Only if Supabase not enabled or validation failed)
+    if not user:
+        print(f"[AUTH MIDDLEWARE] Falling back to local JWT validation...")
         token_data = decode_token(token)
         if token_data:
-            print(f"[AUTH MIDDLEWARE] Token decoded - looking up user ID: {token_data.user_id}")
             user = db.query(User).filter(User.id == token_data.user_id).first()
-            if user:
-                print(f"[AUTH MIDDLEWARE] User found: {user.email}, Role: {user.role.value}")
-            else:
-                print(f"[AUTH MIDDLEWARE] User not found in database")
-        else:
-            print(f"[AUTH MIDDLEWARE] Token decode failed")
     
     if not user:
         print(f"[AUTH MIDDLEWARE] Authentication failed - no user found")
@@ -93,7 +85,7 @@ async def get_current_user(
             detail="User account is disabled"
         )
     
-    print(f"[AUTH MIDDLEWARE] Authentication successful for: {user.email}")
+    print(f"[AUTH MIDDLEWARE] Authentication successful for: {user.email or user.phone}")
     return user
 
 

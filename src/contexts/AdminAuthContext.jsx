@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { getSupabaseSession, isSupabaseEnabled, signOutSupabase } from '../services/supabaseClient'
 
 const AdminAuthContext = createContext(null)
 
@@ -32,29 +33,35 @@ export const AdminAuthProvider = ({ children }) => {
 
   const apiUrl = getApiUrl()
 
-  // Initialize auth state from localStorage
+  // Initialize auth state from Supabase
   useEffect(() => {
-    const storedAccessToken = localStorage.getItem('adminAccessToken')
-    const storedRefreshToken = localStorage.getItem('adminRefreshToken')
-    const storedCurrentLocation = localStorage.getItem('adminCurrentLocation')
+    const initAuth = async () => {
+      const storedCurrentLocation = localStorage.getItem('adminCurrentLocation')
 
-    if (storedAccessToken && storedRefreshToken) {
-      setAccessToken(storedAccessToken)
-      setRefreshToken(storedRefreshToken)
+      if (isSupabaseEnabled()) {
+        const session = await getSupabaseSession()
+        if (session) {
+          setAccessToken(session.access_token)
+          setRefreshToken(session.refresh_token)
 
-      if (storedCurrentLocation) {
-        try {
-          setCurrentLocation(JSON.parse(storedCurrentLocation))
-        } catch (e) {
-          console.error('Error parsing stored location:', e)
+          if (storedCurrentLocation) {
+            try {
+              setCurrentLocation(JSON.parse(storedCurrentLocation))
+            } catch (e) {
+              console.error('Error parsing stored location:', e)
+            }
+          }
+
+          await fetchCurrentUser(session.access_token)
+        } else {
+          setIsLoading(false)
         }
+      } else {
+        setIsLoading(false)
       }
-
-      // Fetch current user
-      fetchCurrentUser(storedAccessToken)
-    } else {
-      setIsLoading(false)
     }
+
+    initAuth()
   }, [])
 
   // Fetch current user info including assigned locations
@@ -139,7 +146,7 @@ export const AdminAuthProvider = ({ children }) => {
     }
   }
 
-  // Login
+  // Login using Supabase
   const login = async (email, password) => {
     try {
       const response = await fetch(`${apiUrl}/api/auth/login`, {
@@ -162,22 +169,12 @@ export const AdminAuthProvider = ({ children }) => {
         throw new Error('This account does not have admin access')
       }
 
-      // Store tokens
-      console.log('[Admin Auth] Storing tokens after login')
-      console.log('[Admin Auth] Access Token:', data.accessToken ? `${data.accessToken.substring(0, 30)}...` : 'MISSING')
-      console.log('[Admin Auth] Refresh Token:', data.refreshToken ? `${data.refreshToken.substring(0, 30)}...` : 'MISSING')
-      
-      localStorage.setItem('adminAccessToken', data.accessToken)
-      localStorage.setItem('adminRefreshToken', data.refreshToken)
-
       setAccessToken(data.accessToken)
       setRefreshToken(data.refreshToken)
       setAdmin(data.user)
       setRole(data.user.role)
       setIsAuthenticated(true)
       
-      console.log('[Admin Auth] Login successful - User:', data.user.email, 'Role:', data.user.role)
-
       // Fetch assigned locations
       if (data.user.role !== 'owner') {
         await fetchAssignedLocations(data.user.id, data.accessToken)
@@ -192,15 +189,16 @@ export const AdminAuthProvider = ({ children }) => {
     }
   }
 
-  // Logout
-  const logout = useCallback(() => {
+  // Logout using Supabase
+  const logout = useCallback(async () => {
+    if (isSupabaseEnabled()) {
+      await signOutSupabase()
+    }
     clearAuth()
   }, [])
 
   // Clear authentication
   const clearAuth = () => {
-    localStorage.removeItem('adminAccessToken')
-    localStorage.removeItem('adminRefreshToken')
     localStorage.removeItem('adminCurrentLocation')
     setAccessToken(null)
     setRefreshToken(null)
@@ -230,14 +228,9 @@ export const AdminAuthProvider = ({ children }) => {
     return assignedLocations.some(loc => loc.location_id === locationId)
   }, [role, assignedLocations])
 
-  // Refresh access token
+  // Refresh access token using Supabase
   const refreshAccessToken = async () => {
-    const currentRefreshToken = refreshToken || localStorage.getItem('adminRefreshToken')
-
-    if (!currentRefreshToken) {
-      clearAuth()
-      return null
-    }
+    if (!isSupabaseEnabled()) return null
 
     try {
       const response = await fetch(`${apiUrl}/api/auth/refresh`, {
@@ -245,7 +238,7 @@ export const AdminAuthProvider = ({ children }) => {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ refreshToken: currentRefreshToken }) // Fixed: changed refresh_token to refreshToken to match schema
+        body: JSON.stringify({ refreshToken: refreshToken })
       })
 
       if (!response.ok) {
@@ -254,10 +247,9 @@ export const AdminAuthProvider = ({ children }) => {
 
       const data = await response.json()
 
-      localStorage.setItem('adminAccessToken', data.accessToken) // Fixed: changed access_token to accessToken
-      setAccessToken(data.accessToken) // Fixed: changed access_token to accessToken
+      setAccessToken(data.accessToken)
 
-      return data.accessToken // Fixed: changed access_token to accessToken
+      return data.accessToken
     } catch (error) {
       console.error('Token refresh error:', error)
       clearAuth()

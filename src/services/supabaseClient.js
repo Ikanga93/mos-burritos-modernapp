@@ -5,14 +5,13 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Environment detection
-const isProduction = import.meta.env.VITE_ENVIRONMENT === 'production'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 let supabase = null
 
-// Only initialize Supabase client in production
-if (isProduction && supabaseUrl && supabaseAnonKey) {
+// Initialize Supabase client if credentials are provided
+if (supabaseUrl && supabaseAnonKey) {
   supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       autoRefreshToken: true,
@@ -25,14 +24,8 @@ if (isProduction && supabaseUrl && supabaseAnonKey) {
 
 /**
  * Get Supabase client instance
- * Only available in production mode
  */
 export const getSupabaseClient = () => {
-  if (!isProduction) {
-    console.warn('Supabase client is only available in production mode')
-    return null
-  }
-  
   if (!supabase) {
     throw new Error('Supabase client not initialized. Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables.')
   }
@@ -41,10 +34,10 @@ export const getSupabaseClient = () => {
 }
 
 /**
- * Check if app is running in production mode with Supabase
+ * Check if app is running with Supabase enabled
  */
 export const isSupabaseEnabled = () => {
-  return isProduction && supabase !== null
+  return supabase !== null
 }
 
 /**
@@ -85,7 +78,7 @@ export const signInWithGoogle = async () => {
     throw new Error('Supabase not initialized')
   }
 
-  const redirectUrl = `${window.location.origin}/`
+  const redirectUrl = `${window.location.origin}/auth/callback`
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
