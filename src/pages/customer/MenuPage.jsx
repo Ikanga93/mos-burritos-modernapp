@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { ShoppingCart } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ShoppingCart, ArrowLeft } from 'lucide-react'
 
 import LocationSelector from '../../components/customer/LocationSelector'
 import MenuItemCard from '../../components/customer/MenuItemCard'
@@ -11,6 +12,7 @@ import { menuApi } from '../../services/api/menuApi'
 import './MenuPage.css'
 
 const MenuPage = () => {
+  const navigate = useNavigate()
   const [menuData, setMenuData] = useState({ categories: [], items: [] })
   const [isLoading, setIsLoading] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState(null)
@@ -65,6 +67,11 @@ const MenuPage = () => {
 
   return (
     <div className="menu-page">
+      {/* Back Button */}
+      <button className="back-btn" onClick={() => navigate('/')} aria-label="Back to Home">
+        <ArrowLeft size={20} />
+      </button>
+
       {/* Location Selector */}
       <LocationSelector />
 
