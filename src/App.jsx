@@ -45,6 +45,15 @@ import AdminMenuPage from './pages/admin/AdminMenuPage'
 import AdminLocationsPage from './pages/admin/AdminLocationsPage'
 import AdminStaffPage from './pages/admin/AdminStaffPage'
 import AdminCustomersPage from './pages/admin/AdminCustomersPage'
+import AdminProfilePage from './pages/admin/AdminProfilePage'
+import AdminKitchenPage from './pages/admin/AdminKitchenPage'
+import AdminDeliveryPage from './pages/admin/AdminDeliveryPage'
+import AdminReservationsPage from './pages/admin/AdminReservationsPage'
+import AdminPaymentsPage from './pages/admin/AdminPaymentsPage'
+import AdminSettingsPage from './pages/admin/AdminSettingsPage'
+import AdminMarketingPage from './pages/admin/AdminMarketingPage'
+import AdminCateringPage from './pages/admin/AdminCateringPage'
+import AdminLoyaltyPage from './pages/admin/AdminLoyaltyPage'
 
 // Error Boundary
 import ErrorBoundary from './components/ErrorBoundary'
@@ -130,6 +139,96 @@ function App() {
                         <AdminProtectedRoute>
                           <AdminLayout>
                             <AdminCustomersPage />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/profile"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminProfilePage />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/kitchen"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminKitchenPage />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/delivery"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminDeliveryPage />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/reservations"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminReservationsPage />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/payments"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminPaymentsPage />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/settings"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminSettingsPage />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/marketing"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminMarketingPage />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/catering"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminCateringPage />
+                          </AdminLayout>
+                        </AdminProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/loyalty"
+                      element={
+                        <AdminProtectedRoute>
+                          <AdminLayout>
+                            <AdminLoyaltyPage />
                           </AdminLayout>
                         </AdminProtectedRoute>
                       }

@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import {
-    LayoutDashboard, ShoppingBag, Package, MapPin, Users, UserCircle, BarChart3, LogOut, Menu, X
+    LayoutDashboard, ShoppingBag, Package, MapPin, Users, UserCircle, BarChart3, LogOut, Menu, X, Building2, Settings,
+    ChefHat, Truck, CalendarCheck, CreditCard, Megaphone, UtensilsCrossed, Award
 } from 'lucide-react'
 import { useAdminAuth } from '../../contexts/AdminAuthContext'
 import { useToast } from '../../contexts/ToastContext'
@@ -13,11 +14,13 @@ const AdminLayout = ({ children }) => {
     const { admin, logout, isAuthenticated, isLoading, role, assignedLocations, currentLocation, switchLocation } = useAdminAuth()
     const { showToast } = useToast()
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+    const [isMenuOpen, setIsMenuOpen] = useState(false)
 
     const handleLogout = () => {
         logout()
         navigate('/admin/login')
         showToast('Logged out successfully', 'info')
+        setIsMenuOpen(false)
     }
 
     const handleLocationSwitch = (e) => {
@@ -37,6 +40,14 @@ const AdminLayout = ({ children }) => {
         setIsSidebarOpen(false)
     }
 
+    const toggleMenu = () => {
+        setIsMenuOpen(!isMenuOpen)
+    }
+
+    const closeMenu = () => {
+        setIsMenuOpen(false)
+    }
+
     // Don't show layout if not authenticated or loading
     if (isLoading || !isAuthenticated) {
         return children
@@ -44,54 +55,61 @@ const AdminLayout = ({ children }) => {
 
     return (
         <div className="admin-layout">
-            {/* Mobile Menu Toggle Button */}
-            <button 
-                className="mobile-menu-toggle" 
-                onClick={toggleSidebar}
-                aria-label="Toggle menu"
-            >
-                {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+            {/* Top Navbar */}
+            <nav className="dashboard-navbar">
+                <div className="navbar-left">
+                    <img src="/images/logo/burritos-logo.png" alt="Mo's Burritos" className="navbar-logo" />
+                    <h1 className="navbar-brand">Mo's Burritos</h1>
+                </div>
+                
+                <div className="navbar-right">
+                    <button className="hamburger-btn" onClick={toggleMenu}>
+                        {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+                </div>
+            </nav>
 
-            {/* Overlay for mobile */}
-            {isSidebarOpen && (
-                <div className="sidebar-overlay" onClick={closeSidebar}></div>
+            {/* Slide-out Menu */}
+            {isMenuOpen && (
+                <div className="menu-overlay" onClick={toggleMenu}>
+                    <div className="menu-panel" onClick={(e) => e.stopPropagation()}>
+                        {/* User Profile Section */}
+                        <Link to="/admin/profile" className="menu-profile" onClick={closeMenu}>
+                            <div className="profile-avatar">
+                                <img src="/images/logo/burritos-logo.png" alt="Profile" className="profile-logo" />
+                            </div>
+                            <div className="profile-info">
+                                <h3>{admin?.first_name} {admin?.last_name}</h3>
+                                <span className="profile-role">{role}</span>
+                            </div>
+                        </Link>
+                        
+                        {/* Menu Navigation */}
+                        <nav className="menu-nav">
+                            <Link to="/admin/locations" className="menu-item" onClick={closeMenu}>
+                                <Building2 size={20} />
+                                <span>Restaurant</span>
+                            </Link>
+                            
+                            <Link to="/admin/staff" className="menu-item" onClick={closeMenu}>
+                                <Users size={20} />
+                                <span>Staff</span>
+                            </Link>
+                            
+                            <Link to="/admin/settings" className="menu-item" onClick={closeMenu}>
+                                <Settings size={20} />
+                                <span>Settings</span>
+                            </Link>
+                        </nav>
+                    </div>
+                </div>
             )}
 
             {/* Sidebar */}
             <aside className={`admin-sidebar ${isSidebarOpen ? 'open' : ''}`}>
-                <div className="sidebar-header">
-                    <button className="sidebar-close-btn" onClick={closeSidebar} aria-label="Close menu">
-                        <X size={20} />
-                    </button>
-                    <img src="/images/logo/burritos-logo.png" alt="Mo's Burritos" className="sidebar-logo" />
-                    <h2>Mo's Burritos</h2>
-                    <span className="role-badge">{admin?.role || 'Admin'}</span>
-
-                    {/* Location Switcher for Staff/Manager with multiple locations */}
-                    {!isOwner && assignedLocations && assignedLocations.length > 1 && (
-                        <div className="location-switcher">
-                            <label>Location:</label>
-                            <select
-                                value={currentLocation?.id || ''}
-                                onChange={handleLocationSwitch}
-                                className="location-switch-select"
-                            >
-                                {assignedLocations.map(al => (
-                                    <option key={al.location_id} value={al.location_id}>
-                                        {al.location_name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-                    {!isOwner && assignedLocations && assignedLocations.length === 1 && currentLocation && (
-                        <div className="single-location-badge">
-                            <MapPin size={14} />
-                            {currentLocation.name}
-                        </div>
-                    )}
-                </div>
+                <button className="sidebar-close-btn" onClick={closeSidebar} aria-label="Close menu">
+                    <X size={20} />
+                </button>
 
                 <nav className="sidebar-nav">
                     <Link 
@@ -101,14 +119,6 @@ const AdminLayout = ({ children }) => {
                     >
                         <LayoutDashboard size={20} />
                         <span>Dashboard</span>
-                    </Link>
-                    <Link 
-                        to="/admin/analytics" 
-                        className={`nav-item ${isActive('/admin/analytics') ? 'active' : ''}`}
-                        onClick={closeSidebar}
-                    >
-                        <BarChart3 size={20} />
-                        <span>Analytics</span>
                     </Link>
                     <Link 
                         to="/admin/orders" 
@@ -135,14 +145,6 @@ const AdminLayout = ({ children }) => {
                         <span>Locations</span>
                     </Link>
                     <Link 
-                        to="/admin/staff" 
-                        className={`nav-item ${isActive('/admin/staff') ? 'active' : ''}`}
-                        onClick={closeSidebar}
-                    >
-                        <Users size={20} />
-                        <span>Staff</span>
-                    </Link>
-                    <Link 
                         to="/admin/customers" 
                         className={`nav-item ${isActive('/admin/customers') ? 'active' : ''}`}
                         onClick={closeSidebar}
@@ -150,17 +152,79 @@ const AdminLayout = ({ children }) => {
                         <UserCircle size={20} />
                         <span>Customers</span>
                     </Link>
+                    <Link 
+                        to="/admin/analytics" 
+                        className={`nav-item ${isActive('/admin/analytics') ? 'active' : ''}`}
+                        onClick={closeSidebar}
+                    >
+                        <BarChart3 size={20} />
+                        <span>Analytics</span>
+                    </Link>
+                    <Link 
+                        to="/admin/kitchen" 
+                        className={`nav-item ${isActive('/admin/kitchen') ? 'active' : ''}`}
+                        onClick={closeSidebar}
+                    >
+                        <ChefHat size={20} />
+                        <span>Kitchen</span>
+                    </Link>
+                    <Link 
+                        to="/admin/delivery" 
+                        className={`nav-item ${isActive('/admin/delivery') ? 'active' : ''}`}
+                        onClick={closeSidebar}
+                    >
+                        <Truck size={20} />
+                        <span>Delivery</span>
+                    </Link>
+                    <Link 
+                        to="/admin/reservations" 
+                        className={`nav-item ${isActive('/admin/reservations') ? 'active' : ''}`}
+                        onClick={closeSidebar}
+                    >
+                        <CalendarCheck size={20} />
+                        <span>Reservations</span>
+                    </Link>
+                    <Link 
+                        to="/admin/payments" 
+                        className={`nav-item ${isActive('/admin/payments') ? 'active' : ''}`}
+                        onClick={closeSidebar}
+                    >
+                        <CreditCard size={20} />
+                        <span>Payments</span>
+                    </Link>
+                    <Link 
+                        to="/admin/settings" 
+                        className={`nav-item ${isActive('/admin/settings') ? 'active' : ''}`}
+                        onClick={closeSidebar}
+                    >
+                        <Settings size={20} />
+                        <span>Settings</span>
+                    </Link>
+                    <Link 
+                        to="/admin/marketing" 
+                        className={`nav-item ${isActive('/admin/marketing') ? 'active' : ''}`}
+                        onClick={closeSidebar}
+                    >
+                        <Megaphone size={20} />
+                        <span>Marketing</span>
+                    </Link>
+                    <Link 
+                        to="/admin/catering" 
+                        className={`nav-item ${isActive('/admin/catering') ? 'active' : ''}`}
+                        onClick={closeSidebar}
+                    >
+                        <UtensilsCrossed size={20} />
+                        <span>Catering</span>
+                    </Link>
+                    <Link 
+                        to="/admin/loyalty" 
+                        className={`nav-item ${isActive('/admin/loyalty') ? 'active' : ''}`}
+                        onClick={closeSidebar}
+                    >
+                        <Award size={20} />
+                        <span>Loyalty</span>
+                    </Link>
                 </nav>
-
-                <div className="sidebar-footer">
-                    <div className="admin-info">
-                        <span className="admin-name">{admin?.first_name || 'Admin'}</span>
-                        <span className="admin-email">{admin?.email}</span>
-                    </div>
-                    <button className="logout-btn" onClick={handleLogout}>
-                        <LogOut size={18} />
-                    </button>
-                </div>
             </aside>
 
             {/* Main Content */}

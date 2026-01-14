@@ -301,7 +301,7 @@ const HomePage = () => {
                 <div className="review-content">
                   <div className="quote-mark">"</div>
                   <div className="stars-rating">★★★★★</div>
-                  <p className="review-text">Always genuinely amazing food. Tortas are the best I've ever had. I think they pan fry the bread with cheese to get this really crispy, savory cheese layer on it. It's so good. Employees are always super nice and efficient too. Best prices in town as well.</p>
+                  <p className="review-text">Amazing food! The tortas are the best I've ever had with crispy, savory cheese. Employees are super nice and prices are great!</p>
                   <div className="review-footer">
                     <div className="reviewer-avatar"><User size={20} /></div>
                     <div className="reviewer-info">
@@ -318,7 +318,7 @@ const HomePage = () => {
                 <div className="review-content">
                   <div className="quote-mark">"</div>
                   <div className="stars-rating">★★★★★</div>
-                  <p className="review-text">Holy moly these are some good tacos. And so reasonably priced! The chorizo especially was unreal, but the pastor was bomb and the asada was solid too!</p>
+                  <p className="review-text">Incredible tacos and so reasonably priced! The chorizo is unreal, pastor is bomb!</p>
                   <div className="review-footer">
                     <div className="reviewer-avatar"><User size={20} /></div>
                     <div className="reviewer-info">
@@ -334,7 +334,7 @@ const HomePage = () => {
                 <div className="review-content">
                   <div className="quote-mark">"</div>
                   <div className="stars-rating">★★★★★</div>
-                  <p className="review-text">These are the best tacos I've tried in the US. The al pastor tacos are my favorite! And the burritos are great too. I would highly recommend Mo's Burritos!</p>
+                  <p className="review-text">Best tacos I've tried in the US! The al pastor tacos are my favorite. Highly recommend!</p>
                   <div className="review-footer">
                     <div className="reviewer-avatar"><User size={20} /></div>
                     <div className="reviewer-info">
@@ -350,7 +350,7 @@ const HomePage = () => {
                 <div className="review-content">
                   <div className="quote-mark">"</div>
                   <div className="stars-rating">★★★★★</div>
-                  <p className="review-text">As someone who grew up in Mexico, I have to say these are the best tacos in Champaign. They taste as good as any street taco you can get in Mexico. The staff always greets you with a smile!</p>
+                  <p className="review-text">Growing up in Mexico, these are authentic as any street taco back home. Best in Champaign!</p>
                   <div className="review-footer">
                     <div className="reviewer-avatar"><User size={20} /></div>
                     <div className="reviewer-info">
@@ -366,7 +366,7 @@ const HomePage = () => {
                 <div className="review-content">
                   <div className="quote-mark">"</div>
                   <div className="stars-rating">★★★★★</div>
-                  <p className="review-text">One of the best quick Mexican food places in Urbana Champaign. The topping portion is amazing and their tacos are incredible. I recommend the avocado topping!</p>
+                  <p className="review-text">Best quick Mexican food in town. Amazing portions and incredible tacos!</p>
                   <div className="review-footer">
                     <div className="reviewer-avatar"><User size={20} /></div>
                     <div className="reviewer-info">
@@ -382,7 +382,7 @@ const HomePage = () => {
                 <div className="review-content">
                   <div className="quote-mark">"</div>
                   <div className="stars-rating">★★★★★</div>
-                  <p className="review-text">Great food and always prepared to order. I've been eating here for 10+ years! Consistent quality every single time.</p>
+                  <p className="review-text">Been eating here 10+ years! Consistent quality every time.</p>
                   <div className="review-footer">
                     <div className="reviewer-avatar"><User size={20} /></div>
                     <div className="reviewer-info">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
     ShoppingBag, Clock, CheckCircle, ChefHat,
     DollarSign, RefreshCw, Package, TrendingUp, X, XCircle
@@ -20,8 +21,9 @@ const STATUS_CONFIG = {
 }
 
 const AdminDashboard = () => {
-    const { isAuthenticated, isLoading: authLoading, role, assignedLocations, currentLocation } = useAdminAuth()
+    const { admin, logout, isAuthenticated, isLoading: authLoading, role, assignedLocations, currentLocation } = useAdminAuth()
     const { showToast } = useToast()
+    const navigate = useNavigate()
 
     const [selectedLocation, setSelectedLocation] = useState('all')
     const [locations, setLocations] = useState([])
@@ -170,36 +172,10 @@ const AdminDashboard = () => {
 
     return (
         <div className="dashboard-content">
-            {/* Header */}
-            <header className="content-header">
-                <div className="header-left">
-                    <h1>Dashboard</h1>
-                    {isOwner && (
-                        <select
-                            value={selectedLocation}
-                            onChange={(e) => setSelectedLocation(e.target.value)}
-                            className="location-select"
-                        >
-                            <option value="all">All Locations</option>
-                            {locations.map(loc => (
-                                <option key={loc.id} value={loc.id}>{loc.name}</option>
-                            ))}
-                        </select>
-                    )}
-                    {!isOwner && currentLocation && (
-                        <span className="current-location-badge">{currentLocation.name}</span>
-                    )}
-                </div>
-                <button className="refresh-btn" onClick={handleRefresh} disabled={isRefreshing}>
-                    <RefreshCw size={18} className={isRefreshing ? 'spin' : ''} />
-                    Refresh
-                </button>
-            </header>
-
             {/* Stats Cards */}
             <div className="stats-grid">
                 <div className="stat-card">
-                    <div className="stat-icon orders">
+                    <div className="stat-icon">
                         <ShoppingBag size={24} />
                     </div>
                     <div className="stat-info">
@@ -209,7 +185,7 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="stat-card">
-                    <div className="stat-icon pending">
+                    <div className="stat-icon">
                         <Clock size={24} />
                     </div>
                     <div className="stat-info">
@@ -219,7 +195,7 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="stat-card">
-                    <div className="stat-icon revenue">
+                    <div className="stat-icon">
                         <DollarSign size={24} />
                     </div>
                     <div className="stat-info">
@@ -229,7 +205,7 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="stat-card">
-                    <div className="stat-icon total">
+                    <div className="stat-icon">
                         <TrendingUp size={24} />
                     </div>
                     <div className="stat-info">

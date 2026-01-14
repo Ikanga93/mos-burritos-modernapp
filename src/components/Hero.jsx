@@ -7,7 +7,7 @@ const Hero = () => {
     <section id="home" className="hero">
       <div className="hero-background">
         <img
-          src="/images/hero/mosburritosheroimage.webp"
+          src="/images/hero/new-location-mos-burritos.PNG"
           alt="Mo's Burritos Food"
           className="hero-bg-image"
         />
@@ -18,15 +18,15 @@ const Hero = () => {
         <div className="hero-content">
           <div className="hero-text">
             <h1 className="hero-title">
-              ¡Bienvenidos a <span>Mo's Burritos!</span>
+              Now Open: <span>Mo's Burritos Bar & Grill!</span>
             </h1>
             <p className="hero-subtitle">
-              Authentic Mexican and Salvadorian cuisine crafted with passion, tradition, and the finest ingredients.
+              Our new full-service restaurant is now open! Enjoy breakfast, lunch, dinner & late night eats with margaritas, craft cocktails, and your favorite Salvadoran specialties. Open daily from 7 AM until late!
             </p>
 
             <div className="hero-buttons">
               <Link to="/menu" className="cta-button">
-                Order Online
+                View Menu
               </Link>
             </div>
           </div>

@@ -1,6 +1,8 @@
 /* Dashboard Content */
 .dashboard-content {
     padding: 2rem;
+    padding-top: 6rem;
+    position: relative;
 }
 
 /* Header */
@@ -90,68 +92,67 @@
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
+    gap: 1.25rem;
     margin-bottom: 2rem;
 }
 
 .stat-card {
     background: white;
     border-radius: 12px;
-    padding: 1.5rem;
+    padding: 1.25rem;
     display: flex;
     align-items: center;
     gap: 1rem;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    border-color: #FF6B35;
 }
 
 .stat-icon {
-    width: 56px;
-    height: 56px;
+    width: 48px;
+    height: 48px;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-}
-
-.stat-icon.orders {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.stat-icon.pending {
-    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
-}
-
-.stat-icon.revenue {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-}
-
-.stat-icon.total {
-    background: linear-gradient(135deg, #17a2b8 0%, #0dccea 100%);
+    color: #333;
+    background: #f8f9fa;
+    border: 2px solid #e0e0e0;
+    flex-shrink: 0;
 }
 
 .stat-info {
     display: flex;
     flex-direction: column;
+    gap: 0.5rem;
 }
 
 .stat-value {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #333;
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #1a1a1a;
+    line-height: 1;
 }
 
 .stat-label {
-    font-size: 0.85rem;
-    color: #888;
+    font-size: 1rem;
+    color: #333;
+    font-weight: 600;
 }
 
 /* Orders Section */
 .orders-section {
     background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border: 2px solid #f0f0f0;
 }
 
 .section-header {
@@ -159,51 +160,64 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
 }
 
 .section-header h2 {
-    font-size: 1.25rem;
-    color: #333;
+    font-size: 1.5rem;
+    color: #1a1a1a;
     margin: 0;
+    font-weight: 700;
 }
 
 .order-count {
-    background: #f0f0f0;
-    color: #666;
-    padding: 0.25rem 0.75rem;
+    background: #FF6B35;
+    color: white;
+    padding: 0.4rem 1rem;
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
+    font-weight: 600;
 }
 
 /* Empty State */
 .empty-orders {
     text-align: center;
-    padding: 3rem;
-    color: #888;
+    padding: 4rem;
+    color: #666;
 }
 
 .empty-orders svg {
     color: #28a745;
     margin-bottom: 1rem;
+    opacity: 0.8;
+}
+
+.empty-orders p {
+    font-size: 1.1rem;
+    font-weight: 500;
 }
 
 /* Orders Grid */
 .orders-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
 }
 
 .order-card {
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 1.25rem;
-    border: 1px solid #e9ecef;
-    transition: border-color 0.2s;
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 2px solid #e0e0e0;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .order-card:hover {
     border-color: #FF6B35;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
 .order-header {
@@ -214,10 +228,10 @@
 }
 
 .order-number {
-    font-weight: 700;
+    font-weight: 800;
     font-family: monospace;
-    font-size: 1rem;
-    color: #333;
+    font-size: 1.1rem;
+    color: #1a1a1a;
 }
 
 .order-status {
@@ -246,13 +260,14 @@
 
 .order-customer strong {
     display: block;
-    color: #333;
-    font-size: 0.95rem;
+    color: #1a1a1a;
+    font-size: 1rem;
+    font-weight: 700;
 }
 
 .order-customer span {
-    color: #666;
-    font-size: 0.85rem;
+    color: #555;
+    font-size: 0.9rem;
 }
 
 .order-items {
@@ -278,9 +293,9 @@
 }
 
 .order-total {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #333;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #1a1a1a;
     margin-bottom: 0.75rem;
 }
 
@@ -291,17 +306,18 @@
 
 .action-btn {
     flex: 1;
-    padding: 0.5rem;
+    padding: 0.75rem;
     border: none;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 600;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.2s;
 }
 
 .action-btn:hover {
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .action-btn.confirm {

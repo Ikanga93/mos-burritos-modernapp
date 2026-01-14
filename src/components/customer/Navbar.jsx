@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ShoppingCart, User, Menu as MenuIcon, X, LogOut } from 'lucide-react'
+import { ShoppingCart, User, Menu as MenuIcon, X, LogOut, Home, UtensilsCrossed, MapPin, Info, Truck } from 'lucide-react'
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext'
 import { useCart } from '../../contexts/CartContext'
 import './Navbar.css'
@@ -34,7 +34,7 @@ const Navbar = () => {
   const closeMenu = () => setIsMenuOpen(false)
 
   return (
-    <nav className="customer-navbar">
+    <nav className={`customer-navbar ${isScrolled ? 'navbar-scrolled' : ''}`}>
       <div className="navbar-container">
         {/* Logo */}
         <Link to="/" className="navbar-logo" onClick={closeMenu}>
@@ -75,19 +75,6 @@ const Navbar = () => {
             </Link>
           )}
 
-          {/* User Menu */}
-          {isAuthenticated ? (
-            <button className="navbar-logout-btn" onClick={handleLogout}>
-              <LogOut size={20} />
-              <span>Logout</span>
-            </button>
-          ) : (
-            <Link to="/login" className="navbar-login-btn" onClick={closeMenu}>
-              <User size={20} />
-              <span>Login</span>
-            </Link>
-          )}
-
           {/* Mobile Menu Toggle */}
           <button
             className="navbar-menu-toggle"
@@ -99,44 +86,55 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Vertical Icon Menu */}
       {isMenuOpen && (
-        <div className="navbar-mobile-menu">
+        <div className="navbar-icon-menu">
           {isAuthenticated ? (
             <>
-              {/* Logged-in user mobile links */}
-              <Link to="/menu" className="mobile-menu-link" onClick={closeMenu}>
-                Menu
+              {/* Logged-in user icon menu */}
+              <Link to="/menu" className="icon-menu-item" onClick={closeMenu}>
+                <UtensilsCrossed size={24} />
+                <span className="icon-label">Menu</span>
               </Link>
-              <Link to="/my-orders" className="mobile-menu-link" onClick={closeMenu}>
-                My Orders
+              <Link to="/my-orders" className="icon-menu-item" onClick={closeMenu}>
+                <ShoppingCart size={24} />
+                <span className="icon-label">Orders</span>
               </Link>
-              <Link to="/profile" className="mobile-menu-link" onClick={closeMenu}>
-                Profile
+              <Link to="/profile" className="icon-menu-item" onClick={closeMenu}>
+                <User size={24} />
+                <span className="icon-label">Profile</span>
               </Link>
-              <div className="mobile-menu-divider"></div>
-              <button className="mobile-menu-link logout-link" onClick={handleLogout}>
-                <LogOut size={16} />
-                Logout
+              <button className="icon-menu-item logout-icon" onClick={handleLogout}>
+                <LogOut size={24} />
+                <span className="icon-label">Logout</span>
               </button>
             </>
           ) : (
             <>
-              {/* Public mobile links */}
-              <Link to="/" className="mobile-menu-link" onClick={closeMenu}>
-                Home
+              {/* Public icon menu */}
+              <Link to="/" className="icon-menu-item" onClick={closeMenu}>
+                <Home size={24} />
+                <span className="icon-label">Home</span>
               </Link>
-              <Link to="/menu" className="mobile-menu-link" onClick={closeMenu}>
-                Menu
+              <Link to="/menu" className="icon-menu-item" onClick={closeMenu}>
+                <UtensilsCrossed size={24} />
+                <span className="icon-label">Menu</span>
               </Link>
-              <Link to="/location" className="mobile-menu-link" onClick={closeMenu}>
-                Locations
+              <Link to="/location" className="icon-menu-item" onClick={closeMenu}>
+                <MapPin size={24} />
+                <span className="icon-label">Locations</span>
               </Link>
-              <Link to="/about" className="mobile-menu-link" onClick={closeMenu}>
-                About
+              <Link to="/about" className="icon-menu-item" onClick={closeMenu}>
+                <Info size={24} />
+                <span className="icon-label">About</span>
               </Link>
-              <Link to="/catering" className="mobile-menu-link" onClick={closeMenu}>
-                Catering
+              <Link to="/catering" className="icon-menu-item" onClick={closeMenu}>
+                <Truck size={24} />
+                <span className="icon-label">Catering</span>
+              </Link>
+              <Link to="/login" className="icon-menu-item" onClick={closeMenu}>
+                <User size={24} />
+                <span className="icon-label">Login</span>
               </Link>
             </>
           )}
