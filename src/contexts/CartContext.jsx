@@ -84,12 +84,17 @@ export const CartProvider = ({ children }) => {
 
   // Validate location - can't mix items from different locations
   const validateLocation = useCallback((newLocationId) => {
+    // If cart is empty, always allow any location
+    if (items.length === 0) {
+      return { valid: true }
+    }
+
     if (!locationId) {
       // No location set yet, allow
       return { valid: true }
     }
 
-    if (locationId !== newLocationId) {
+    if (String(locationId) !== String(newLocationId)) {
       // Different location, not allowed
       return {
         valid: false,
@@ -98,7 +103,7 @@ export const CartProvider = ({ children }) => {
     }
 
     return { valid: true }
-  }, [locationId])
+  }, [locationId, items.length])
 
   // Compare options to check if two items have the same customizations
   const optionsMatch = (options1, options2) => {
@@ -129,6 +134,9 @@ export const CartProvider = ({ children }) => {
     // Use item's location_id, or fallback to current selected location
     const itemLocationId = item.location_id || (locationContext?.selectedLocation?.id)
     
+    console.log('[Cart] Adding item:', item.name, 'Location ID:', itemLocationId);
+    console.log('[Cart] Current Cart Location ID:', locationId, 'Items count:', items.length);
+
     if (!itemLocationId) {
       return { success: false, error: 'No location selected. Please choose a location first.' }
     }
@@ -136,6 +144,7 @@ export const CartProvider = ({ children }) => {
     const validation = validateLocation(itemLocationId)
 
     if (!validation.valid) {
+      console.warn('[Cart] Location validation failed:', validation.message);
       return { success: false, error: validation.message }
     }
 
@@ -168,13 +177,14 @@ export const CartProvider = ({ children }) => {
       }
     })
 
-    // Set location if not already set
-    if (!locationId) {
+    // Set location if not already set or if cart is becoming non-empty
+    if (!locationId || items.length === 0) {
+      console.log('[Cart] Updating Cart Location ID to:', itemLocationId);
       setLocationId(itemLocationId)
     }
 
     return { success: true }
-  }, [locationId, validateLocation, locationContext?.selectedLocation])
+  }, [locationId, items.length, validateLocation, locationContext?.selectedLocation])
 
   // Remove item from cart (by cart_id or menu_item_id)
   const removeItem = useCallback((itemId) => {
