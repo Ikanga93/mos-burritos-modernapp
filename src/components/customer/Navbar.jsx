@@ -38,8 +38,8 @@ const Navbar = () => {
       <div className="navbar-container">
         {/* Logo */}
         <Link to="/" className="navbar-logo" onClick={closeMenu}>
-          <img src="/images/logo/bobos-logo.jpg" alt="Bobo's Barbecue" />
-          <span className="navbar-logo-text">Bobo's Barbecue</span>
+          <img src="/images/logo/burritos-logo.png" alt="Mo's Burritos" />
+          <span className="navbar-logo-text">Mo's Burritos</span>
         </Link>
 
         {/* Desktop Navigation */}

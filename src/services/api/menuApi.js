@@ -109,11 +109,7 @@ export const menuApi = {
   uploadMenuImage: async (itemId, file) => {
     const formData = new FormData()
     formData.append('file', file)
-    const response = await adminClient.post(`/menu/items/${itemId}/upload-image`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
+    const response = await adminClient.post(`/menu/items/${itemId}/upload-image`, formData)
     return response.data
   },
 

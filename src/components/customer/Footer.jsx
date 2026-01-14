@@ -11,9 +11,9 @@ const Footer = () => {
       <div className="footer-container">
         {/* About Section */}
         <div className="footer-section">
-          <h3>Bobo's Barbecue</h3>
+          <h3>Mo's Burritos</h3>
           <p>
-            Serving authentic and delicious barbecue in Champaign-Urbana.
+            Serving authentic and delicious burritos in Champaign-Urbana since day one.
             Fresh ingredients, bold flavors, and a passion for great food.
           </p>
           <div className="footer-social">

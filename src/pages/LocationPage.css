@@ -44,16 +44,16 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background: #2d2d2d;
-  color: white;
+  background: rgba(255, 255, 255, 0.95);
+  color: #2E7D32;
   border: none;
   padding: 0.75rem 1.25rem;
-  border-radius: 12px;
+  border-radius: 50px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* Move Leaflet Zoom Controls to align with back button */
@@ -63,9 +63,9 @@
 }
 
 .map-back-button:hover {
-  background: #1a1a1a;
+  background: white;
   transform: translateX(-5px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
 .map-back-button span {
@@ -73,8 +73,7 @@
 }
 
 .location-hero {
-  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
-  /* Dark charcoal background */
+  background: linear-gradient(135deg, var(--cream) 0%, #FFF3E0 50%, var(--warm-yellow) 100%);
   padding: 60px 0;
   position: relative;
 }
@@ -86,9 +85,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: url('/images/pattern-overlay.png');
-  /* If exists, otherwise subtle texture */
-  opacity: 0.05;
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(211, 47, 47, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(56, 142, 60, 0.1) 0%, transparent 50%);
 }
 
 .location-hero .container {
@@ -100,7 +99,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #D32F2F;
+  color: var(--primary-red);
   text-decoration: none;
   font-weight: 500;
   margin-bottom: 30px;
@@ -108,21 +107,21 @@
 }
 
 .back-link:hover {
-  color: white;
+  color: var(--dark-brown);
   transform: translateX(-5px);
 }
 
 .location-page-title {
   font-size: 3.5rem;
   font-weight: 700;
-  color: white;
+  color: var(--dark-brown);
   text-align: center;
   margin-bottom: 20px;
 }
 
 .location-page-subtitle {
   font-size: 1.3rem;
-  color: #ccc;
+  color: var(--text-light);
   text-align: center;
   max-width: 600px;
   margin: 0 auto;
@@ -135,12 +134,11 @@
 }
 
 .today-card {
-  background: linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);
-  /* Premium Red Gradient */
+  background: linear-gradient(135deg, var(--primary-red), #E57373);
   color: white;
-  border-radius: 24px;
+  border-radius: 25px;
   padding: 40px;
-  box-shadow: 0 15px 40px rgba(211, 47, 47, 0.25);
+  box-shadow: 0 15px 40px rgba(211, 47, 47, 0.3);
   position: relative;
   overflow: hidden;
 }
@@ -245,151 +243,70 @@
   background: rgba(255, 255, 255, 0.3) !important;
 }
 
-/* Live Locations Section (New functionality) */
-.live-locations {
-  background: #1a1a1a;
-  /* Dark background for contrast */
-  color: white;
-  padding: 4rem 0;
-  margin: 0;
-  border-top: 1px solid #333;
-}
-
-.live-locations-title {
-  font-size: 2.5rem;
-  font-weight: 800;
-  text-align: center;
-  margin-bottom: 0.5rem;
-  color: white;
-}
-
-.live-locations-subtitle {
-  text-align: center;
-  font-size: 1.2rem;
-  margin-bottom: 3rem;
-  opacity: 0.7;
-}
-
-.live-locations-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-  gap: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.live-location-card {
-  background: #2d2d2d;
-  border-radius: 16px;
-  padding: 2rem;
-  border: 1px solid #404040;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-}
-
-.live-location-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
-  border-color: #505050;
-}
-
-.live-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: #D32F2F;
-  color: white;
-  padding: 0.4rem 1rem;
-  border-radius: 50px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
-}
-
-.live-indicator {
-  color: white;
-  font-size: 0.8rem;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.5;
-  }
-
-  100% {
-    opacity: 1;
-  }
-}
-
-.live-truck-name {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0 0 1.5rem 0;
-  color: white;
-}
-
-.live-location-info .info-item {
-  color: #e0e0e0;
-}
-
 /* Weekly Schedule */
 .weekly-schedule {
   padding: 80px 0;
-  background: #f4f4f4;
+  background: #FAFAFA;
 }
 
 .schedule-title {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #2d2d2d;
+  color: var(--dark-brown);
   text-align: center;
   margin-bottom: 15px;
 }
 
 .schedule-subtitle {
   font-size: 1.2rem;
-  color: #666;
+  color: var(--text-light);
   text-align: center;
   margin-bottom: 50px;
 }
 
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+  margin-bottom: 60px;
+}
+
 .schedule-card {
   background: white;
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
-  border: 1px solid #e0e0e0;
+  border: 2px solid transparent;
 }
 
 .schedule-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-  border-color: #D32F2F;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border-color: var(--cream);
+}
+
+.schedule-card.today {
+  border-color: var(--primary-red);
+  box-shadow: 0 10px 30px rgba(211, 47, 47, 0.2);
 }
 
 .schedule-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #FFD700;
+  padding-bottom: 0.5rem;
 }
 
 .location-type {
-  background: #2d2d2d;
+  background: var(--dark-brown);
   color: white;
-  padding: 6px 14px;
-  border-radius: 50px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
   text-transform: capitalize;
 }
 

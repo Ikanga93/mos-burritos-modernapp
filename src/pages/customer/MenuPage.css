@@ -1,13 +1,8 @@
-/* Menu Page - Bobo's Barbecue Styling */
 .menu-page {
   position: relative;
   padding-bottom: 6rem;
   max-width: 1400px;
   margin: 0 auto;
-  background-color: #f8f5f2;
-  /* Warm off-white background */
-  font-family: 'Rubik', sans-serif;
-  /* Example font if available, fallback to inherited */
 }
 
 /* Header Section with Back Button */
@@ -16,7 +11,6 @@
   align-items: center;
   gap: 1rem;
   margin-bottom: 1.5rem;
-  padding: 1rem 0;
 }
 
 /* Back Button */
@@ -27,58 +21,49 @@
   width: 44px;
   height: 44px;
   background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s;
   flex-shrink: 0;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  color: #2d2d2d;
 }
 
 .back-btn:hover {
-  border-color: #D32F2F;
-  color: #D32F2F;
-  /* Barbecue Red */
+  border-color: #FF6B35;
+  color: #FF6B35;
   transform: translateX(-3px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Empty States */
 .menu-empty-state {
   text-align: center;
   padding: 4rem 2rem;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  margin: 2rem 0;
 }
 
 .menu-empty-state h2,
 .menu-empty-state h3 {
-  color: #2d2d2d;
+  color: #333;
   margin-bottom: 0.75rem;
-  font-weight: 700;
 }
 
 .menu-empty-state p {
   color: #666;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
 }
 
 /* Category Tabs */
 .category-tabs {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.625rem;
   margin-bottom: 2.5rem;
   overflow-x: auto;
-  padding: 0.75rem 0.5rem;
+  padding: 0.5rem 0;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
 }
 
 .category-tabs::-webkit-scrollbar {
-  height: 6px;
+  height: 5px;
 }
 
 .category-tabs::-webkit-scrollbar-track {
@@ -86,60 +71,63 @@
 }
 
 .category-tabs::-webkit-scrollbar-thumb {
-  background: #ccc;
+  background: #ddd;
   border-radius: 10px;
+}
+
+.category-tabs::-webkit-scrollbar-thumb:hover {
+  background: #bbb;
 }
 
 .category-tab {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
+  padding: 0.625rem 1.25rem;
   background: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 50px;
-  color: #555;
+  border: 2px solid #e0e0e0;
+  border-radius: 30px;
+  color: #666;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .category-tab:hover {
-  border-color: #D32F2F;
-  color: #D32F2F;
+  border-color: #FF6B35;
+  color: #FF6B35;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.15);
+  box-shadow: 0 4px 8px rgba(255, 107, 53, 0.15);
 }
 
 .category-tab.active {
-  background: #D32F2F;
-  /* Barbecue Red */
-  border-color: #D32F2F;
+  background: linear-gradient(135deg, #FF6B35 0%, #e55a2b 100%);
+  border-color: #FF6B35;
   color: white;
-  box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
 }
 
 .category-emoji {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
 }
 
 /* Menu Grid - Responsive grid layout */
 .menu-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 3rem;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
   padding: 0.5rem 0;
 }
 
 @media (min-width: 1200px) {
   .menu-grid {
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
   }
 }
 
@@ -148,10 +136,9 @@
   position: fixed;
   bottom: 2rem;
   right: 2rem;
-  width: 60px;
-  height: 60px;
-  background: #2d2d2d;
-  /* Charcoal */
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #FF6B35 0%, #e55a2b 100%);
   color: white;
   border: none;
   border-radius: 50%;
@@ -159,22 +146,21 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
   z-index: 100;
   transition: all 0.3s;
 }
 
 .floating-cart-btn:hover {
-  transform: scale(1.05);
-  background: #1a1a1a;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.5);
 }
 
 .cart-count {
   position: absolute;
-  top: -2px;
-  right: -2px;
-  background: #D32F2F;
+  top: -4px;
+  right: -4px;
+  background: #dc3545;
   color: white;
   border-radius: 50%;
   width: 24px;
@@ -184,7 +170,7 @@
   justify-content: center;
   font-size: 0.75rem;
   font-weight: 700;
-  border: 2px solid #2d2d2d;
+  border: 2px solid white;
 }
 
 /* View Cart Button (Desktop) */
@@ -194,38 +180,32 @@
   left: 0;
   right: 0;
   background: white;
-  padding: 1.5rem;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
   z-index: 100;
   display: none;
-  border-top: 1px solid #eee;
 }
 
 .view-cart-btn {
   width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 1rem 1.5rem;
-  background: #2d2d2d;
-  /* Charcoal */
+  gap: 0.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #FF6B35 0%, #e55a2b 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 1.1rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .view-cart-btn:hover {
   transform: translateY(-2px);
-  background: #1a1a1a;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
 }
 
 @media (min-width: 769px) {

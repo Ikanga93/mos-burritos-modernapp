@@ -524,8 +524,9 @@ const AdminMenuPage = () => {
                                             </button>
                                         </div>
                                     ) : (
-                                        <label className="image-upload-label">
+                                        <label htmlFor="menu-item-image" className="image-upload-label">
                                             <input
+                                                id="menu-item-image"
                                                 type="file"
                                                 accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
                                                 onChange={handleImageSelect}

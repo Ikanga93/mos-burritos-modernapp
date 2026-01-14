@@ -8,7 +8,7 @@ import base64
 import uuid
 
 from ..database import get_db
-from ..models import Location, MenuCategory, MenuItem, User
+from ..models import Location, MenuCategory, MenuItem
 from ..models.menu import MenuItemOptionGroup, MenuItemOption
 from ..schemas import (
     CategoryCreate,
@@ -18,11 +18,9 @@ from ..schemas import (
     MenuItemUpdate,
     MenuItemResponse,
     CategoryWithItems,
-    LocationMenu,
-    UserRole
+    LocationMenu
 )
-from ..middleware import get_current_user, require_manager_or_above
-from ..services import can_access_location
+
 
 router = APIRouter(prefix="/menu", tags=["Menu"])
 
@@ -127,18 +125,9 @@ async def get_categories(location_id: str, db: Session = Depends(get_db)):
 @router.post("/categories", response_model=CategoryResponse)
 async def create_category(
     category_data: CategoryCreate,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create a new category (manager or above for their location)"""
-    # Check permissions
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, category_data.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
-    
+    """Create a new category (public)"""
     # Verify location exists
     location = db.query(Location).filter(Location.id == category_data.location_id).first()
     if not location:
@@ -159,7 +148,6 @@ async def create_category(
 async def update_category(
     category_id: str,
     category_data: CategoryUpdate,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Update a category"""
@@ -170,14 +158,6 @@ async def update_category(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Category not found"
         )
-    
-    # Check permissions
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, category.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
     
     update_data = category_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -192,7 +172,6 @@ async def update_category(
 @router.delete("/categories/{category_id}")
 async def delete_category(
     category_id: str,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Delete a category (soft delete)"""
@@ -203,14 +182,6 @@ async def delete_category(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Category not found"
         )
-    
-    # Check permissions
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, category.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
     
     category.is_active = False
     db.commit()
@@ -239,18 +210,9 @@ async def get_menu_items(
 @router.post("/items", response_model=MenuItemResponse)
 async def create_menu_item(
     item_data: MenuItemCreate,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Create a new menu item"""
-    # Check permissions
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, item_data.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
-    
     # Verify category exists and belongs to the location
     category = db.query(MenuCategory).filter(
         MenuCategory.id == item_data.category_id,
@@ -275,7 +237,6 @@ async def create_menu_item(
 async def update_menu_item(
     item_id: str,
     item_data: MenuItemUpdate,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Update a menu item"""
@@ -286,14 +247,6 @@ async def update_menu_item(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Menu item not found"
         )
-    
-    # Check permissions
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, item.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
     
     update_data = item_data.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -308,7 +261,6 @@ async def update_menu_item(
 @router.delete("/items/{item_id}")
 async def delete_menu_item(
     item_id: str,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Delete a menu item (sets unavailable)"""
@@ -320,14 +272,6 @@ async def delete_menu_item(
             detail="Menu item not found"
         )
     
-    # Check permissions
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, item.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
-    
     item.is_available = False
     db.commit()
     
@@ -337,7 +281,6 @@ async def delete_menu_item(
 @router.patch("/items/{item_id}/toggle")
 async def toggle_item_availability(
     item_id: str,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Toggle menu item availability (quick action for staff)"""
@@ -348,14 +291,6 @@ async def toggle_item_availability(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Menu item not found"
         )
-    
-    # Check permissions
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, item.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
     
     item.is_available = not item.is_available
     db.commit()
@@ -369,7 +304,6 @@ async def toggle_item_availability(
 async def upload_menu_item_image(
     item_id: str,
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Upload image for menu item
@@ -384,14 +318,6 @@ async def upload_menu_item_image(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Menu item not found"
         )
-
-    # Check permissions
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, item.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
 
     # Validate file type
     allowed_types = ["image/jpeg", "image/png", "image/jpg", "image/webp", "image/avif"]
@@ -459,7 +385,6 @@ async def get_item_option_groups(
 async def create_option_group(
     item_id: str,
     group_data: dict,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Create an option group for a menu item"""
@@ -470,14 +395,6 @@ async def create_option_group(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Menu item not found"
         )
-
-    # Check permissions
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, item.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
 
     # Create option group
     new_group = MenuItemOptionGroup(
@@ -513,7 +430,6 @@ async def create_option_group(
 async def update_option_group(
     group_id: str,
     group_data: dict,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Update an option group"""
@@ -524,15 +440,6 @@ async def update_option_group(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Option group not found"
         )
-
-    # Get menu item to check permissions
-    item = db.query(MenuItem).filter(MenuItem.id == group.menu_item_id).first()
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, item.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
 
     # Update group fields
     if "name" in group_data:
@@ -556,7 +463,6 @@ async def update_option_group(
 @router.delete("/option-groups/{group_id}")
 async def delete_option_group(
     group_id: str,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Delete an option group and all its options"""
@@ -567,15 +473,6 @@ async def delete_option_group(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Option group not found"
         )
-
-    # Get menu item to check permissions
-    item = db.query(MenuItem).filter(MenuItem.id == group.menu_item_id).first()
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, item.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
 
     # Delete will cascade to options
     db.delete(group)
@@ -590,7 +487,6 @@ async def delete_option_group(
 async def create_option(
     group_id: str,
     option_data: dict,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Add an option to an option group"""
@@ -601,15 +497,6 @@ async def create_option(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Option group not found"
         )
-
-    # Check permissions
-    item = db.query(MenuItem).filter(MenuItem.id == group.menu_item_id).first()
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, item.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
 
     new_option = MenuItemOption(
         option_group_id=group_id,
@@ -628,7 +515,6 @@ async def create_option(
 @router.delete("/options/{option_id}")
 async def delete_option(
     option_id: str,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Delete an individual option"""
@@ -639,16 +525,6 @@ async def delete_option(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Option not found"
         )
-
-    # Check permissions
-    group = db.query(MenuItemOptionGroup).filter(MenuItemOptionGroup.id == option.option_group_id).first()
-    item = db.query(MenuItem).filter(MenuItem.id == group.menu_item_id).first()
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, item.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
 
     db.delete(option)
     db.commit()

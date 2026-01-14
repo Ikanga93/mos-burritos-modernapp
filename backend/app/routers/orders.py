@@ -18,10 +18,9 @@ from ..schemas import (
     DashboardStats,
     OrderStatus,
     PaymentStatus,
-    UserRole
+    PaymentStatus
 )
-from ..middleware import get_current_user, require_staff_or_above
-from ..services import can_access_location, get_user_locations
+from ..middleware import get_current_user
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -101,20 +100,9 @@ async def get_orders(
     customer_id: Optional[str] = None,
     status_filter: Optional[OrderStatus] = None,
     limit: int = 50,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get orders (filtered by user's accessible locations)"""
-    # Determine which locations user can access
-    if current_user.role.value == UserRole.OWNER.value:
-        # Owner sees all
-        accessible_locations = None
-    else:
-        # Staff/managers see only their assigned locations
-        accessible_locations = get_user_locations(db, current_user.id)
-        if not accessible_locations:
-            return []
-
+    """Get orders (public for admin dashboard)"""
     query = db.query(Order)
 
     # Filter by customer ID
@@ -123,15 +111,7 @@ async def get_orders(
 
     # Filter by location
     if location_id:
-        # Check if user can access this specific location
-        if accessible_locations and location_id not in accessible_locations:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
         query = query.filter(Order.location_id == location_id)
-    elif accessible_locations:
-        query = query.filter(Order.location_id.in_(accessible_locations))
 
     # Filter by status
     if status_filter:
@@ -190,10 +170,9 @@ async def get_order(
 async def update_order_status_patch(
     order_id: str,
     status_update: OrderStatusUpdate,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Update order status - PATCH method (staff or above for their locations)"""
+    """Update order status - PATCH method (public)"""
     order = db.query(Order).filter(Order.id == order_id).first()
 
     if not order:
@@ -201,14 +180,6 @@ async def update_order_status_patch(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Order not found"
         )
-
-    # Check permissions
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, order.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this order's location"
-            )
 
     # Update status
     old_status = order.status
@@ -222,7 +193,7 @@ async def update_order_status_patch(
     status_history = OrderStatusHistory(
         order_id=order.id,
         status=order.status,
-        changed_by=current_user.id,
+        changed_by=None,
         notes=status_update.notes or f"Status changed from {old_status.value} to {order.status.value}"
     )
     db.add(status_history)
@@ -237,19 +208,17 @@ async def update_order_status_patch(
 async def update_order_status_put(
     order_id: str,
     status_update: OrderStatusUpdate,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Update order status - PUT method (staff or above for their locations)"""
+    """Update order status - PUT method (public)"""
     # Same implementation as PATCH
-    return await update_order_status_patch(order_id, status_update, current_user, db)
+    return await update_order_status_patch(order_id, status_update, db)
 
 
 @router.patch("/{order_id}/payment", response_model=OrderResponse)
 async def update_payment_status(
     order_id: str,
     payment_status: PaymentStatus,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Update payment status for an order"""
@@ -260,14 +229,6 @@ async def update_payment_status(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Order not found"
         )
-
-    # Check permissions
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, order.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this order's location"
-            )
 
     order.payment_status = payment_status
     db.commit()
@@ -280,7 +241,6 @@ async def update_payment_status(
 async def reset_order_to_cooking(
     order_id: str,
     estimated_time: int = 15,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Reset order to preparing status with custom estimated time"""
@@ -292,14 +252,6 @@ async def reset_order_to_cooking(
             detail="Order not found"
         )
 
-    # Check permissions
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, order.location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this order's location"
-            )
-
     # Reset order status
     order.status = ModelOrderStatus.PREPARING
     order.estimated_time = estimated_time
@@ -310,7 +262,7 @@ async def reset_order_to_cooking(
     status_history = OrderStatusHistory(
         order_id=order.id,
         status=ModelOrderStatus.PREPARING,
-        changed_by=current_user.id,
+        changed_by=None,
         notes=f"Order reset to cooking with {estimated_time} minutes estimated time"
     )
     db.add(status_history)
@@ -336,8 +288,7 @@ async def cancel_order(
     """
     Cancel an order
     - Customers can cancel their own orders if status is PENDING or CONFIRMED
-    - Staff/Admin can cancel any order at any time
-    - Guest customers can cancel via order ID (if they have it)
+    - Admin (public) can cancel any order at any time
     """
     order = db.query(Order).filter(Order.id == order_id).first()
 
@@ -360,33 +311,20 @@ async def cancel_order(
             detail="Cannot cancel a completed order"
         )
 
-    # Permission checks
-    is_staff = False
-    is_owner = False
+    # Permission checks for CUSTOMERS ONLY
+    # If a user is logged in, we check if they own the order
+    # If no user is logged in, we assume it's an admin/public action (dashboard)
     
     if current_user:
-        # Check if user is staff/admin/owner
-        is_staff = current_user.role.value in [UserRole.STAFF.value, UserRole.ADMIN.value, UserRole.OWNER.value]
+        # Check if user is acting as a customer
         is_owner = order.customer_id == current_user.id
         
-        # Staff can cancel any order
-        if is_staff:
-            # Check location access for staff/admin
-            if current_user.role.value != UserRole.OWNER.value:
-                if not can_access_location(db, current_user, order.location_id):
-                    raise HTTPException(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        detail="You don't have access to cancel orders for this location"
-                    )
-        # Customers can only cancel their own orders
-        elif not is_owner:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You can only cancel your own orders"
-            )
+        # If user is logged in but NOT the owner and NOT making an authenticated admin request (which we've mostly removed)
+        # We can treat them as a customer. 
+        # Ideally, we'd rely on the "public" nature of the dashboard now.
+        # But if they ARE logged in as a customer, we enforce customer rules.
         
-        # Customers can only cancel if order is in early stages
-        if is_owner and not is_staff:
+        if is_owner:
             if order.status not in [ModelOrderStatus.PENDING, ModelOrderStatus.CONFIRMED]:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -401,10 +339,8 @@ async def cancel_order(
     # Determine cancellation notes
     if reason:
         notes = reason
-    elif current_user and is_staff:
-        notes = f"Order cancelled by staff ({current_user.email})"
-    elif current_user and is_owner:
-        notes = f"Order cancelled by customer ({current_user.email})"
+    elif current_user:
+        notes = f"Order cancelled by user ({current_user.email})"
     else:
         notes = "Order cancelled"
 
@@ -426,17 +362,11 @@ async def cancel_order(
 @router.delete("/{order_id}")
 async def delete_order(
     order_id: str,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Delete an order (owner only - soft delete by setting cancelled status)"""
-    # Only owners can delete orders
-    if current_user.role.value != UserRole.OWNER.value:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only owners can delete orders"
-        )
-
+    """Delete an order (public - soft delete by setting cancelled status)"""
+    # NOTE: Making this public creates a risk of abuse, but aligns with request for no-auth dashboard
+    
     order = db.query(Order).filter(Order.id == order_id).first()
 
     if not order:
@@ -453,8 +383,8 @@ async def delete_order(
     status_history = OrderStatusHistory(
         order_id=order.id,
         status=ModelOrderStatus.CANCELLED,
-        changed_by=current_user.id,
-        notes="Order deleted by owner"
+        changed_by=None,
+        notes="Order deleted"
     )
     db.add(status_history)
 
@@ -466,18 +396,9 @@ async def delete_order(
 @router.get("/dashboard/{location_id}", response_model=DashboardStats)
 async def get_dashboard_stats(
     location_id: str,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get dashboard statistics for a location"""
-    # Check permissions
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
-    
     location = db.query(Location).filter(Location.id == location_id).first()
     if not location:
         raise HTTPException(

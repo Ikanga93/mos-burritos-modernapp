@@ -6,16 +6,18 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from ..database import get_db
-from ..models import Location, User, UserLocation
+from ..models import (
+    Location,
+    UserLocation,
+    User,
+)
 from ..schemas import (
     LocationCreate,
     LocationUpdate,
     LocationResponse,
-    LocationWithStats,
-    UserRole
+    LocationWithStats
 )
-from ..middleware import get_current_user, require_owner, require_manager_or_above
-from ..services import can_access_location
+
 
 router = APIRouter(prefix="/locations", tags=["Locations"])
 
@@ -121,17 +123,10 @@ async def delete_location(
 @router.get("/{location_id}/staff", response_model=List[dict])
 async def get_location_staff(
     location_id: str,
-    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get staff assigned to a location"""
-    # Check permissions
-    if current_user.role.value != UserRole.OWNER.value:
-        if not can_access_location(db, current_user, location_id):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this location"
-            )
+    # No permission check needed per request
     
     assignments = db.query(UserLocation).filter(
         UserLocation.location_id == location_id,

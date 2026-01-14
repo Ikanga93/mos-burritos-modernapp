@@ -7,8 +7,8 @@ const Hero = () => {
     <section id="home" className="hero">
       <div className="hero-background">
         <img
-          src="/images/hero/hero2.JPG"
-          alt="Bobo's Barbecue Food"
+          src="/images/hero/new-location-mos-burritos.PNG"
+          alt="Mo's Burritos Food"
           className="hero-bg-image"
         />
       </div>
@@ -18,10 +18,10 @@ const Hero = () => {
         <div className="hero-content">
           <div className="hero-text">
             <h1 className="hero-title">
-              Now Open: <span>Bobo's Barbecue!</span>
+              Now Open: <span>Mo's Burritos Bar & Grill!</span>
             </h1>
             <p className="hero-subtitle">
-              Our new full-service restaurant is now open! Enjoy breakfast, lunch, dinner & late night eats with margaritas, craft cocktails, and your favorite barbecue specialties. Open daily from 7 AM until late!
+              Our new full-service restaurant is now open! Enjoy breakfast, lunch, dinner & late night eats with margaritas, craft cocktails, and your favorite Salvadoran specialties. Open daily from 7 AM until late!
             </p>
 
             <div className="hero-buttons">

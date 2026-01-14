@@ -39,14 +39,14 @@ export const createCustomerClient = () => {
   client.interceptors.request.use(
     async (config) => {
       let token = null
-      
+
       if (isSupabaseEnabled()) {
         const session = await getSupabaseSession()
         if (session?.access_token) {
           token = session.access_token
         }
       }
-      
+
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
       }
@@ -74,7 +74,7 @@ export const createCustomerClient = () => {
               return client(originalRequest)
             }
           }
-          
+
           // If no session after refresh or Supabase not enabled
           window.location.href = '/login'
           return Promise.reject(error)
@@ -103,35 +103,8 @@ export const createAdminClient = () => {
     }
   })
 
-  // Request interceptor - add access token
-  client.interceptors.request.use(
-    async (config) => {
-      let token = null
-      
-      if (isSupabaseEnabled()) {
-        const session = await getSupabaseSession()
-        if (session?.access_token) {
-          token = session.access_token
-        }
-      }
-      
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-        console.log(`[Admin API] Making request to ${config.url} with token: ${token.substring(0, 20)}...`)
-      } else {
-        console.warn(`[Admin API] No token available for request to ${config.url}`)
-      }
-      return config
-    },
-    (error) => Promise.reject(error)
-  )
-
-  // Response interceptor - handle 401 errors (token expired)
   // No authentication required for admin routes
-  client.interceptors.response.use(
-    (response) => response,
-    (error) => Promise.reject(error)
-  )
+  // We simply return the client without adding any auth tokens
 
   return client
 }
