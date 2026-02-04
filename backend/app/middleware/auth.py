@@ -45,17 +45,30 @@ async def get_current_user(
         raise credentials_exception
     
     print(f"[AUTH] Supabase token valid for user: {supabase_user.get('email')}")
-    
-    # Find user by supabase_id or email/phone
-    user = db.query(User).filter(
-        (User.supabase_id == supabase_user["id"]) |
-        (User.email == supabase_user.get("email")) |
-        (User.phone == supabase_user.get("phone"))
-    ).first()
-    
+
+    # Find user by supabase_id FIRST (most reliable)
+    user = db.query(User).filter(User.supabase_id == supabase_user["id"]).first()
+
+    # If not found by supabase_id, try email (for legacy users)
+    if not user and supabase_user.get("email"):
+        user = db.query(User).filter(User.email == supabase_user.get("email")).first()
+        if user and not user.supabase_id:
+            # Link existing user to Supabase account
+            print(f"[AUTH] Linking existing user to Supabase ID: {user.email}")
+            user.supabase_id = supabase_user["id"]
+            db.commit()
+
+    # If not found by email, try phone (for phone auth users)
+    if not user and supabase_user.get("phone"):
+        user = db.query(User).filter(User.phone == supabase_user.get("phone")).first()
+        if user and not user.supabase_id:
+            print(f"[AUTH] Linking existing phone user to Supabase ID: {user.phone}")
+            user.supabase_id = supabase_user["id"]
+            db.commit()
+
     # Auto-sync user from Supabase on first login
     if not user and (supabase_user.get("email") or supabase_user.get("phone")):
-        print(f"[AUTH] Auto-creating user from Supabase: {supabase_user.get('email')}")
+        print(f"[AUTH] Auto-creating user from Supabase: {supabase_user.get('email') or supabase_user.get('phone')}")
         user = User(
             supabase_id=supabase_user["id"],
             email=supabase_user.get("email"),
@@ -67,11 +80,6 @@ async def get_current_user(
         db.commit()
         db.refresh(user)
         print(f"[AUTH] User created successfully: {user.id}")
-    elif user and not user.supabase_id:
-        # Link existing user to Supabase account
-        print(f"[AUTH] Linking existing user to Supabase ID: {user.email}")
-        user.supabase_id = supabase_user["id"]
-        db.commit()
     
     if not user:
         print(f"[AUTH] User not found after Supabase validation")

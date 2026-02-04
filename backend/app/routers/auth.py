@@ -340,14 +340,21 @@ async def supabase_login(
     supabase_user = result["user"]
     session = result["session"]
 
-    # Find or create user in our database
-    user = db.query(User).filter(
-        (User.supabase_id == supabase_user["id"]) |
-        (User.email == supabase_user["email"])
-    ).first()
+    # Find user by supabase_id FIRST (most reliable)
+    user = db.query(User).filter(User.supabase_id == supabase_user["id"]).first()
 
+    # If not found by supabase_id, try email (for legacy users)
+    if not user and supabase_user.get("email"):
+        user = db.query(User).filter(User.email == supabase_user["email"]).first()
+        if user and not user.supabase_id:
+            # Link existing user to Supabase
+            print(f"[AUTH] Linking existing user to Supabase: {user.email}")
+            user.supabase_id = supabase_user["id"]
+            db.commit()
+
+    # If still not found, create new user
     if not user:
-        # Create new user
+        print(f"[AUTH] Creating new user from login: {supabase_user['email']}")
         user = User(
             supabase_id=supabase_user["id"],
             email=supabase_user["email"],
@@ -357,10 +364,6 @@ async def supabase_login(
         db.add(user)
         db.commit()
         db.refresh(user)
-    elif not user.supabase_id:
-        # Link existing user to Supabase
-        user.supabase_id = supabase_user["id"]
-        db.commit()
 
     return PhoneLoginResponse(
         user=user,
