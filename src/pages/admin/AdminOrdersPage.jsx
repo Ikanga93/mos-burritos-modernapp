@@ -37,6 +37,9 @@ const AdminOrdersPage = () => {
     const [cancelReason, setCancelReason] = useState('')
     const [isCancelling, setIsCancelling] = useState(false)
 
+    // Auto-refresh timer
+    const [currentTime, setCurrentTime] = useState(new Date())
+
 
     // Load locations
     useEffect(() => {
@@ -83,6 +86,22 @@ const AdminOrdersPage = () => {
         }
     }, [selectedLocation, selectedStatus])
 
+    // Auto-refresh every 30 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            loadOrders(true)
+        }, 30000)
+        return () => clearInterval(interval)
+    }, [selectedLocation, selectedStatus])
+
+    // Update current time every minute for elapsed time display
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentTime(new Date())
+        }, 60000)
+        return () => clearInterval(interval)
+    }, [])
+
     const handleRefresh = () => {
         loadOrders(true)
         showToast('Orders refreshed', 'success')
@@ -128,22 +147,48 @@ const AdminOrdersPage = () => {
     }
 
     const formatPrice = (price) => `$${parseFloat(price || 0).toFixed(2)}`
+
     const formatDate = (dateStr) => {
         const date = new Date(dateStr)
         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
     }
 
-    // Filter orders by search
-    const filteredOrders = orders.filter(order => {
-        if (!searchQuery) return true
-        const query = searchQuery.toLowerCase()
-        return (
-            order.id?.toLowerCase().includes(query) ||
-            order.customer_name?.toLowerCase().includes(query) ||
-            order.customer_email?.toLowerCase().includes(query) ||
-            order.customer_phone?.includes(query)
-        )
-    })
+    const getElapsedTime = (dateStr) => {
+        const date = new Date(dateStr)
+        const now = currentTime
+        const diffMs = now - date
+        const diffMins = Math.floor(diffMs / 60000)
+
+        if (diffMins < 1) return 'Just now'
+        if (diffMins < 60) return `${diffMins}m ago`
+        const diffHours = Math.floor(diffMins / 60)
+        if (diffHours < 24) return `${diffHours}h ago`
+        const diffDays = Math.floor(diffHours / 24)
+        return `${diffDays}d ago`
+    }
+
+    const getStatusPriority = (status) => {
+        const priorities = { pending: 0, confirmed: 1, preparing: 2, ready: 3, completed: 4, cancelled: 5 }
+        return priorities[status] || 999
+    }
+
+    // Filter and sort orders by search and status priority
+    const filteredOrders = orders
+        .filter(order => {
+            if (!searchQuery) return true
+            const query = searchQuery.toLowerCase()
+            return (
+                order.id?.toLowerCase().includes(query) ||
+                order.customer_name?.toLowerCase().includes(query) ||
+                order.customer_email?.toLowerCase().includes(query) ||
+                order.customer_phone?.includes(query)
+            )
+        })
+        .sort((a, b) => {
+            const priorityDiff = getStatusPriority(a.status) - getStatusPriority(b.status)
+            if (priorityDiff !== 0) return priorityDiff
+            return new Date(b.created_at) - new Date(a.created_at)
+        })
 
     if (isLoading) {
         return (
@@ -205,99 +250,116 @@ const AdminOrdersPage = () => {
                         {filteredOrders.map(order => {
                             const status = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending
                             const StatusIcon = status.icon
-                            const timeAgo = formatDate(order.created_at)
+                            const elapsedTime = getElapsedTime(order.created_at)
+                            const isUrgent = order.status === 'pending' && new Date() - new Date(order.created_at) > 5 * 60000
 
                             return (
-                                <div key={order.id} className={`order-card ${order.status}`}>
-                                    {/* Header: Order ID, Time, Status */}
+                                <div key={order.id} className={`order-card ${order.status} ${isUrgent ? 'urgent' : ''}`}>
+                                    {/* Status Badge - Prominent */}
+                                    <div className="order-status-banner" style={{ backgroundColor: status.color }}>
+                                        <StatusIcon size={20} />
+                                        <span>{status.label}</span>
+                                    </div>
+
+                                    {/* Header: Order ID and Time */}
                                     <div className="order-card-header">
                                         <div className="order-id-section">
+                                            <span className="order-id-label">Order</span>
                                             <span className="order-id">#{order.id?.slice(-6).toUpperCase()}</span>
-                                            <span className="order-time">
-                                                <Clock size={14} />
-                                                {timeAgo}
-                                            </span>
                                         </div>
-                                        <span className="status-pill" style={{ backgroundColor: status.color }}>
-                                            <StatusIcon size={14} />
-                                            {status.label}
-                                        </span>
+                                        <div className="order-time-section">
+                                            <Clock size={16} />
+                                            <span className="elapsed-time">{elapsedTime}</span>
+                                        </div>
                                     </div>
 
                                     {/* Customer Info */}
                                     <div className="order-customer">
                                         <div className="customer-detail">
-                                            <User size={16} />
-                                            <span>{order.customer_name}</span>
-                                        </div>
-                                        <div className="customer-detail">
-                                            <Phone size={16} />
-                                            <span>{order.customer_phone}</span>
+                                            <User size={18} />
+                                            <div className="customer-text">
+                                                <span className="customer-name">{order.customer_name}</span>
+                                                <span className="customer-phone">{order.customer_phone}</span>
+                                            </div>
                                         </div>
                                     </div>
 
                                     {/* Items */}
-                                    <div className="order-items-list">
-                                        {(order.items || []).map((item, idx) => (
-                                            <div key={idx} className="item-row">
-                                                <span className="item-qty">{item.quantity}x</span>
-                                                <span className="item-name">{item.name}</span>
-                                                <span className="item-price">{formatPrice(item.price * item.quantity)}</span>
-                                            </div>
-                                        ))}
+                                    <div className="order-items-section">
+                                        <div className="items-header">Items</div>
+                                        <div className="order-items-list">
+                                            {(order.items || []).map((item, idx) => (
+                                                <div key={idx} className="item-row">
+                                                    <span className="item-qty">{item.quantity}×</span>
+                                                    <span className="item-name">{item.name}</span>
+                                                    <span className="item-price">{formatPrice(item.price * item.quantity)}</span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
 
-                                    {/* Footer: Total and Actions */}
-                                    <div className="order-card-footer">
-                                        <div className="order-total">
-                                            <span className="total-label">Total</span>
-                                            <span className="total-amount">{formatPrice(order.total)}</span>
-                                        </div>
-                                        <div className="order-actions">
-                                            {order.status === 'pending' && (
-                                                <>
-                                                    <button className="primary-action-btn" onClick={() => updateOrderStatus(order.id, 'confirmed')}>
-                                                        Accept Order
-                                                    </button>
-                                                    <button className="cancel-action-btn" onClick={() => openCancelModal(order.id)}>
-                                                        <XCircle size={16} />
-                                                    </button>
-                                                </>
-                                            )}
-                                            {order.status === 'confirmed' && (
-                                                <>
-                                                    <button className="primary-action-btn" onClick={() => updateOrderStatus(order.id, 'preparing')}>
-                                                        Start Preparing
-                                                    </button>
-                                                    <button className="cancel-action-btn" onClick={() => openCancelModal(order.id)}>
-                                                        <XCircle size={16} />
-                                                    </button>
-                                                </>
-                                            )}
-                                            {order.status === 'preparing' && (
-                                                <>
-                                                    <button className="primary-action-btn" onClick={() => updateOrderStatus(order.id, 'ready')}>
-                                                        Mark as Ready
-                                                    </button>
-                                                    <button className="cancel-action-btn" onClick={() => openCancelModal(order.id)}>
-                                                        <XCircle size={16} />
-                                                    </button>
-                                                </>
-                                            )}
-                                            {order.status === 'ready' && (
-                                                <>
-                                                    <button className="primary-action-btn" onClick={() => updateOrderStatus(order.id, 'completed')}>
-                                                        Complete Order
-                                                    </button>
-                                                    <button className="cancel-action-btn" onClick={() => openCancelModal(order.id)}>
-                                                        <XCircle size={16} />
-                                                    </button>
-                                                </>
-                                            )}
-                                            {['completed', 'cancelled'].includes(order.status) && (
-                                                <span className="completed-badge">Finished</span>
-                                            )}
-                                        </div>
+                                    {/* Total */}
+                                    <div className="order-total-section">
+                                        <span className="total-label">Total</span>
+                                        <span className="total-amount">{formatPrice(order.total)}</span>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="order-actions">
+                                        {order.status === 'pending' && (
+                                            <>
+                                                <button className="primary-action-btn accept" onClick={() => updateOrderStatus(order.id, 'confirmed')}>
+                                                    <CheckCircle size={18} />
+                                                    Accept Order
+                                                </button>
+                                                <button className="secondary-action-btn decline" onClick={() => openCancelModal(order.id)}>
+                                                    <XCircle size={18} />
+                                                    Decline
+                                                </button>
+                                            </>
+                                        )}
+                                        {order.status === 'confirmed' && (
+                                            <>
+                                                <button className="primary-action-btn start" onClick={() => updateOrderStatus(order.id, 'preparing')}>
+                                                    <ChefHat size={18} />
+                                                    Start Preparing
+                                                </button>
+                                                <button className="secondary-action-btn decline" onClick={() => openCancelModal(order.id)}>
+                                                    <XCircle size={18} />
+                                                    Cancel
+                                                </button>
+                                            </>
+                                        )}
+                                        {order.status === 'preparing' && (
+                                            <>
+                                                <button className="primary-action-btn ready" onClick={() => updateOrderStatus(order.id, 'ready')}>
+                                                    <Package size={18} />
+                                                    Mark as Ready
+                                                </button>
+                                                <button className="secondary-action-btn decline" onClick={() => openCancelModal(order.id)}>
+                                                    <XCircle size={18} />
+                                                    Cancel
+                                                </button>
+                                            </>
+                                        )}
+                                        {order.status === 'ready' && (
+                                            <>
+                                                <button className="primary-action-btn complete" onClick={() => updateOrderStatus(order.id, 'completed')}>
+                                                    <CheckCircle size={18} />
+                                                    Complete Order
+                                                </button>
+                                                <button className="secondary-action-btn decline" onClick={() => openCancelModal(order.id)}>
+                                                    <XCircle size={18} />
+                                                    Cancel
+                                                </button>
+                                            </>
+                                        )}
+                                        {['completed', 'cancelled'].includes(order.status) && (
+                                            <div className="completed-badge">
+                                                <CheckCircle size={16} />
+                                                Finished
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )
