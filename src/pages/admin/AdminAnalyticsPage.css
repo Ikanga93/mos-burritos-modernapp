@@ -78,63 +78,74 @@
 /* Stats Grid */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
 }
 
 .stat-card {
     background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
+    border-radius: 8px;
+    padding: 0.875rem;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    gap: 0.625rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e8e8e8;
+    transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    border-color: #d0d0d0;
 }
 
 .stat-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: #666;
+    flex-shrink: 0;
 }
 
 .stat-icon.revenue {
-    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    background: #f5f5f5;
 }
 
 .stat-icon.orders {
-    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    background: #f5f5f5;
 }
 
 .stat-icon.average {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #f5f5f5;
 }
 
 .stat-icon.completed {
-    background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+    background: #f5f5f5;
 }
 
 .stat-info {
     display: flex;
     flex-direction: column;
+    gap: 0.125rem;
+    flex: 1;
 }
 
 .stat-value {
-    font-size: 1.75rem;
+    font-size: 1.125rem;
     font-weight: 700;
-    color: #333;
-    line-height: 1;
+    color: #1a1a1a;
+    line-height: 1.2;
 }
 
 .stat-label {
-    font-size: 0.85rem;
-    color: #888;
-    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: #666;
+    font-weight: 500;
+    line-height: 1.2;
 }
 
 /* Charts Container */

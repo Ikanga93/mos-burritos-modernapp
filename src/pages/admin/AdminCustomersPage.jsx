@@ -146,51 +146,6 @@ const AdminCustomersPage = () => {
                 </button>
             </header>
 
-            {/* Stats Cards */}
-            <div className="stats-grid">
-                <div className="stat-card">
-                    <div className="stat-icon total">
-                        <Users size={24} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-value">{stats.total_customers}</span>
-                        <span className="stat-label">Total Customers</span>
-                    </div>
-                </div>
-
-                <div className="stat-card">
-                    <div className="stat-icon registered">
-                        <User size={24} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-value">{stats.registered_count}</span>
-                        <span className="stat-label">Registered</span>
-                    </div>
-                </div>
-
-                <div className="stat-card">
-                    <div className="stat-icon guest">
-                        <ShoppingBag size={24} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-value">{stats.guest_count}</span>
-                        <span className="stat-label">Guest Orders</span>
-                    </div>
-                </div>
-
-                <div className="stat-card">
-                    <div className="stat-icon revenue">
-                        <DollarSign size={24} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-value">
-                            {formatPrice(customers.reduce((sum, c) => sum + (c.total_spent || 0), 0))}
-                        </span>
-                        <span className="stat-label">Total Revenue</span>
-                    </div>
-                </div>
-            </div>
-
             {/* Filters */}
             <div className="filters-bar">
                 <div className="search-box">

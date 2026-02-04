@@ -207,49 +207,6 @@ const AdminAnalyticsPage = () => {
                 </div>
             </header>
 
-            {/* Stats Overview */}
-            <div className="stats-grid">
-                <div className="stat-card">
-                    <div className="stat-icon revenue">
-                        <DollarSign size={24} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-value">{formatPrice(analytics?.totalRevenue)}</span>
-                        <span className="stat-label">Total Revenue</span>
-                    </div>
-                </div>
-
-                <div className="stat-card">
-                    <div className="stat-icon orders">
-                        <ShoppingBag size={24} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-value">{analytics?.totalOrders || 0}</span>
-                        <span className="stat-label">Total Orders</span>
-                    </div>
-                </div>
-
-                <div className="stat-card">
-                    <div className="stat-icon average">
-                        <TrendingUp size={24} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-value">{formatPrice(analytics?.avgOrderValue)}</span>
-                        <span className="stat-label">Avg Order Value</span>
-                    </div>
-                </div>
-
-                <div className="stat-card">
-                    <div className="stat-icon completed">
-                        <Package size={24} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-value">{analytics?.statusBreakdown.completed || 0}</span>
-                        <span className="stat-label">Completed Orders</span>
-                    </div>
-                </div>
-            </div>
-
             {/* Charts Section */}
             <div className="charts-container">
                 {/* Orders by Status */}

@@ -157,49 +157,6 @@ const AdminDashboard = () => {
 
     return (
         <div className="dashboard-content">
-            {/* Stats Cards */}
-            <div className="stats-grid">
-                <div className="stat-card">
-                    <div className="stat-icon">
-                        <ShoppingBag size={24} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-value">{stats?.todayOrders || 0}</span>
-                        <span className="stat-label">Today's Orders</span>
-                    </div>
-                </div>
-
-                <div className="stat-card">
-                    <div className="stat-icon">
-                        <Clock size={24} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-value">{stats?.pendingOrders || 0}</span>
-                        <span className="stat-label">Pending Orders</span>
-                    </div>
-                </div>
-
-                <div className="stat-card">
-                    <div className="stat-icon">
-                        <DollarSign size={24} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-value">{formatPrice(stats?.todayRevenue)}</span>
-                        <span className="stat-label">Today's Revenue</span>
-                    </div>
-                </div>
-
-                <div className="stat-card">
-                    <div className="stat-icon">
-                        <TrendingUp size={24} />
-                    </div>
-                    <div className="stat-info">
-                        <span className="stat-value">{stats?.totalOrders || 0}</span>
-                        <span className="stat-label">Total Orders</span>
-                    </div>
-                </div>
-            </div>
-
             {/* Active Orders */}
             <section className="orders-section">
                 <div className="section-header">

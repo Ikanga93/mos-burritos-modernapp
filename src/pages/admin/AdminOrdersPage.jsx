@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import {
     Clock, CheckCircle, ChefHat, Package, RefreshCw,
-    Search, X, XCircle
+    Search, X, XCircle, User, Phone
 } from 'lucide-react'
 import { useToast } from '../../contexts/ToastContext'
 import { orderApi } from '../../services/api/orderApi'
@@ -10,12 +10,12 @@ import LoadingSpinner from '../../components/shared/LoadingSpinner'
 import './AdminOrdersPage.css'
 
 const STATUS_CONFIG = {
-    pending: { label: 'Pending', color: '#ffc107', icon: Clock },
-    confirmed: { label: 'Confirmed', color: '#17a2b8', icon: CheckCircle },
-    preparing: { label: 'Preparing', color: '#FF6B35', icon: ChefHat },
-    ready: { label: 'Ready', color: '#28a745', icon: Package },
-    completed: { label: 'Completed', color: '#28a745', icon: CheckCircle },
-    cancelled: { label: 'Cancelled', color: '#dc3545', icon: X }
+    pending: { label: 'New Order', color: '#FF6B35', icon: Clock, action: 'Accept' },
+    confirmed: { label: 'Confirmed', color: '#3B82F6', icon: CheckCircle, action: 'Start Prep' },
+    preparing: { label: 'Preparing', color: '#8B5CF6', icon: ChefHat, action: 'Mark Ready' },
+    ready: { label: 'Ready', color: '#10B981', icon: Package, action: 'Complete' },
+    completed: { label: 'Completed', color: '#6B7280', icon: CheckCircle, action: null },
+    cancelled: { label: 'Cancelled', color: '#EF4444', icon: X, action: null }
 }
 
 const AdminOrdersPage = () => {
@@ -193,95 +193,116 @@ const AdminOrdersPage = () => {
                 </select>
             </div>
 
-            {/* Orders Table */}
-            <div className="orders-table-container">
+            {/* Orders List */}
+            <div className="orders-list-container">
                 {filteredOrders.length === 0 ? (
                     <div className="empty-state">
                         <Package size={48} />
                         <p>No orders found</p>
                     </div>
                 ) : (
-                    <table className="orders-table">
-                        <thead>
-                            <tr>
-                                <th>Order #</th>
-                                <th>Customer</th>
-                                <th>Items</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredOrders.map(order => {
-                                const status = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending
-                                const StatusIcon = status.icon
+                    <div className="orders-list">
+                        {filteredOrders.map(order => {
+                            const status = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending
+                            const StatusIcon = status.icon
+                            const timeAgo = formatDate(order.created_at)
 
-                                return (
-                                    <tr key={order.id}>
-                                        <td className="order-id">#{order.id?.slice(-6).toUpperCase()}</td>
-                                        <td className="customer-info">
-                                            <strong>{order.customer_name}</strong>
-                                            <span>{order.customer_phone}</span>
-                                        </td>
-                                        <td className="items-cell">
-                                            {(order.items || []).slice(0, 2).map((item, idx) => (
-                                                <span key={idx} className="item-chip">{item.quantity}× {item.name}</span>
-                                            ))}
-                                            {order.items?.length > 2 && (
-                                                <span className="more-chip">+{order.items.length - 2}</span>
-                                            )}
-                                        </td>
-                                        <td className="total-cell">{formatPrice(order.total)}</td>
-                                        <td>
-                                            <span className="status-badge" style={{ backgroundColor: status.color }}>
-                                                <StatusIcon size={12} />
-                                                {status.label}
+                            return (
+                                <div key={order.id} className={`order-card ${order.status}`}>
+                                    {/* Header: Order ID, Time, Status */}
+                                    <div className="order-card-header">
+                                        <div className="order-id-section">
+                                            <span className="order-id">#{order.id?.slice(-6).toUpperCase()}</span>
+                                            <span className="order-time">
+                                                <Clock size={14} />
+                                                {timeAgo}
                                             </span>
-                                        </td>
-                                        <td className="date-cell">{formatDate(order.created_at)}</td>
-                                        <td className="actions-cell">
-                                            <div className="action-buttons-group">
-                                                {order.status === 'pending' && (
-                                                    <button className="action-btn confirm" onClick={() => updateOrderStatus(order.id, 'confirmed')}>
-                                                        Confirm
+                                        </div>
+                                        <span className="status-pill" style={{ backgroundColor: status.color }}>
+                                            <StatusIcon size={14} />
+                                            {status.label}
+                                        </span>
+                                    </div>
+
+                                    {/* Customer Info */}
+                                    <div className="order-customer">
+                                        <div className="customer-detail">
+                                            <User size={16} />
+                                            <span>{order.customer_name}</span>
+                                        </div>
+                                        <div className="customer-detail">
+                                            <Phone size={16} />
+                                            <span>{order.customer_phone}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Items */}
+                                    <div className="order-items-list">
+                                        {(order.items || []).map((item, idx) => (
+                                            <div key={idx} className="item-row">
+                                                <span className="item-qty">{item.quantity}x</span>
+                                                <span className="item-name">{item.name}</span>
+                                                <span className="item-price">{formatPrice(item.price * item.quantity)}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Footer: Total and Actions */}
+                                    <div className="order-card-footer">
+                                        <div className="order-total">
+                                            <span className="total-label">Total</span>
+                                            <span className="total-amount">{formatPrice(order.total)}</span>
+                                        </div>
+                                        <div className="order-actions">
+                                            {order.status === 'pending' && (
+                                                <>
+                                                    <button className="primary-action-btn" onClick={() => updateOrderStatus(order.id, 'confirmed')}>
+                                                        Accept Order
                                                     </button>
-                                                )}
-                                                {order.status === 'confirmed' && (
-                                                    <button className="action-btn prepare" onClick={() => updateOrderStatus(order.id, 'preparing')}>
-                                                        Prepare
-                                                    </button>
-                                                )}
-                                                {order.status === 'preparing' && (
-                                                    <button className="action-btn ready" onClick={() => updateOrderStatus(order.id, 'ready')}>
-                                                        Ready
-                                                    </button>
-                                                )}
-                                                {order.status === 'ready' && (
-                                                    <button className="action-btn complete" onClick={() => updateOrderStatus(order.id, 'completed')}>
-                                                        Complete
-                                                    </button>
-                                                )}
-                                                {!['completed', 'cancelled'].includes(order.status) && (
-                                                    <button 
-                                                        className="action-btn cancel-btn" 
-                                                        onClick={() => openCancelModal(order.id)}
-                                                        title="Cancel Order"
-                                                    >
+                                                    <button className="cancel-action-btn" onClick={() => openCancelModal(order.id)}>
                                                         <XCircle size={16} />
                                                     </button>
-                                                )}
-                                                {['completed', 'cancelled'].includes(order.status) && (
-                                                    <span className="done-text">Done</span>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )
-                            })}
-                        </tbody>
-                    </table>
+                                                </>
+                                            )}
+                                            {order.status === 'confirmed' && (
+                                                <>
+                                                    <button className="primary-action-btn" onClick={() => updateOrderStatus(order.id, 'preparing')}>
+                                                        Start Preparing
+                                                    </button>
+                                                    <button className="cancel-action-btn" onClick={() => openCancelModal(order.id)}>
+                                                        <XCircle size={16} />
+                                                    </button>
+                                                </>
+                                            )}
+                                            {order.status === 'preparing' && (
+                                                <>
+                                                    <button className="primary-action-btn" onClick={() => updateOrderStatus(order.id, 'ready')}>
+                                                        Mark as Ready
+                                                    </button>
+                                                    <button className="cancel-action-btn" onClick={() => openCancelModal(order.id)}>
+                                                        <XCircle size={16} />
+                                                    </button>
+                                                </>
+                                            )}
+                                            {order.status === 'ready' && (
+                                                <>
+                                                    <button className="primary-action-btn" onClick={() => updateOrderStatus(order.id, 'completed')}>
+                                                        Complete Order
+                                                    </button>
+                                                    <button className="cancel-action-btn" onClick={() => openCancelModal(order.id)}>
+                                                        <XCircle size={16} />
+                                                    </button>
+                                                </>
+                                            )}
+                                            {['completed', 'cancelled'].includes(order.status) && (
+                                                <span className="completed-badge">Finished</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
                 )}
             </div>
 
