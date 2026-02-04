@@ -31,16 +31,24 @@ export const CustomerAuthProvider = ({ children }) => {
   // Initialize auth state from Supabase
   useEffect(() => {
     const initAuth = async () => {
+      console.log('[CustomerAuth] 🔄 Initializing auth...')
+
       if (isSupabaseEnabled()) {
+        console.log('[CustomerAuth] Supabase is enabled, checking for session...')
         const session = await getSupabaseSession()
+
         if (session) {
+          console.log('[CustomerAuth] ✅ Found existing Supabase session')
+          console.log('[CustomerAuth] Session expires at:', new Date(session.expires_at * 1000).toLocaleString())
           setAccessToken(session.access_token)
           setRefreshToken(session.refresh_token)
           fetchCurrentUser(session.access_token)
         } else {
+          console.log('[CustomerAuth] ❌ No existing Supabase session found')
           setIsLoading(false)
         }
       } else {
+        console.log('[CustomerAuth] Supabase is not enabled')
         setIsLoading(false)
       }
     }
@@ -69,14 +77,23 @@ export const CustomerAuthProvider = ({ children }) => {
           try {
             const { getSupabaseClient } = await import('../services/supabaseClient')
             const supabase = getSupabaseClient()
-            await supabase.auth.setSession({
+            const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
               access_token: token,
               refresh_token: refreshToken
             })
-            console.log('[CustomerAuth] Supabase session synced on user fetch')
+
+            if (sessionError) {
+              console.error('[CustomerAuth] ❌ Supabase setSession error on user fetch:', sessionError)
+            } else if (sessionData?.session) {
+              console.log('[CustomerAuth] ✅ Supabase session synced on user fetch')
+            } else {
+              console.warn('[CustomerAuth] ⚠️ setSession returned no session on user fetch')
+            }
           } catch (sessionError) {
-            console.error('[CustomerAuth] Failed to sync Supabase session:', sessionError)
+            console.error('[CustomerAuth] ❌ Failed to sync Supabase session:', sessionError)
           }
+        } else if (!refreshToken) {
+          console.warn('[CustomerAuth] ⚠️ Cannot sync session: refreshToken is missing')
         }
       } else if (response.status === 401) {
         // Token expired, try to refresh
@@ -146,13 +163,25 @@ export const CustomerAuthProvider = ({ children }) => {
         try {
           const { getSupabaseClient } = await import('../services/supabaseClient')
           const supabase = getSupabaseClient()
-          await supabase.auth.setSession({
+          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
             access_token: data.accessToken,
             refresh_token: data.refreshToken
           })
-          console.log('[CustomerAuth] Supabase session set successfully')
+
+          if (sessionError) {
+            console.error('[CustomerAuth] Supabase setSession error:', sessionError)
+            throw sessionError
+          }
+
+          if (sessionData?.session) {
+            console.log('[CustomerAuth] ✅ Supabase session set successfully')
+            console.log('[CustomerAuth] Session expires at:', new Date(sessionData.session.expires_at * 1000).toLocaleString())
+          } else {
+            console.warn('[CustomerAuth] ⚠️ setSession returned no session')
+          }
         } catch (sessionError) {
-          console.error('[CustomerAuth] Failed to set Supabase session:', sessionError)
+          console.error('[CustomerAuth] ❌ Failed to set Supabase session:', sessionError)
+          // Don't fail the login, but log the issue
         }
       }
 
@@ -196,13 +225,25 @@ export const CustomerAuthProvider = ({ children }) => {
         try {
           const { getSupabaseClient } = await import('../services/supabaseClient')
           const supabase = getSupabaseClient()
-          await supabase.auth.setSession({
+          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
             access_token: data.accessToken,
             refresh_token: data.refreshToken
           })
-          console.log('[CustomerAuth] Supabase session set successfully after registration')
+
+          if (sessionError) {
+            console.error('[CustomerAuth] Supabase setSession error:', sessionError)
+            throw sessionError
+          }
+
+          if (sessionData?.session) {
+            console.log('[CustomerAuth] ✅ Supabase session set successfully after registration')
+            console.log('[CustomerAuth] Session expires at:', new Date(sessionData.session.expires_at * 1000).toLocaleString())
+          } else {
+            console.warn('[CustomerAuth] ⚠️ setSession returned no session')
+          }
         } catch (sessionError) {
-          console.error('[CustomerAuth] Failed to set Supabase session:', sessionError)
+          console.error('[CustomerAuth] ❌ Failed to set Supabase session:', sessionError)
+          // Don't fail the registration, but log the issue
         }
       }
 
@@ -244,7 +285,18 @@ export const CustomerAuthProvider = ({ children }) => {
 
   // Refresh access token using Supabase Auth
   const refreshAccessTokenInternal = async () => {
-    if (!isSupabaseEnabled()) return null
+    if (!isSupabaseEnabled()) {
+      console.log('[CustomerAuth] Supabase not enabled, cannot refresh token')
+      return null
+    }
+
+    if (!refreshToken) {
+      console.error('[CustomerAuth] ❌ Cannot refresh: refreshToken is null')
+      await clearAuth()
+      return null
+    }
+
+    console.log('[CustomerAuth] 🔄 Attempting to refresh access token...')
 
     try {
       const response = await fetch(`${apiUrl}/api/auth/supabase/refresh`, {
@@ -256,6 +308,8 @@ export const CustomerAuthProvider = ({ children }) => {
       })
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('[CustomerAuth] Token refresh failed:', response.status, errorData)
         throw new Error('Token refresh failed')
       }
 
@@ -263,6 +317,13 @@ export const CustomerAuthProvider = ({ children }) => {
 
       const newAccessToken = data.accessToken || data.access_token
       const newRefreshToken = data.refreshToken || data.refresh_token
+
+      if (!newAccessToken || !newRefreshToken) {
+        console.error('[CustomerAuth] ❌ Refresh response missing tokens:', data)
+        throw new Error('Invalid refresh response')
+      }
+
+      console.log('[CustomerAuth] ✅ Token refresh successful')
 
       setAccessToken(newAccessToken)
       setRefreshToken(newRefreshToken)
@@ -272,13 +333,18 @@ export const CustomerAuthProvider = ({ children }) => {
         try {
           const { getSupabaseClient } = await import('../services/supabaseClient')
           const supabase = getSupabaseClient()
-          await supabase.auth.setSession({
+          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
             access_token: newAccessToken,
             refresh_token: newRefreshToken
           })
-          console.log('[CustomerAuth] Supabase session updated after token refresh')
+
+          if (sessionError) {
+            console.error('[CustomerAuth] Supabase setSession error after refresh:', sessionError)
+          } else if (sessionData?.session) {
+            console.log('[CustomerAuth] ✅ Supabase session updated after token refresh')
+          }
         } catch (sessionError) {
-          console.error('[CustomerAuth] Failed to update Supabase session:', sessionError)
+          console.error('[CustomerAuth] ❌ Failed to update Supabase session:', sessionError)
         }
       }
 

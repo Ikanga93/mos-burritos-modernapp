@@ -44,11 +44,16 @@ export const createCustomerClient = () => {
         const session = await getSupabaseSession()
         if (session?.access_token) {
           token = session.access_token
+          console.log('[API Client] ✅ Found auth token for request:', config.url)
+        } else {
+          console.warn('[API Client] ⚠️ No session found for authenticated request:', config.url)
         }
       }
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
+      } else {
+        console.warn('[API Client] ❌ No token available for request:', config.url)
       }
       return config
     },
