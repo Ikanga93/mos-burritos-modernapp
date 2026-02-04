@@ -218,12 +218,15 @@ async def register(user_data: UserRegister, db: Session = Depends(get_db)):
     session = result["session"]
     
     # Create user in our database
+    # Convert empty strings to None to avoid unique constraint violations
+    phone = user_data.phone if user_data.phone and user_data.phone.strip() else None
+
     new_user = User(
         supabase_id=supabase_user["id"],
         email=user_data.email,
         first_name=user_data.first_name,
         last_name=user_data.last_name,
-        phone=user_data.phone,
+        phone=phone,
         role=ModelUserRole.CUSTOMER,
         is_active=True
     )
@@ -406,12 +409,15 @@ async def supabase_register(
     session = result["session"]
 
     # Create user in our database
+    # Convert empty strings to None to avoid unique constraint violations
+    phone = user_data.phone if user_data.phone and user_data.phone.strip() else None
+
     new_user = User(
         supabase_id=supabase_user["id"],
         email=user_data.email,
         first_name=user_data.first_name,
         last_name=user_data.last_name,
-        phone=user_data.phone,
+        phone=phone,
         role=ModelUserRole.CUSTOMER,
         is_active=True
     )

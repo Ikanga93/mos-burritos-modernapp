@@ -69,10 +69,20 @@ async def get_current_user(
     # Auto-sync user from Supabase on first login
     if not user and (supabase_user.get("email") or supabase_user.get("phone")):
         print(f"[AUTH] Auto-creating user from Supabase: {supabase_user.get('email') or supabase_user.get('phone')}")
+
+        # Convert empty strings to None to avoid unique constraint violations
+        phone = supabase_user.get("phone")
+        if phone == "" or phone is None:
+            phone = None
+
+        email = supabase_user.get("email")
+        if email == "" or email is None:
+            email = None
+
         user = User(
             supabase_id=supabase_user["id"],
-            email=supabase_user.get("email"),
-            phone=supabase_user.get("phone"),
+            email=email,
+            phone=phone,
             role=ModelUserRole.CUSTOMER,
             is_active=True
         )
