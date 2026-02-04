@@ -63,6 +63,21 @@ export const CustomerAuthProvider = ({ children }) => {
         console.log('[CustomerAuth] Current user fetched successfully:', data.email, 'Role:', data.role);
         setCustomer(data)
         setIsAuthenticated(true)
+
+        // CRITICAL FIX: Ensure Supabase session is set when fetching user on init
+        if (isSupabaseEnabled() && token && refreshToken) {
+          try {
+            const { getSupabaseClient } = await import('../services/supabaseClient')
+            const supabase = getSupabaseClient()
+            await supabase.auth.setSession({
+              access_token: token,
+              refresh_token: refreshToken
+            })
+            console.log('[CustomerAuth] Supabase session synced on user fetch')
+          } catch (sessionError) {
+            console.error('[CustomerAuth] Failed to sync Supabase session:', sessionError)
+          }
+        }
       } else if (response.status === 401) {
         // Token expired, try to refresh
         console.log('Access token expired, attempting refresh...')
@@ -82,19 +97,19 @@ export const CustomerAuthProvider = ({ children }) => {
             setIsAuthenticated(true)
           } else {
             // Still failed, clear auth
-            clearAuth()
+            await clearAuth()
           }
         } else {
           // Refresh failed, clear auth
-          clearAuth()
+          await clearAuth()
         }
       } else {
         // Other error, clear auth
-        clearAuth()
+        await clearAuth()
       }
     } catch (error) {
       console.error('Error fetching current user:', error)
-      clearAuth()
+      await clearAuth()
     } finally {
       setIsLoading(false)
     }
@@ -121,10 +136,25 @@ export const CustomerAuthProvider = ({ children }) => {
 
       setAccessToken(data.accessToken)
       setRefreshToken(data.refreshToken)
-      
+
       const loggedInUser = data.user
       setCustomer(loggedInUser)
       setIsAuthenticated(true)
+
+      // CRITICAL FIX: Set the Supabase session so the API interceptor can find the token
+      if (isSupabaseEnabled()) {
+        try {
+          const { getSupabaseClient } = await import('../services/supabaseClient')
+          const supabase = getSupabaseClient()
+          await supabase.auth.setSession({
+            access_token: data.accessToken,
+            refresh_token: data.refreshToken
+          })
+          console.log('[CustomerAuth] Supabase session set successfully')
+        } catch (sessionError) {
+          console.error('[CustomerAuth] Failed to set Supabase session:', sessionError)
+        }
+      }
 
       // Wait a bit for state to propagate
       await new Promise(resolve => setTimeout(resolve, 100))
@@ -156,10 +186,25 @@ export const CustomerAuthProvider = ({ children }) => {
 
       setAccessToken(data.accessToken)
       setRefreshToken(data.refreshToken)
-      
+
       const registeredUser = data.user
       setCustomer(registeredUser)
       setIsAuthenticated(true)
+
+      // CRITICAL FIX: Set the Supabase session so the API interceptor can find the token
+      if (isSupabaseEnabled()) {
+        try {
+          const { getSupabaseClient } = await import('../services/supabaseClient')
+          const supabase = getSupabaseClient()
+          await supabase.auth.setSession({
+            access_token: data.accessToken,
+            refresh_token: data.refreshToken
+          })
+          console.log('[CustomerAuth] Supabase session set successfully after registration')
+        } catch (sessionError) {
+          console.error('[CustomerAuth] Failed to set Supabase session:', sessionError)
+        }
+      }
 
       // Wait a bit for state to propagate
       await new Promise(resolve => setTimeout(resolve, 100))
@@ -180,11 +225,21 @@ export const CustomerAuthProvider = ({ children }) => {
   }, [])
 
   // Clear authentication
-  const clearAuth = () => {
+  const clearAuth = async () => {
     setAccessToken(null)
     setRefreshToken(null)
     setCustomer(null)
     setIsAuthenticated(false)
+
+    // Also clear Supabase session
+    if (isSupabaseEnabled()) {
+      try {
+        await signOutSupabase()
+        console.log('[CustomerAuth] Supabase session cleared')
+      } catch (error) {
+        console.error('[CustomerAuth] Error clearing Supabase session:', error)
+      }
+    }
   }
 
   // Refresh access token using Supabase Auth
@@ -212,10 +267,25 @@ export const CustomerAuthProvider = ({ children }) => {
       setAccessToken(newAccessToken)
       setRefreshToken(newRefreshToken)
 
+      // CRITICAL FIX: Update the Supabase session with the new tokens
+      if (isSupabaseEnabled()) {
+        try {
+          const { getSupabaseClient } = await import('../services/supabaseClient')
+          const supabase = getSupabaseClient()
+          await supabase.auth.setSession({
+            access_token: newAccessToken,
+            refresh_token: newRefreshToken
+          })
+          console.log('[CustomerAuth] Supabase session updated after token refresh')
+        } catch (sessionError) {
+          console.error('[CustomerAuth] Failed to update Supabase session:', sessionError)
+        }
+      }
+
       return newAccessToken
     } catch (error) {
       console.error('Token refresh error:', error)
-      clearAuth()
+      await clearAuth()
       return null
     }
   }
