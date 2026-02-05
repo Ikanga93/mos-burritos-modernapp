@@ -4,6 +4,8 @@ import { useToast } from '../../contexts/ToastContext'
 import { orderApi } from '../../services/api/orderApi'
 import { locationApi } from '../../services/api/locationApi'
 import LoadingSpinner from '../../components/shared/LoadingSpinner'
+import socketService from '../../services/socketService'
+import ConnectionStatus from '../../components/shared/ConnectionStatus'
 import './AdminKitchenPage.css'
 
 const STATUS_CONFIG = {
@@ -23,6 +25,7 @@ const AdminKitchenPage = () => {
     const [orders, setOrders] = useState([])
     const [isLoading, setIsLoading] = useState(true)
     const [isRefreshing, setIsRefreshing] = useState(false)
+    const [socketConnected, setSocketConnected] = useState(false)
 
     // Load locations
     useEffect(() => {
@@ -59,10 +62,47 @@ const AdminKitchenPage = () => {
         loadOrders()
     }, [selectedLocation])
 
-    // Auto refresh every 30 seconds for kitchen operations
+    // Socket.IO connection for real-time updates
     useEffect(() => {
-        const interval = setInterval(() => loadOrders(true), 30000)
-        return () => clearInterval(interval)
+        if (selectedLocation && selectedLocation !== 'all') {
+            // Connect socket for kitchen notifications
+            socketService.connect()
+            socketService.joinKitchenRoom(selectedLocation)
+
+            // Track connection status
+            const handleConnect = () => setSocketConnected(true)
+            const handleDisconnect = () => setSocketConnected(false)
+
+            if (socketService.socket) {
+                socketService.socket.on('connect', handleConnect)
+                socketService.socket.on('disconnect', handleDisconnect)
+
+                // Set initial connection state
+                setSocketConnected(socketService.isConnected())
+            }
+
+            // Listen for new orders
+            const handleNewOrder = (orderData) => {
+                console.log('New order received:', orderData)
+                showToast(`New order #${orderData.id.slice(-8)}!`, 'info')
+                loadOrders(true) // Refresh order list
+            }
+
+            socketService.onNewOrder(handleNewOrder)
+
+            // Cleanup on unmount or location change
+            return () => {
+                socketService.offNewOrder(handleNewOrder)
+                socketService.leaveKitchenRoom(selectedLocation)
+                if (socketService.socket) {
+                    socketService.socket.off('connect', handleConnect)
+                    socketService.socket.off('disconnect', handleDisconnect)
+                }
+            }
+        } else {
+            // When "all" is selected, don't use socket
+            setSocketConnected(false)
+        }
     }, [selectedLocation])
 
     const handleRefresh = () => {
@@ -122,6 +162,7 @@ const AdminKitchenPage = () => {
                             </option>
                         ))}
                     </select>
+                    <ConnectionStatus isConnected={socketConnected} />
                     <button
                         onClick={handleRefresh}
                         disabled={isRefreshing}

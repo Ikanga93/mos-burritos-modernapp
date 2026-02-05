@@ -5,6 +5,8 @@ import { orderApi } from '../../services/api/orderApi'
 import { useToast } from '../../contexts/ToastContext'
 import { useCustomerAuth } from '../../contexts/CustomerAuthContext'
 import LoadingSpinner from '../../components/shared/LoadingSpinner'
+import socketService from '../../services/socketService'
+import ConnectionStatus from '../../components/shared/ConnectionStatus'
 import './OrderTrackingPage.css'
 
 const ORDER_STATUSES = {
@@ -28,6 +30,7 @@ const OrderTrackingPage = () => {
     const [showCancelModal, setShowCancelModal] = useState(false)
     const [cancelReason, setCancelReason] = useState('')
     const [isCancelling, setIsCancelling] = useState(false)
+    const [socketConnected, setSocketConnected] = useState(false)
 
     const fetchOrder = async (showRefreshSpinner = false) => {
         if (showRefreshSpinner) setIsRefreshing(true)
@@ -50,9 +53,40 @@ const OrderTrackingPage = () => {
         if (orderId) {
             fetchOrder()
 
-            // Auto-refresh every 30 seconds
-            const interval = setInterval(() => fetchOrder(true), 30000)
-            return () => clearInterval(interval)
+            // Connect socket and join order room for real-time updates
+            socketService.connect()
+            socketService.joinOrderRoom(orderId)
+
+            // Track connection status
+            const handleConnect = () => setSocketConnected(true)
+            const handleDisconnect = () => setSocketConnected(false)
+
+            if (socketService.socket) {
+                socketService.socket.on('connect', handleConnect)
+                socketService.socket.on('disconnect', handleDisconnect)
+
+                // Set initial connection state
+                setSocketConnected(socketService.isConnected())
+            }
+
+            // Listen for order status updates
+            const handleOrderUpdate = (data) => {
+                console.log('Order update received:', data)
+                setOrder(data)
+                showToast('Order status updated!', 'success')
+            }
+
+            socketService.onOrderStatusUpdate(handleOrderUpdate)
+
+            // Cleanup on unmount
+            return () => {
+                socketService.offOrderStatusUpdate(handleOrderUpdate)
+                socketService.leaveOrderRoom(orderId)
+                if (socketService.socket) {
+                    socketService.socket.off('connect', handleConnect)
+                    socketService.socket.off('disconnect', handleDisconnect)
+                }
+            }
         }
     }, [orderId])
 
@@ -138,14 +172,17 @@ const OrderTrackingPage = () => {
                         Back to Menu
                     </Link>
                     <h1>Order Tracking</h1>
-                    <button
-                        className="refresh-btn"
-                        onClick={handleRefresh}
-                        disabled={isRefreshing}
-                    >
-                        <RefreshCw size={20} className={isRefreshing ? 'spin' : ''} />
-                        Refresh
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <ConnectionStatus isConnected={socketConnected} />
+                        <button
+                            className="refresh-btn"
+                            onClick={handleRefresh}
+                            disabled={isRefreshing}
+                        >
+                            <RefreshCw size={20} className={isRefreshing ? 'spin' : ''} />
+                            Refresh
+                        </button>
+                    </div>
                 </div>
 
                 {/* Order Info Card */}

@@ -21,6 +21,7 @@ from ..schemas import (
     PaymentStatus
 )
 from ..middleware import get_current_user
+from ..socket_manager import emit_order_status_update, emit_new_order, emit_order_cancelled
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -90,7 +91,34 @@ async def create_order(
     )
     db.add(status_history)
     db.commit()
-    
+
+    # Emit Socket.IO event to kitchen for new order notification
+    try:
+        order_dict = {
+            "id": new_order.id,
+            "status": new_order.status.value,
+            "customer_name": new_order.customer_name,
+            "customer_email": new_order.customer_email,
+            "customer_phone": new_order.customer_phone,
+            "items": new_order.items,
+            "subtotal": float(new_order.subtotal),
+            "tax": float(new_order.tax),
+            "total": float(new_order.total),
+            "location": {
+                "id": location.id,
+                "name": location.name,
+                "address": location.address,
+                "phone": location.phone
+            },
+            "created_at": new_order.created_at.isoformat() if new_order.created_at else None,
+            "updated_at": new_order.updated_at.isoformat() if new_order.updated_at else None,
+            "notes": new_order.notes
+        }
+        await emit_new_order(location_id, order_dict)
+    except Exception as e:
+        # Log error but don't block HTTP response
+        print(f"Socket.IO emit error (new order): {e}")
+
     return new_order
 
 
@@ -200,6 +228,33 @@ async def update_order_status_patch(
 
     db.commit()
     db.refresh(order)
+
+    # Emit Socket.IO event for real-time updates
+    try:
+        order_dict = {
+            "id": order.id,
+            "status": order.status.value,
+            "customer_name": order.customer_name,
+            "customer_email": order.customer_email,
+            "customer_phone": order.customer_phone,
+            "items": order.items,
+            "subtotal": float(order.subtotal),
+            "tax": float(order.tax),
+            "total": float(order.total),
+            "location": {
+                "id": order.location.id,
+                "name": order.location.name,
+                "address": order.location.address,
+                "phone": order.location.phone
+            } if order.location else None,
+            "created_at": order.created_at.isoformat() if order.created_at else None,
+            "updated_at": order.updated_at.isoformat() if order.updated_at else None,
+            "notes": order.notes
+        }
+        await emit_order_status_update(order.id, order_dict)
+    except Exception as e:
+        # Log error but don't block HTTP response
+        print(f"Socket.IO emit error: {e}")
 
     return order
 
@@ -355,6 +410,33 @@ async def cancel_order(
 
     db.commit()
     db.refresh(order)
+
+    # Emit Socket.IO event for order cancellation
+    try:
+        order_dict = {
+            "id": order.id,
+            "status": order.status.value,
+            "customer_name": order.customer_name,
+            "customer_email": order.customer_email,
+            "customer_phone": order.customer_phone,
+            "items": order.items,
+            "subtotal": float(order.subtotal),
+            "tax": float(order.tax),
+            "total": float(order.total),
+            "location": {
+                "id": order.location.id,
+                "name": order.location.name,
+                "address": order.location.address,
+                "phone": order.location.phone
+            } if order.location else None,
+            "created_at": order.created_at.isoformat() if order.created_at else None,
+            "updated_at": order.updated_at.isoformat() if order.updated_at else None,
+            "notes": order.notes
+        }
+        await emit_order_cancelled(order.id, order_dict)
+    except Exception as e:
+        # Log error but don't block HTTP response
+        print(f"Socket.IO emit error (cancellation): {e}")
 
     return order
 

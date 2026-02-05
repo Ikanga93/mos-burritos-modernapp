@@ -239,132 +239,143 @@ const AdminOrdersPage = () => {
             </div>
 
             {/* Orders List */}
-            <div className="orders-list-container">
+            <div className="orders-table-container">
                 {filteredOrders.length === 0 ? (
                     <div className="empty-state">
                         <Package size={48} />
                         <p>No orders found</p>
                     </div>
                 ) : (
-                    <div className="orders-list">
-                        {filteredOrders.map(order => {
-                            const status = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending
-                            const StatusIcon = status.icon
-                            const elapsedTime = getElapsedTime(order.created_at)
-                            const isUrgent = order.status === 'pending' && new Date() - new Date(order.created_at) > 5 * 60000
+                    <table className="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Time</th>
+                                <th>Customer</th>
+                                <th>Items</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredOrders.map(order => {
+                                const status = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending
+                                const StatusIcon = status.icon
+                                const elapsedTime = getElapsedTime(order.created_at)
 
-                            return (
-                                <div key={order.id} className={`order-card ${order.status} ${isUrgent ? 'urgent' : ''}`}>
-                                    {/* Status Badge - Prominent */}
-                                    <div className="order-status-banner" style={{ backgroundColor: status.color }}>
-                                        <StatusIcon size={20} />
-                                        <span>{status.label}</span>
-                                    </div>
-
-                                    {/* Header: Order ID and Time */}
-                                    <div className="order-card-header">
-                                        <div className="order-id-section">
-                                            <span className="order-id-label">Order</span>
-                                            <span className="order-id">#{order.id?.slice(-6).toUpperCase()}</span>
-                                        </div>
-                                        <div className="order-time-section">
-                                            <Clock size={16} />
-                                            <span className="elapsed-time">{elapsedTime}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Customer Info */}
-                                    <div className="order-customer">
-                                        <div className="customer-detail">
-                                            <User size={18} />
-                                            <div className="customer-text">
-                                                <span className="customer-name">{order.customer_name}</span>
-                                                <span className="customer-phone">{order.customer_phone}</span>
+                                return (
+                                    <tr key={order.id}>
+                                        <td className="order-id-cell">
+                                            <span className="order-number">#{order.id?.slice(-6).toUpperCase()}</span>
+                                        </td>
+                                        <td className="order-time-cell">
+                                            <Clock size={14} />
+                                            <span>{formatDate(order.created_at)}</span>
+                                            <span className="text-muted">({elapsedTime})</span>
+                                        </td>
+                                        <td className="order-customer-cell">
+                                            <div className="customer-info">
+                                                <strong>{order.customer_name}</strong>
+                                                <span>{order.customer_phone}</span>
                                             </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Items */}
-                                    <div className="order-items-section">
-                                        <div className="items-header">Items</div>
-                                        <div className="order-items-list">
-                                            {(order.items || []).map((item, idx) => (
-                                                <div key={idx} className="item-row">
-                                                    <span className="item-qty">{item.quantity}×</span>
-                                                    <span className="item-name">{item.name}</span>
-                                                    <span className="item-price">{formatPrice(item.price * item.quantity)}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Total */}
-                                    <div className="order-total-section">
-                                        <span className="total-label">Total</span>
-                                        <span className="total-amount">{formatPrice(order.total)}</span>
-                                    </div>
-
-                                    {/* Actions */}
-                                    <div className="order-actions">
-                                        {order.status === 'pending' && (
-                                            <>
-                                                <button className="primary-action-btn accept" onClick={() => updateOrderStatus(order.id, 'confirmed')}>
-                                                    <CheckCircle size={18} />
-                                                    Accept Order
-                                                </button>
-                                                <button className="secondary-action-btn decline" onClick={() => openCancelModal(order.id)}>
-                                                    <XCircle size={18} />
-                                                    Decline
-                                                </button>
-                                            </>
-                                        )}
-                                        {order.status === 'confirmed' && (
-                                            <>
-                                                <button className="primary-action-btn start" onClick={() => updateOrderStatus(order.id, 'preparing')}>
-                                                    <ChefHat size={18} />
-                                                    Start Preparing
-                                                </button>
-                                                <button className="secondary-action-btn decline" onClick={() => openCancelModal(order.id)}>
-                                                    <XCircle size={18} />
-                                                    Cancel
-                                                </button>
-                                            </>
-                                        )}
-                                        {order.status === 'preparing' && (
-                                            <>
-                                                <button className="primary-action-btn ready" onClick={() => updateOrderStatus(order.id, 'ready')}>
-                                                    <Package size={18} />
-                                                    Mark as Ready
-                                                </button>
-                                                <button className="secondary-action-btn decline" onClick={() => openCancelModal(order.id)}>
-                                                    <XCircle size={18} />
-                                                    Cancel
-                                                </button>
-                                            </>
-                                        )}
-                                        {order.status === 'ready' && (
-                                            <>
-                                                <button className="primary-action-btn complete" onClick={() => updateOrderStatus(order.id, 'completed')}>
-                                                    <CheckCircle size={18} />
-                                                    Complete Order
-                                                </button>
-                                                <button className="secondary-action-btn decline" onClick={() => openCancelModal(order.id)}>
-                                                    <XCircle size={18} />
-                                                    Cancel
-                                                </button>
-                                            </>
-                                        )}
-                                        {['completed', 'cancelled'].includes(order.status) && (
-                                            <div className="completed-badge">
-                                                <CheckCircle size={16} />
-                                                Finished
+                                        </td>
+                                        <td className="order-items-cell">
+                                            <div className="items-list">
+                                                {(order.items || []).slice(0, 3).map((item, idx) => (
+                                                    <span key={idx} className="item-tag">
+                                                        {item.quantity}x {item.name}
+                                                    </span>
+                                                ))}
+                                                {(order.items || []).length > 3 && (
+                                                    <span className="more-items">+{order.items.length - 3} more</span>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
+                                        </td>
+                                        <td className="order-total-cell">
+                                            <span className="total-price">{formatPrice(order.total)}</span>
+                                        </td>
+                                        <td className="order-status-cell">
+                                            <div className="status-badge" style={{ backgroundColor: status.color }}>
+                                                <StatusIcon size={14} />
+                                                <span>{status.label}</span>
+                                            </div>
+                                        </td>
+                                        <td className="order-actions-cell">
+                                            <div className="action-buttons">
+                                                {order.status === 'pending' && (
+                                                    <>
+                                                        <button
+                                                            className="action-btn confirm"
+                                                            onClick={() => updateOrderStatus(order.id, 'confirmed')}
+                                                            title="Accept Order"
+                                                        >
+                                                            Accept
+                                                        </button>
+                                                        <button
+                                                            className="action-btn-icon"
+                                                            onClick={() => openCancelModal(order.id)}
+                                                            title="Decline"
+                                                        >
+                                                            <XCircle size={20} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                                {order.status === 'confirmed' && (
+                                                    <>
+                                                        <button
+                                                            className="action-btn prepare"
+                                                            onClick={() => updateOrderStatus(order.id, 'preparing')}
+                                                        >
+                                                            Start Prep
+                                                        </button>
+                                                        <button
+                                                            className="action-btn-icon"
+                                                            onClick={() => openCancelModal(order.id)}
+                                                        >
+                                                            <XCircle size={18} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                                {order.status === 'preparing' && (
+                                                    <>
+                                                        <button
+                                                            className="action-btn ready"
+                                                            onClick={() => updateOrderStatus(order.id, 'ready')}
+                                                        >
+                                                            Mark Ready
+                                                        </button>
+                                                        <button
+                                                            className="action-btn-icon"
+                                                            onClick={() => openCancelModal(order.id)}
+                                                        >
+                                                            <XCircle size={18} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                                {order.status === 'ready' && (
+                                                    <>
+                                                        <button
+                                                            className="action-btn complete"
+                                                            onClick={() => updateOrderStatus(order.id, 'completed')}
+                                                        >
+                                                            Complete
+                                                        </button>
+                                                        <button
+                                                            className="action-btn-icon"
+                                                            onClick={() => openCancelModal(order.id)}
+                                                        >
+                                                            <XCircle size={18} />
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )
+                            })}
+                        </tbody>
+                    </table>
                 )}
             </div>
 

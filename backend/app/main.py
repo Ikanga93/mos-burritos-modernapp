@@ -20,6 +20,8 @@ from .routers import (
     live_locations_router,
     admin_router,
 )
+from .socket_manager import sio
+import socketio
 
 
 @asynccontextmanager
@@ -135,3 +137,7 @@ async def upload_menu_image(
         "url": image_url,
         "message": "Image received (cloud storage not configured yet)"
     }
+
+
+# Wrap FastAPI app with Socket.IO
+app = socketio.ASGIApp(sio, app)
