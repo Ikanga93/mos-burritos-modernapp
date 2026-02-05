@@ -9,9 +9,13 @@
   border-bottom: 1px solid #e0e0e0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 0.625rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .menu-secondary-navbar-content {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -23,6 +27,18 @@
 .menu-secondary-location {
   flex: 1;
   min-width: 0;
+}
+
+.menu-category-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.menu-category-scroll-container::-webkit-scrollbar {
+  display: none;
 }
 
 .menu-secondary-cart-btn {
@@ -73,17 +89,7 @@
 }
 
 /* Sticky Category Navbar - Third fixed navbar */
-.menu-category-navbar {
-  position: fixed;
-  top: 185px; /* Mobile: 110px (main navbar) + 75px (secondary navbar) */
-  left: 0;
-  right: 0;
-  z-index: 1400;
-  background: white;
-  border-bottom: 1px solid #e0e0e0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  padding: 0.625rem 1rem;
-}
+/* Old .menu-category-navbar styles removed */
 
 .menu-category-navbar-content {
   max-width: 1400px;
@@ -122,8 +128,8 @@
 }
 
 .menu-page {
-  position: relative;
-  padding-top: 245px; /* Space for all three navbars: 110px (main) + 75px (secondary) + 60px (category) */
+  padding-top: 210px;
+  /* Space for Main + Expanded Secondary Navbar */
   padding-bottom: 6rem;
   padding-left: 1rem;
   padding-right: 1rem;
@@ -135,7 +141,8 @@
 
 @media (min-width: 769px) {
   .menu-page {
-    padding-top: 130px; /* No secondary/category navbar on tablet+ */
+    padding-top: 130px;
+    /* No secondary/category navbar on tablet+ */
     padding-left: 1.5rem;
     padding-right: 1.5rem;
   }
@@ -150,7 +157,8 @@
 
 /* Header Section */
 .menu-header-container {
-  display: none; /* Hidden on mobile - location is in secondary navbar */
+  display: none;
+  /* Hidden on mobile - location is in secondary navbar */
   flex-direction: column;
   gap: 1rem;
   margin-bottom: 1.5rem;

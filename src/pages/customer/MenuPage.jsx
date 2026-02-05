@@ -87,12 +87,10 @@ const MenuPage = () => {
             )}
           </button>
         </div>
-      </div>
 
-      {/* Sticky Category Navbar - Shows when location selected and categories exist */}
-      {selectedLocation && menuData.categories.length > 0 && !isLoading && (
-        <div className="menu-category-navbar">
-          <div className="menu-category-navbar-content">
+        {/* Category Tabs inside secondary navbar */}
+        {selectedLocation && menuData.categories.length > 0 && !isLoading && (
+          <div className="menu-category-scroll-container">
             <div className="category-tabs">
               {menuData.categories.map((category) => (
                 <button
@@ -106,8 +104,8 @@ const MenuPage = () => {
               ))}
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="menu-page">
         <div className="menu-header-container">
@@ -117,78 +115,78 @@ const MenuPage = () => {
           </div>
         </div>
 
-      {/* Floating Cart Button (Mobile) */}
-      {itemCount > 0 && (
-        <button
-          className="floating-cart-btn"
-          onClick={() => setIsCartOpen(true)}
-          aria-label="Open cart"
-        >
-          <ShoppingCart size={24} />
-          <span className="cart-count">{itemCount}</span>
-        </button>
-      )}
+        {/* Floating Cart Button (Mobile) */}
+        {itemCount > 0 && (
+          <button
+            className="floating-cart-btn"
+            onClick={() => setIsCartOpen(true)}
+            aria-label="Open cart"
+          >
+            <ShoppingCart size={24} />
+            <span className="cart-count">{itemCount}</span>
+          </button>
+        )}
 
-      {/* Menu Content */}
-      {!selectedLocation ? (
-        <div className="menu-empty-state">
-          <h2>Select a location to view the menu</h2>
-          <p>Choose your preferred location above to start ordering</p>
-        </div>
-      ) : isLoading ? (
-        <LoadingSpinner size="large" message="Loading menu..." />
-      ) : (
-        <>
-          {/* Category Tabs - Desktop Only (mobile has fixed navbar) */}
-          {menuData.categories.length > 0 && (
-            <div className="category-tabs-desktop">
-              <div className="category-tabs">
-                {menuData.categories.map((category) => (
-                  <button
-                    key={category.id}
-                    className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
-                    onClick={() => setSelectedCategory(category.id)}
-                  >
-                    {category.emoji && <span className="category-emoji">{category.emoji}</span>}
-                    {category.name}
-                  </button>
+        {/* Menu Content */}
+        {!selectedLocation ? (
+          <div className="menu-empty-state">
+            <h2>Select a location to view the menu</h2>
+            <p>Choose your preferred location above to start ordering</p>
+          </div>
+        ) : isLoading ? (
+          <LoadingSpinner size="large" message="Loading menu..." />
+        ) : (
+          <>
+            {/* Category Tabs - Desktop Only (mobile has fixed navbar) */}
+            {menuData.categories.length > 0 && (
+              <div className="category-tabs-desktop">
+                <div className="category-tabs">
+                  {menuData.categories.map((category) => (
+                    <button
+                      key={category.id}
+                      className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
+                      onClick={() => setSelectedCategory(category.id)}
+                    >
+                      {category.emoji && <span className="category-emoji">{category.emoji}</span>}
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Menu Grid */}
+            {filteredItems.length === 0 ? (
+              <div className="menu-empty-state">
+                <h3>No items available</h3>
+                <p>Check back soon for delicious options!</p>
+              </div>
+            ) : (
+              <div className="menu-grid">
+                {filteredItems.map((item) => (
+                  <MenuItemCard
+                    key={item.id}
+                    item={item}
+                    locationId={selectedLocation.id}
+                  />
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </>
+        )}
 
-          {/* Menu Grid */}
-          {filteredItems.length === 0 ? (
-            <div className="menu-empty-state">
-              <h3>No items available</h3>
-              <p>Check back soon for delicious options!</p>
-            </div>
-          ) : (
-            <div className="menu-grid">
-              {filteredItems.map((item) => (
-                <MenuItemCard
-                  key={item.id}
-                  item={item}
-                  locationId={selectedLocation.id}
-                />
-              ))}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* View Cart Button (Desktop) */}
-      {itemCount > 0 && (
-        <div className="view-cart-section">
-          <button
-            className="view-cart-btn"
-            onClick={() => setIsCartOpen(true)}
-          >
-            <ShoppingCart size={20} />
-            <span>View Cart ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
-          </button>
-        </div>
-      )}
+        {/* View Cart Button (Desktop) */}
+        {itemCount > 0 && (
+          <div className="view-cart-section">
+            <button
+              className="view-cart-btn"
+              onClick={() => setIsCartOpen(true)}
+            >
+              <ShoppingCart size={20} />
+              <span>View Cart ({itemCount} {itemCount === 1 ? 'item' : 'items'})</span>
+            </button>
+          </div>
+        )}
       </div>
     </>
   )
