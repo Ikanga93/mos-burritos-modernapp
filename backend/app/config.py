@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     supabase_service_key: str = ""
 
     # CORS
-    cors_origins: str = "http://localhost:5173,http://localhost:3000"
+    cors_origins: str = "*"
 
     @property
     def is_development(self) -> bool:

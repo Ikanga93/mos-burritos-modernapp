@@ -5,67 +5,105 @@
 import { io } from 'socket.io-client'
 
 // Get Socket.IO server URL from environment or default to API URL
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const SOCKET_URL = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://web-production-93566.up.railway.app')
 
 class SocketService {
   constructor() {
     this.socket = null
     this.connectionStatus = 'disconnected' // 'connected' | 'disconnected' | 'reconnecting'
     this.statusCallbacks = []
+    this.activeRooms = [] // Rooms to maintain (rejoin on reconnect)
+    this.connectedPromise = null
   }
 
   /**
    * Connect to Socket.IO server
+   * Returns a promise that resolves when connected
    */
   connect() {
     if (this.socket?.connected) {
       console.log('Socket already connected')
-      return this.socket
+      return Promise.resolve(this.socket)
+    }
+
+    // If already connecting, return the existing promise
+    if (this.connectedPromise) {
+      return this.connectedPromise
     }
 
     console.log('Connecting to Socket.IO server:', SOCKET_URL)
 
-    this.socket = io(SOCKET_URL, {
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 10000,
-      transports: ['websocket', 'polling'], // Fallback to polling if WS fails
+    this.connectedPromise = new Promise((resolve, reject) => {
+      this.socket = io(SOCKET_URL, {
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 20000,
+        transports: ['polling', 'websocket'], // Start with polling, upgrade to websocket
+      })
+
+      // Connection event handlers
+      this.socket.on('connect', () => {
+        console.log('Socket.IO connected:', this.socket.id)
+        this.updateConnectionStatus('connected')
+
+        // Join all active rooms
+        this.activeRooms.forEach(({ type, id }) => {
+          if (type === 'order') {
+            this._emitJoinOrderRoom(id)
+          } else if (type === 'kitchen') {
+            this._emitJoinKitchenRoom(id)
+          }
+        })
+
+        resolve(this.socket)
+      })
+
+      this.socket.on('disconnect', (reason) => {
+        console.log('Socket.IO disconnected:', reason)
+        this.updateConnectionStatus('disconnected')
+      })
+
+      this.socket.on('connect_error', (error) => {
+        console.error('Socket.IO connection error:', error.message)
+        this.updateConnectionStatus('reconnecting')
+      })
+
+      this.socket.on('reconnect', (attemptNumber) => {
+        console.log('Socket.IO reconnected after', attemptNumber, 'attempts')
+        this.updateConnectionStatus('connected')
+
+        // Re-join all active rooms on reconnection
+        this.activeRooms.forEach(({ type, id }) => {
+          if (type === 'order') {
+            this._emitJoinOrderRoom(id)
+          } else if (type === 'kitchen') {
+            this._emitJoinKitchenRoom(id)
+          }
+        })
+      })
+
+      this.socket.on('reconnect_attempt', (attemptNumber) => {
+        console.log('Socket.IO reconnection attempt:', attemptNumber)
+        this.updateConnectionStatus('reconnecting')
+      })
+
+      this.socket.on('reconnect_failed', () => {
+        console.error('Socket.IO reconnection failed')
+        this.updateConnectionStatus('disconnected')
+        reject(new Error('Socket.IO reconnection failed'))
+      })
+
+      // Timeout for initial connection
+      setTimeout(() => {
+        if (!this.socket?.connected) {
+          console.error('Socket.IO connection timeout')
+        }
+      }, 20000)
     })
 
-    // Connection event handlers
-    this.socket.on('connect', () => {
-      console.log('Socket.IO connected:', this.socket.id)
-      this.updateConnectionStatus('connected')
-    })
-
-    this.socket.on('disconnect', (reason) => {
-      console.log('Socket.IO disconnected:', reason)
-      this.updateConnectionStatus('disconnected')
-    })
-
-    this.socket.on('connect_error', (error) => {
-      console.error('Socket.IO connection error:', error)
-      this.updateConnectionStatus('reconnecting')
-    })
-
-    this.socket.on('reconnect', (attemptNumber) => {
-      console.log('Socket.IO reconnected after', attemptNumber, 'attempts')
-      this.updateConnectionStatus('connected')
-    })
-
-    this.socket.on('reconnect_attempt', (attemptNumber) => {
-      console.log('Socket.IO reconnection attempt:', attemptNumber)
-      this.updateConnectionStatus('reconnecting')
-    })
-
-    this.socket.on('reconnect_failed', () => {
-      console.error('Socket.IO reconnection failed')
-      this.updateConnectionStatus('disconnected')
-    })
-
-    return this.socket
+    return this.connectedPromise
   }
 
   /**
@@ -75,6 +113,8 @@ class SocketService {
     if (this.socket) {
       this.socket.disconnect()
       this.socket = null
+      this.connectedPromise = null
+      this.activeRooms = []
       this.updateConnectionStatus('disconnected')
     }
   }
@@ -118,23 +158,58 @@ class SocketService {
   }
 
   /**
+   * Internal method to emit join order room
+   */
+  _emitJoinOrderRoom(orderId) {
+    console.log('Emitting join_order_room:', orderId)
+    this.socket.emit('join_order_room', { order_id: orderId }, (response) => {
+      if (response?.success) {
+        console.log('Successfully joined order room:', response.room)
+      } else {
+        console.error('Failed to join order room:', response?.error)
+      }
+    })
+  }
+
+  /**
+   * Internal method to emit join kitchen room
+   */
+  _emitJoinKitchenRoom(locationId) {
+    console.log('Emitting join_kitchen_room:', locationId)
+    this.socket.emit('join_kitchen_room', { location_id: locationId }, (response) => {
+      if (response?.success) {
+        console.log('Successfully joined kitchen room:', response.room)
+      } else {
+        console.error('Failed to join kitchen room:', response?.error)
+      }
+    })
+  }
+
+  /**
    * Join order room to receive updates for specific order
    */
   joinOrderRoom(orderId) {
-    if (!this.socket) {
-      console.warn('Cannot join order room: socket not connected')
+    // Track this room for reconnection
+    if (!this.activeRooms.find(r => r.type === 'order' && r.id === orderId)) {
+      this.activeRooms.push({ type: 'order', id: orderId })
+    }
+
+    if (!this.socket?.connected) {
+      console.log('Socket not connected yet, will join order room on connect:', orderId)
       return
     }
 
-    console.log('Joining order room:', orderId)
-    this.socket.emit('join_order_room', { order_id: orderId })
+    this._emitJoinOrderRoom(orderId)
   }
 
   /**
    * Leave order room
    */
   leaveOrderRoom(orderId) {
-    if (!this.socket) return
+    // Remove from active rooms
+    this.activeRooms = this.activeRooms.filter(r => !(r.type === 'order' && r.id === orderId))
+
+    if (!this.socket?.connected) return
 
     console.log('Leaving order room:', orderId)
     this.socket.emit('leave_order_room', { order_id: orderId })
@@ -144,20 +219,27 @@ class SocketService {
    * Join kitchen room to receive new order notifications
    */
   joinKitchenRoom(locationId) {
-    if (!this.socket) {
-      console.warn('Cannot join kitchen room: socket not connected')
+    // Track this room for reconnection
+    if (!this.activeRooms.find(r => r.type === 'kitchen' && r.id === locationId)) {
+      this.activeRooms.push({ type: 'kitchen', id: locationId })
+    }
+
+    if (!this.socket?.connected) {
+      console.log('Socket not connected yet, will join kitchen room on connect:', locationId)
       return
     }
 
-    console.log('Joining kitchen room:', locationId)
-    this.socket.emit('join_kitchen_room', { location_id: locationId })
+    this._emitJoinKitchenRoom(locationId)
   }
 
   /**
    * Leave kitchen room
    */
   leaveKitchenRoom(locationId) {
-    if (!this.socket) return
+    // Remove from active rooms
+    this.activeRooms = this.activeRooms.filter(r => !(r.type === 'kitchen' && r.id === locationId))
+
+    if (!this.socket?.connected) return
 
     console.log('Leaving kitchen room:', locationId)
     this.socket.emit('leave_kitchen_room', { location_id: locationId })

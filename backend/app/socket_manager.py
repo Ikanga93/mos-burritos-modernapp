@@ -7,16 +7,24 @@ from .config import settings
 import logging
 
 # Configure logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Log CORS configuration
+logger.info(f"Socket.IO CORS origins: {settings.cors_origins_list}")
+
 # Create Socket.IO AsyncServer
+# Use '*' for all origins in development, specific origins in production
+cors_origins = settings.cors_origins_list if settings.cors_origins != '*' else '*'
+
 sio = socketio.AsyncServer(
     async_mode='asgi',
-    cors_allowed_origins=settings.cors_origins_list,
+    cors_allowed_origins=cors_origins,
     ping_timeout=60,
     ping_interval=25,
     logger=True,
-    engineio_logger=True
+    engineio_logger=True,
+    always_connect=True  # Always accept connections, handle auth in events
 )
 
 # Create ASGI app (will be used to wrap FastAPI app)
@@ -26,7 +34,10 @@ socket_app = socketio.ASGIApp(sio)
 @sio.event
 async def connect(sid, environ, auth):
     """Handle client connection"""
-    logger.info(f"Client connected: {sid}")
+    # Log connection details for debugging
+    origin = environ.get('HTTP_ORIGIN', 'unknown')
+    logger.info(f"Client connected: {sid} from origin: {origin}")
+    print(f"[Socket.IO] Client connected: {sid} from origin: {origin}")
     return True
 
 
@@ -34,6 +45,7 @@ async def connect(sid, environ, auth):
 async def disconnect(sid):
     """Handle client disconnection"""
     logger.info(f"Client disconnected: {sid}")
+    print(f"[Socket.IO] Client disconnected: {sid}")
 
 
 @sio.event
@@ -53,10 +65,16 @@ async def join_order_room(sid, data):
         room = f"order:{order_id}"
         sio.enter_room(sid, room)
         logger.info(f"Client {sid} joined order room: {room}")
+        print(f"[Socket.IO] Client {sid} joined order room: {room}")
+
+        # Get list of rooms client is in for debugging
+        rooms = sio.rooms(sid)
+        print(f"[Socket.IO] Client {sid} is now in rooms: {rooms}")
 
         return {'success': True, 'room': room}
     except Exception as e:
         logger.error(f"Error joining order room: {e}")
+        print(f"[Socket.IO] Error joining order room: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -100,10 +118,16 @@ async def join_kitchen_room(sid, data):
         room = f"kitchen:{location_id}"
         sio.enter_room(sid, room)
         logger.info(f"Client {sid} joined kitchen room: {room}")
+        print(f"[Socket.IO] Client {sid} joined kitchen room: {room}")
+
+        # Get list of rooms client is in for debugging
+        rooms = sio.rooms(sid)
+        print(f"[Socket.IO] Client {sid} is now in rooms: {rooms}")
 
         return {'success': True, 'room': room}
     except Exception as e:
         logger.error(f"Error joining kitchen room: {e}")
+        print(f"[Socket.IO] Error joining kitchen room: {e}")
         return {'success': False, 'error': str(e)}
 
 
@@ -142,10 +166,16 @@ async def emit_order_status_update(order_id: str, order_data: dict):
     """
     try:
         room = f"order:{order_id}"
+        print(f"[Socket.IO] Emitting order_status_updated to room {room}")
+        print(f"[Socket.IO] Order data: status={order_data.get('status')}, id={order_data.get('id')}")
+
         await sio.emit('order_status_updated', order_data, room=room)
+
         logger.info(f"Emitted order_status_updated to room {room}")
+        print(f"[Socket.IO] Successfully emitted order_status_updated to room {room}")
     except Exception as e:
         logger.error(f"Error emitting order status update: {e}")
+        print(f"[Socket.IO] Error emitting order status update: {e}")
 
 
 async def emit_new_order(location_id: str, order_data: dict):
@@ -158,10 +188,16 @@ async def emit_new_order(location_id: str, order_data: dict):
     """
     try:
         room = f"kitchen:{location_id}"
+        print(f"[Socket.IO] Emitting new_order_created to room {room}")
+        print(f"[Socket.IO] Order: id={order_data.get('id')}, customer={order_data.get('customer_name')}")
+
         await sio.emit('new_order_created', order_data, room=room)
+
         logger.info(f"Emitted new_order_created to room {room}")
+        print(f"[Socket.IO] Successfully emitted new_order_created to room {room}")
     except Exception as e:
         logger.error(f"Error emitting new order: {e}")
+        print(f"[Socket.IO] Error emitting new order: {e}")
 
 
 async def emit_order_cancelled(order_id: str, order_data: dict):
