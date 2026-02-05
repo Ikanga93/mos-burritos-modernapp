@@ -158,8 +158,8 @@
 }
 
 .menu-page {
-  padding-top: 210px;
-  /* Space for Main + Expanded Secondary Navbar */
+  padding-top: 110px;
+  /* Adjust for standalone secondary navbar height */
   padding-bottom: 6rem;
   padding-left: 1rem;
   padding-right: 1rem;
