@@ -69,10 +69,32 @@ const MenuPage = () => {
   return (
     <>
       <Navbar />
+
+      {/* Mobile-only secondary navbar with Location and Cart */}
+      <div className="menu-secondary-navbar">
+        <div className="menu-secondary-navbar-content">
+          <div className="menu-secondary-location">
+            <LocationSelector />
+          </div>
+          <button
+            className="menu-secondary-cart-btn"
+            onClick={() => setIsCartOpen(true)}
+            aria-label={`Cart with ${itemCount} items`}
+          >
+            <ShoppingCart size={20} />
+            {itemCount > 0 && (
+              <span className="menu-secondary-cart-badge">{itemCount}</span>
+            )}
+          </button>
+        </div>
+      </div>
+
       <div className="menu-page">
         <div className="menu-header-container">
-          {/* Location Selector */}
-          <LocationSelector />
+          {/* Location Selector - Hidden on mobile, shown on desktop */}
+          <div className="menu-header-location-desktop">
+            <LocationSelector />
+          </div>
         </div>
 
       {/* Floating Cart Button (Mobile) */}
