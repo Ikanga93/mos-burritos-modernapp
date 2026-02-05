@@ -73,6 +73,13 @@ const MenuPage = () => {
       {/* Mobile-only secondary navbar with Location and Cart */}
       <div className="menu-secondary-navbar">
         <div className="menu-secondary-navbar-content">
+          <button
+            className="menu-secondary-back-btn"
+            onClick={() => navigate('/')}
+            aria-label="Go back"
+          >
+            <ArrowLeft size={20} />
+          </button>
           <div className="menu-secondary-location">
             <LocationSelector />
           </div>
