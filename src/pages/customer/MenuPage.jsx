@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ShoppingCart, ArrowLeft } from 'lucide-react'
 
+import Navbar from '../../components/customer/Navbar'
 import LocationSelector from '../../components/customer/LocationSelector'
 import MenuItemCard from '../../components/customer/MenuItemCard'
 import LoadingSpinner from '../../components/shared/LoadingSpinner'
@@ -66,17 +67,13 @@ const MenuPage = () => {
     : menuData.items
 
   return (
-    <div className="menu-page">
-      <div className="menu-header-container">
-        {/* Back Button */}
-        <button className="back-btn-pill" onClick={() => navigate('/')} aria-label="Back to Home">
-          <ArrowLeft size={18} />
-          <span>Back to Home</span>
-        </button>
-
-        {/* Location Selector */}
-        <LocationSelector />
-      </div>
+    <>
+      <Navbar />
+      <div className="menu-page">
+        <div className="menu-header-container">
+          {/* Location Selector */}
+          <LocationSelector />
+        </div>
 
       {/* Floating Cart Button (Mobile) */}
       {itemCount > 0 && (
@@ -148,7 +145,8 @@ const MenuPage = () => {
           </button>
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }
 
