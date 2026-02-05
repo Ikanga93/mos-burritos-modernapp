@@ -67,7 +67,7 @@ const MenuPage = () => {
     : menuData.items
 
   return (
-    <>
+    <div className="menu-page-wrapper">
       <Navbar />
 
       {/* Mobile-only secondary navbar with Location and Cart */}
@@ -195,7 +195,7 @@ const MenuPage = () => {
           </div>
         )}
       </div>
-    </>
+    </div>
   )
 }
 

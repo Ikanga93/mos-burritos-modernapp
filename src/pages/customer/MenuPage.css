@@ -1,7 +1,14 @@
+/* Hide Main Navbar on Mobile for Menu Page */
+@media (max-width: 768px) {
+  .menu-page-wrapper .customer-navbar {
+    display: none;
+  }
+}
+
 /* Mobile-only Secondary Navbar */
 .menu-secondary-navbar {
   position: fixed;
-  top: var(--navbar-height, 96px);
+  top: 0;
   left: 0;
   right: 0;
   z-index: 1500;
