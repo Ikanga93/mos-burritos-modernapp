@@ -14,6 +14,7 @@ class SocketService {
     this.statusCallbacks = []
     this.activeRooms = [] // Rooms to maintain (rejoin on reconnect)
     this.connectedPromise = null
+    this.eventListeners = [] // Track event listeners for reconnection
   }
 
   /**
@@ -57,6 +58,12 @@ class SocketService {
           }
         })
 
+        // Attach all tracked event listeners
+        this.eventListeners.forEach(({ event, callback }) => {
+          console.log('Attaching listener for:', event)
+          this.socket.on(event, callback)
+        })
+
         resolve(this.socket)
       })
 
@@ -81,6 +88,12 @@ class SocketService {
           } else if (type === 'kitchen') {
             this._emitJoinKitchenRoom(id)
           }
+        })
+
+        // Re-attach all event listeners on reconnection
+        this.eventListeners.forEach(({ event, callback }) => {
+          console.log('Re-attaching listener for:', event)
+          this.socket.on(event, callback)
         })
       })
 
@@ -115,6 +128,7 @@ class SocketService {
       this.socket = null
       this.connectedPromise = null
       this.activeRooms = []
+      this.eventListeners = []
       this.updateConnectionStatus('disconnected')
     }
   }
@@ -249,11 +263,18 @@ class SocketService {
    * Subscribe to order status updates
    */
   onOrderStatusUpdate(callback) {
+    // Track listener for reconnection
+    const listener = { event: 'order_status_updated', callback }
+    if (!this.eventListeners.find(l => l.event === listener.event && l.callback === callback)) {
+      this.eventListeners.push(listener)
+    }
+
     if (!this.socket) {
-      console.warn('Cannot listen for order updates: socket not connected')
+      console.log('Socket not ready yet, listener will be attached on connect')
       return
     }
 
+    console.log('Attaching order_status_updated listener')
     this.socket.on('order_status_updated', callback)
   }
 
@@ -261,6 +282,11 @@ class SocketService {
    * Unsubscribe from order status updates
    */
   offOrderStatusUpdate(callback) {
+    // Remove from tracked listeners
+    this.eventListeners = this.eventListeners.filter(
+      l => !(l.event === 'order_status_updated' && l.callback === callback)
+    )
+
     if (!this.socket) return
     this.socket.off('order_status_updated', callback)
   }
@@ -269,11 +295,18 @@ class SocketService {
    * Subscribe to new order events (for kitchen)
    */
   onNewOrder(callback) {
+    // Track listener for reconnection
+    const listener = { event: 'new_order_created', callback }
+    if (!this.eventListeners.find(l => l.event === listener.event && l.callback === callback)) {
+      this.eventListeners.push(listener)
+    }
+
     if (!this.socket) {
-      console.warn('Cannot listen for new orders: socket not connected')
+      console.log('Socket not ready yet, listener will be attached on connect')
       return
     }
 
+    console.log('Attaching new_order_created listener')
     this.socket.on('new_order_created', callback)
   }
 
@@ -281,6 +314,11 @@ class SocketService {
    * Unsubscribe from new order events
    */
   offNewOrder(callback) {
+    // Remove from tracked listeners
+    this.eventListeners = this.eventListeners.filter(
+      l => !(l.event === 'new_order_created' && l.callback === callback)
+    )
+
     if (!this.socket) return
     this.socket.off('new_order_created', callback)
   }
