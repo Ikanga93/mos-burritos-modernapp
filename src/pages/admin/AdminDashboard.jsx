@@ -157,6 +157,53 @@ const AdminDashboard = () => {
 
     return (
         <div className="dashboard-content">
+            {/* Daily Stats - Sliding Carousel */}
+            {stats && (
+                <div className="daily-stats-container">
+                    <div className="daily-stats-slider">
+                        <div className="stat-card-mini">
+                            <div className="stat-icon-mini">
+                                <ShoppingBag size={20} />
+                            </div>
+                            <div className="stat-info-mini">
+                                <div className="stat-value-mini">{stats.todayOrders}</div>
+                                <div className="stat-label-mini">Today's Orders</div>
+                            </div>
+                        </div>
+
+                        <div className="stat-card-mini">
+                            <div className="stat-icon-mini pending">
+                                <Clock size={20} />
+                            </div>
+                            <div className="stat-info-mini">
+                                <div className="stat-value-mini">{stats.pendingOrders}</div>
+                                <div className="stat-label-mini">Pending Orders</div>
+                            </div>
+                        </div>
+
+                        <div className="stat-card-mini">
+                            <div className="stat-icon-mini revenue">
+                                <DollarSign size={20} />
+                            </div>
+                            <div className="stat-info-mini">
+                                <div className="stat-value-mini">{formatPrice(stats.todayRevenue)}</div>
+                                <div className="stat-label-mini">Today's Revenue</div>
+                            </div>
+                        </div>
+
+                        <div className="stat-card-mini">
+                            <div className="stat-icon-mini total">
+                                <TrendingUp size={20} />
+                            </div>
+                            <div className="stat-info-mini">
+                                <div className="stat-value-mini">{stats.totalOrders}</div>
+                                <div className="stat-label-mini">Total Orders</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Active Orders */}
             <section className="orders-section">
                 <div className="section-header">
@@ -164,97 +211,115 @@ const AdminDashboard = () => {
                     <span className="order-count">{activeOrders.length} orders</span>
                 </div>
 
-                {activeOrders.length === 0 ? (
+{activeOrders.length === 0 ? (
                     <div className="empty-orders">
                         <CheckCircle size={48} />
                         <p>No active orders right now</p>
                     </div>
                 ) : (
-                    <div className="orders-grid">
-                        {activeOrders.map(order => {
-                            const status = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending
-                            const StatusIcon = status.icon
+                    <div className="orders-table-container">
+                        <table className="orders-table">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Time</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {activeOrders.map(order => {
+                                    const status = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending
+                                    const StatusIcon = status.icon
 
-                            return (
-                                <div key={order.id} className="order-card">
-                                    <div className="order-header">
-                                        <span className="order-number">#{order.id?.slice(-6).toUpperCase()}</span>
-                                        <span className="order-status" style={{ backgroundColor: status.color }}>
-                                            <StatusIcon size={14} />
-                                            {status.label}
-                                        </span>
-                                    </div>
-
-                                    <div className="order-time">
-                                        <Clock size={14} />
-                                        {formatTime(order.created_at)}
-                                    </div>
-
-                                    <div className="order-customer">
-                                        <strong>{order.customer_name}</strong>
-                                        <span>{order.customer_phone}</span>
-                                    </div>
-
-                                    <div className="order-items">
-                                        {(order.items || []).slice(0, 3).map((item, idx) => (
-                                            <span key={idx} className="item-tag">
-                                                {item.quantity}× {item.name}
-                                            </span>
-                                        ))}
-                                        {order.items?.length > 3 && (
-                                            <span className="more-items">+{order.items.length - 3} more</span>
-                                        )}
-                                    </div>
-
-                                    <div className="order-total">
-                                        {formatPrice(order.total)}
-                                    </div>
-
-                                    <div className="order-actions">
-                                        {order.status === 'pending' && (
-                                            <>
-                                                <button className="action-btn confirm" onClick={() => updateOrderStatus(order.id, 'confirmed')}>
-                                                    Confirm
-                                                </button>
-                                                <button className="action-btn cancel-btn-small" onClick={() => openCancelModal(order.id)} title="Cancel Order">
-                                                    <XCircle size={14} />
-                                                </button>
-                                            </>
-                                        )}
-                                        {order.status === 'confirmed' && (
-                                            <>
-                                                <button className="action-btn prepare" onClick={() => updateOrderStatus(order.id, 'preparing')}>
-                                                    Start Preparing
-                                                </button>
-                                                <button className="action-btn cancel-btn-small" onClick={() => openCancelModal(order.id)} title="Cancel Order">
-                                                    <XCircle size={14} />
-                                                </button>
-                                            </>
-                                        )}
-                                        {order.status === 'preparing' && (
-                                            <>
-                                                <button className="action-btn ready" onClick={() => updateOrderStatus(order.id, 'ready')}>
-                                                    Mark Ready
-                                                </button>
-                                                <button className="action-btn cancel-btn-small" onClick={() => openCancelModal(order.id)} title="Cancel Order">
-                                                    <XCircle size={14} />
-                                                </button>
-                                            </>
-                                        )}
-                                        {order.status === 'ready' && (
-                                            <>
-                                                <button className="action-btn complete" onClick={() => updateOrderStatus(order.id, 'completed')}>
-                                                    Complete
-                                                </button>
-                                                <button className="action-btn cancel-btn-small" onClick={() => openCancelModal(order.id)} title="Cancel Order">
-                                                    <XCircle size={14} />
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                            )
-                        })}
+                                    return (
+                                        <tr key={order.id} className="order-row">
+                                            <td className="order-id-cell">
+                                                <span className="order-number">#{order.id?.slice(-6).toUpperCase()}</span>
+                                            </td>
+                                            <td className="order-time-cell">
+                                                <Clock size={14} />
+                                                <span>{formatTime(order.created_at)}</span>
+                                            </td>
+                                            <td className="order-customer-cell">
+                                                <div className="customer-info">
+                                                    <strong>{order.customer_name}</strong>
+                                                    <span>{order.customer_phone}</span>
+                                                </div>
+                                            </td>
+                                            <td className="order-items-cell">
+                                                <div className="items-list">
+                                                    {(order.items || []).slice(0, 2).map((item, idx) => (
+                                                        <span key={idx} className="item-tag">
+                                                            {item.quantity}× {item.name}
+                                                        </span>
+                                                    ))}
+                                                    {order.items?.length > 2 && (
+                                                        <span className="more-items">+{order.items.length - 2}</span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="order-total-cell">
+                                                <span className="total-price">{formatPrice(order.total)}</span>
+                                            </td>
+                                            <td className="order-status-cell">
+                                                <span className="status-badge" style={{ backgroundColor: status.color }}>
+                                                    <StatusIcon size={14} />
+                                                    {status.label}
+                                                </span>
+                                            </td>
+                                            <td className="order-actions-cell">
+                                                <div className="action-buttons">
+                                                    {order.status === 'pending' && (
+                                                        <>
+                                                            <button className="action-btn confirm" onClick={() => updateOrderStatus(order.id, 'confirmed')}>
+                                                                Confirm
+                                                            </button>
+                                                            <button className="action-btn-icon cancel" onClick={() => openCancelModal(order.id)} title="Cancel">
+                                                                <XCircle size={16} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {order.status === 'confirmed' && (
+                                                        <>
+                                                            <button className="action-btn prepare" onClick={() => updateOrderStatus(order.id, 'preparing')}>
+                                                                Prepare
+                                                            </button>
+                                                            <button className="action-btn-icon cancel" onClick={() => openCancelModal(order.id)} title="Cancel">
+                                                                <XCircle size={16} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {order.status === 'preparing' && (
+                                                        <>
+                                                            <button className="action-btn ready" onClick={() => updateOrderStatus(order.id, 'ready')}>
+                                                                Ready
+                                                            </button>
+                                                            <button className="action-btn-icon cancel" onClick={() => openCancelModal(order.id)} title="Cancel">
+                                                                <XCircle size={16} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {order.status === 'ready' && (
+                                                        <>
+                                                            <button className="action-btn complete" onClick={() => updateOrderStatus(order.id, 'completed')}>
+                                                                Complete
+                                                            </button>
+                                                            <button className="action-btn-icon cancel" onClick={() => openCancelModal(order.id)} title="Cancel">
+                                                                <XCircle size={16} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
+                            </tbody>
+                        </table>
                     </div>
                 )}
             </section>
