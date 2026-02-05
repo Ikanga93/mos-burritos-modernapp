@@ -8,7 +8,7 @@
   background: white;
   border-bottom: 1px solid #e0e0e0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  padding: 0.75rem 1rem;
+  padding: 0.625rem 1rem;
 }
 
 .menu-secondary-navbar-content {
@@ -72,6 +72,33 @@
   }
 }
 
+/* Sticky Category Navbar - Third fixed navbar */
+.menu-category-navbar {
+  position: fixed;
+  top: 185px; /* Mobile: 110px (main navbar) + 75px (secondary navbar) */
+  left: 0;
+  right: 0;
+  z-index: 1400;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 0.625rem 1rem;
+}
+
+.menu-category-navbar-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide category navbar on tablet and desktop */
+@media (min-width: 769px) {
+  .menu-category-navbar {
+    display: none;
+  }
+}
+
 /* Desktop location selector - hidden on mobile, shown on tablet+ */
 .menu-header-location-desktop {
   display: none;
@@ -83,9 +110,20 @@
   }
 }
 
+/* Desktop category tabs - hidden on mobile, shown on tablet+ */
+.category-tabs-desktop {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .category-tabs-desktop {
+    display: block;
+  }
+}
+
 .menu-page {
   position: relative;
-  padding-top: 200px; /* Space for main navbar + secondary navbar on mobile */
+  padding-top: 245px; /* Space for all three navbars: 110px (main) + 75px (secondary) + 60px (category) */
   padding-bottom: 6rem;
   padding-left: 1rem;
   padding-right: 1rem;
@@ -97,7 +135,7 @@
 
 @media (min-width: 769px) {
   .menu-page {
-    padding-top: 130px; /* No secondary navbar on tablet+ */
+    padding-top: 130px; /* No secondary/category navbar on tablet+ */
     padding-left: 1.5rem;
     padding-right: 1.5rem;
   }
@@ -163,11 +201,11 @@
 /* Empty States */
 .menu-empty-state {
   text-align: center;
-  padding: 5rem 2rem;
+  padding: 3rem 2rem;
   background: white;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  margin: 2rem 0;
+  margin: 1rem 0;
 }
 
 .menu-empty-state h2,
@@ -184,19 +222,32 @@
   line-height: 1.6;
 }
 
+@media (min-width: 768px) {
+  .menu-empty-state {
+    padding: 5rem 2rem;
+    margin: 2rem 0;
+  }
+}
+
 /* Category Tabs */
 .category-tabs {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 0;
   overflow-x: auto;
-  padding: 0.5rem 0;
+  padding: 0;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
   flex-wrap: nowrap;
 }
 
-@media (min-width: 768px) {
+/* When category tabs are in the fixed navbar (mobile) */
+.menu-category-navbar .category-tabs {
+  margin-bottom: 0;
+}
+
+/* When category tabs are in content area (desktop) */
+@media (min-width: 769px) {
   .category-tabs {
     gap: 0.75rem;
     padding: 0.75rem 0;
@@ -278,8 +329,9 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
-  margin-bottom: 2rem;
-  padding: 0.5rem 0;
+  margin-bottom: 1.5rem;
+  padding: 0;
+  margin-top: 0;
 }
 
 @media (min-width: 600px) {

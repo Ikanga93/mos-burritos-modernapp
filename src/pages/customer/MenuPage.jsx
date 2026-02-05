@@ -89,6 +89,26 @@ const MenuPage = () => {
         </div>
       </div>
 
+      {/* Sticky Category Navbar - Shows when location selected and categories exist */}
+      {selectedLocation && menuData.categories.length > 0 && !isLoading && (
+        <div className="menu-category-navbar">
+          <div className="menu-category-navbar-content">
+            <div className="category-tabs">
+              {menuData.categories.map((category) => (
+                <button
+                  key={category.id}
+                  className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(category.id)}
+                >
+                  {category.emoji && <span className="category-emoji">{category.emoji}</span>}
+                  {category.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="menu-page">
         <div className="menu-header-container">
           {/* Location Selector - Hidden on mobile, shown on desktop */}
@@ -119,19 +139,21 @@ const MenuPage = () => {
         <LoadingSpinner size="large" message="Loading menu..." />
       ) : (
         <>
-          {/* Category Tabs */}
+          {/* Category Tabs - Desktop Only (mobile has fixed navbar) */}
           {menuData.categories.length > 0 && (
-            <div className="category-tabs">
-              {menuData.categories.map((category) => (
-                <button
-                  key={category.id}
-                  className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory(category.id)}
-                >
-                  {category.emoji && <span className="category-emoji">{category.emoji}</span>}
-                  {category.name}
-                </button>
-              ))}
+            <div className="category-tabs-desktop">
+              <div className="category-tabs">
+                {menuData.categories.map((category) => (
+                  <button
+                    key={category.id}
+                    className={`category-tab ${selectedCategory === category.id ? 'active' : ''}`}
+                    onClick={() => setSelectedCategory(category.id)}
+                  >
+                    {category.emoji && <span className="category-emoji">{category.emoji}</span>}
+                    {category.name}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
