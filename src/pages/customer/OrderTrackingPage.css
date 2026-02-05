@@ -497,6 +497,7 @@
         transform: translateY(-20px);
         opacity: 0;
     }
+
     to {
         transform: translateY(0);
         opacity: 1;
@@ -617,30 +618,146 @@
 
 /* Mobile Responsiveness */
 @media (max-width: 600px) {
-    .status-timeline {
-        flex-direction: column;
-        gap: 1rem;
+    .order-tracking-page {
+        padding: 1rem 0.5rem;
     }
 
-    .step-indicator {
-        flex-direction: column;
+    .tracking-container {
+        width: 100%;
     }
 
-    .step-line {
-        width: 4px;
-        height: 20px;
-    }
-
+    /* Header Adjustments */
     .tracking-header {
         flex-direction: column;
         align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
     }
 
+    .tracking-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .tracking-header>div {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    /* Order Info Card */
+    .order-info-card {
+        padding: 1rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+
+    .order-id-section,
+    .order-date {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    /* Vertical Status Timeline */
+    .status-section {
+        padding: 1.25rem 1rem;
+    }
+
+    .status-timeline {
+        flex-direction: column;
+        gap: 0;
+        position: relative;
+        padding-left: 1rem;
+    }
+
+    /* Draw continuous vertical line */
+    .status-timeline::before {
+        content: '';
+        position: absolute;
+        left: 2.3rem;
+        /* Align with icon center */
+        top: 2rem;
+        bottom: 2rem;
+        width: 2px;
+        background: #eee;
+        z-index: 0;
+    }
+
+    .timeline-step {
+        flex-direction: row;
+        align-items: flex-start;
+        text-align: left;
+        padding-bottom: 2rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .timeline-step:last-child {
+        padding-bottom: 0;
+    }
+
+    .step-indicator {
+        width: auto;
+        flex-direction: row;
+        margin-right: 1rem;
+    }
+
+    .step-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
+        border: 4px solid white;
+        /* Create gap around icon for line */
+    }
+
+    /* Hide horizontal lines */
+    .step-line {
+        display: none;
+    }
+
+    .step-label {
+        margin-top: 0.5rem;
+        font-size: 0.95rem;
+        text-align: left;
+    }
+
+    /* Highlight the "current" vertical segment if needed, 
+       but simplified approach is often better. 
+       We can assume the active state colors handle it enough. */
+
+    /* Card Content Adjustments */
+    .pickup-section,
+    .items-section,
+    .customer-section {
+        padding: 1.25rem 1rem;
+    }
+
+    .item-name {
+        font-size: 0.95rem;
+    }
+
+    .order-totals .total-row {
+        font-size: 0.9rem;
+    }
+
+    .order-totals .total-row.grand-total {
+        font-size: 1.1rem;
+    }
+
+    /* Mobile Modal */
     .modal-content {
         margin: 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
     }
 
     .modal-actions {
         flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .modal-actions button {
+        width: 100%;
+        padding: 1rem;
+        /* Larger touch target */
     }
 }
