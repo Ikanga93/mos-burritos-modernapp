@@ -63,7 +63,10 @@ async def join_order_room(sid, data):
             return {'success': False, 'error': 'order_id required'}
 
         room = f"order:{order_id}"
-        sio.enter_room(sid, room)
+
+        # Use await for AsyncServer compatibility
+        await sio.enter_room(sid, room)
+
         logger.info(f"Client {sid} joined order room: {room}")
         print(f"[Socket.IO] Client {sid} joined order room: {room}")
 
@@ -92,7 +95,7 @@ async def leave_order_room(sid, data):
             return {'success': False, 'error': 'order_id required'}
 
         room = f"order:{order_id}"
-        sio.leave_room(sid, room)
+        await sio.leave_room(sid, room)
         logger.info(f"Client {sid} left order room: {room}")
 
         return {'success': True, 'room': room}
@@ -116,7 +119,7 @@ async def join_kitchen_room(sid, data):
             return {'success': False, 'error': 'location_id required'}
 
         room = f"kitchen:{location_id}"
-        sio.enter_room(sid, room)
+        await sio.enter_room(sid, room)
         logger.info(f"Client {sid} joined kitchen room: {room}")
         print(f"[Socket.IO] Client {sid} joined kitchen room: {room}")
 
@@ -145,7 +148,7 @@ async def leave_kitchen_room(sid, data):
             return {'success': False, 'error': 'location_id required'}
 
         room = f"kitchen:{location_id}"
-        sio.leave_room(sid, room)
+        await sio.leave_room(sid, room)
         logger.info(f"Client {sid} left kitchen room: {room}")
 
         return {'success': True, 'room': room}
