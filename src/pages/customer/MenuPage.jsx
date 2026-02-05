@@ -10,6 +10,7 @@ import { useLocation } from '../../contexts/LocationContext'
 import { useCart } from '../../contexts/CartContext'
 import { useToast } from '../../contexts/ToastContext'
 import { menuApi } from '../../services/api/menuApi'
+import LocationRequestModal from '../../components/customer/LocationRequestModal'
 import './MenuPage.css'
 
 const MenuPage = () => {
@@ -18,16 +19,19 @@ const MenuPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState(null)
 
-  const { selectedLocation } = useLocation()
+  const { selectedLocation, isLoading: isLocationLoading } = useLocation()
   const { itemCount, setIsCartOpen } = useCart()
   const { showToast } = useToast()
+  const [showLocationModal, setShowLocationModal] = useState(true)
 
   // Load menu when location changes
   useEffect(() => {
+    if (isLocationLoading) return
+
     if (selectedLocation) {
       loadMenu(selectedLocation.id)
     }
-  }, [selectedLocation])
+  }, [selectedLocation, isLocationLoading])
 
   const loadMenu = async (locationId) => {
     setIsLoading(true)
@@ -195,6 +199,11 @@ const MenuPage = () => {
           </div>
         )}
       </div>
+
+      <LocationRequestModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+      />
     </div>
   )
 }

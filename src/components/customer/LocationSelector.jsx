@@ -14,11 +14,12 @@ const LocationSelector = ({ onLocationChange }) => {
 
   useEffect(() => {
     // Auto-select first location if none selected
-    if (!selectedLocation && locations.length > 0 && !cartLocationId) {
-      setLocation(locations[0].id)
-    }
+    // Auto-select first location logic removed to force user selection
+    // if (!selectedLocation && locations.length > 0 && !cartLocationId) {
+    //   setLocation(locations[0].id)
+    // }
     // If cart has a location, make sure that's selected
-    else if (cartLocationId && (!selectedLocation || selectedLocation.id !== cartLocationId)) {
+    if (cartLocationId && (!selectedLocation || selectedLocation.id !== cartLocationId)) {
       setLocation(cartLocationId)
     }
   }, [locations, selectedLocation, cartLocationId, setLocation])

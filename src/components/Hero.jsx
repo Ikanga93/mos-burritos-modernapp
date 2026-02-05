@@ -28,6 +28,9 @@ const Hero = () => {
               <Link to="/menu" className="cta-button">
                 View Menu
               </Link>
+              <a href="tel:+12175551234" className="cta-button transparent-outline">
+                Call Us
+              </a>
             </div>
           </div>
         </div>
